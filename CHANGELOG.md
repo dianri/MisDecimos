@@ -5,6 +5,32 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [0.6.0] - 2026-11-15
+
+### Added
+- **Infraestructura Web Push VAPID Nativa:**
+  - Generación de claves criptográficas VAPID persistidas de forma segura en Supabase Secrets (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) y variable `VITE_VAPID_PUBLIC_KEY` para clientes PWA.
+  - Script Service Worker (`public/push-sw.js`) integrado mediante `workbox.importScripts` que gestiona eventos `push` con badge monocromo, vibración, iconos y eventos `notificationclick` para enfocar o abrir la PWA en la URL de destino.
+- **Supabase Edge Function `send-push`:**
+  - Desplegada y activa con `npm:web-push`:
+    - Envío en segundo plano de alertas a dispositivos activos según preferencias de perfil (`profiles.push_enabled`).
+    - Auto-limpieza y desactivación de endpoints caducados o revocados por el sistema operativo (errores 404/410).
+    - Modo de prueba inmediata (`{ testPush: true }`) disparado desde el perfil.
+- **Trigger Asíncrono de Notificaciones y RPC de Marcado Masivo:**
+  - Migración `20261115000004_push_trigger_and_audit_helpers.sql`:
+    - Trigger `AFTER INSERT ON public.notifications` que invoca asíncronamente `send-push` vía `pg_net` (`net.http_post`) sin bloquear transacciones de base de datos.
+    - RPC `mark_all_notifications_read`: Marca de golpe todas las alertas del usuario autenticado como leídas y actualiza el contador global.
+  - Botón "Enviar notificación de prueba" en la pantalla de Perfil.
+- **Pantalla `Mis Notificaciones` (`AlertsPage.tsx`):**
+  - Cabecera con botón verde "Leídas todas", contador en tiempo real y navegación atrás.
+  - Tarjetas de alerta con marcas temporales `HH:mm - DD/MM`, iconos contextuales (`Info`, `Trophy`, `UserPlus`, `AlertTriangle`), distinción visual para alertas no leídas y navegación directa al billete.
+  - Acciones interactivas en línea para solicitudes de renuncia (`WAIVER_REQUEST`) con botones de aceptación y rechazo directo sin salir de la bandeja.
+- **Centro Global de Auditoría y Trazabilidad (`AuditPage.tsx`):**
+  - Sello de garantía de inmutabilidad en PostgreSQL.
+  - Bloque explicativo desplegable con las 4 Reglas de Seguridad y Transaccionalidad de MisDecimos (Custodia bloqueada, inmutabilidad bilateral, integridad matemática del 100% y liquidación verificada).
+  - Buscador reactivo instantáneo por número, sorteo, usuario o código y chips de filtrado por categoría (`Todos`, `Décimos`, `Participaciones`, `Renuncias`, `Premios y Cobros`).
+  - Feed cronológico global con accesos directos al detalle de cada décimo.
+
 ## [0.5.0] - 2026-11-15
 
 ### Added

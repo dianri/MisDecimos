@@ -515,6 +515,10 @@ export type Database = {
         }
         Returns: string
       }
+      mark_all_notifications_read: {
+        Args: Record<string, never>
+        Returns: number
+      }
       record_ticket_prize_check: {
         Args: {
           p_check_source: string

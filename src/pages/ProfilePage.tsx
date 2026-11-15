@@ -21,6 +21,7 @@ import {
   Loader2,
   Download,
   Smartphone,
+  Send,
 } from 'lucide-react'
 
 export const ProfilePage: React.FC = () => {
@@ -39,6 +40,7 @@ export const ProfilePage: React.FC = () => {
   // Notificaciones Push
   const [pushEnabled, setPushEnabled] = useState(profile?.push_enabled || false)
   const [isTogglingPush, setIsTogglingPush] = useState(false)
+  const [isSendingTestPush, setIsSendingTestPush] = useState(false)
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
 
   // Plataforma y PWA
@@ -223,6 +225,33 @@ export const ProfilePage: React.FC = () => {
       })
     } finally {
       setIsTogglingPush(false)
+    }
+  }
+
+  // Enviar notificación Web Push de prueba
+  const handleSendTestPush = async () => {
+    setIsSendingTestPush(true)
+    setStatusMsg(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('send-push', {
+        body: { testPush: true },
+      })
+      if (error) throw error
+      setStatusMsg({
+        type: 'success',
+        text:
+          data?.sentCount > 0
+            ? '¡Notificación de prueba enviada con éxito! Comprueba la barra del sistema.'
+            : 'Prueba registrada. Comprueba que el permiso esté concedido y el navegador activo.',
+      })
+    } catch (err: unknown) {
+      console.error('Error enviando notificación de prueba:', err)
+      setStatusMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al enviar la notificación de prueba.',
+      })
+    } finally {
+      setIsSendingTestPush(false)
     }
   }
 
@@ -449,6 +478,25 @@ export const ProfilePage: React.FC = () => {
             />
           </button>
         </div>
+
+        {/* Botón de prueba de notificación push si está activado */}
+        {pushEnabled && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleSendTestPush}
+              disabled={isSendingTestPush}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-lottery/30 bg-lottery-50 text-lottery text-xs font-bold hover:bg-lottery-100 transition active:scale-98"
+            >
+              {isSendingTestPush ? (
+                <Loader2 className="h-4 w-4 animate-spin text-lottery" />
+              ) : (
+                <Send className="h-4 w-4 text-lottery" />
+              )}
+              <span>Enviar notificación de prueba</span>
+            </button>
+          </div>
+        )}
 
         {/* Aviso especial para iOS si no está instalada */}
         {platform === 'ios' && !isStandalone && (
