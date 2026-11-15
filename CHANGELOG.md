@@ -5,6 +5,37 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.0] - 2026-11-15
+
+### Summary
+Lanzamiento oficial de producción de **MisDecimos (v1.0.0)** — Plataforma Mobile-First PWA para la gestión transparente, custodia compartida y liquidación de participaciones de Lotería Nacional (Navidad, El Niño y sorteos semanales).
+
+### Features de Producción
+- **Arquitectura Transaccional Robusta:**
+  - 12 funciones RPC (`SECURITY DEFINER`) transaccionales y triggers automáticos en Supabase PostgreSQL.
+  - Reglas inmutables: Custodia bloqueada ante terceros, inmutabilidad bilateral de cuotas, integridad matemática del 100% (cero huérfanos) y liquidación de premios unánime.
+- **PWA & Web Push Nativo:**
+  - Service Worker con auto-actualización anti-caché y soporte offline.
+  - Notificaciones Web Push cifradas vía VAPID (`public/push-sw.js` + Edge Function `send-push` + `pg_net`).
+  - Banner de instalación PWA optimizado para Android y guía paso a paso para iOS Safari.
+- **Captura Multimodal y Billetes Realistas:**
+  - Parser oficial GS1-128 / Code-128 de SELAE con normalización OCR.
+  - Escáner con cámara trasera (`html5-qrcode`) y selector de imágenes.
+  - Componente `<RealisticTicketCard />` con guilloche y sellos digitales.
+- **Reparto de Participaciones e Invitaciones:**
+  - Cuadro de propiedad con gráfico Donut SVG interactivo.
+  - Reparto por porcentaje manual o partes iguales con absorción de redondeos.
+  - Invitaciones QR dinámicas (`qrcode.react`), códigos de 6 dígitos y compartición por WhatsApp.
+  - Flujo formal de solicitud y respuesta de renuncias.
+- **Comprobación Oficial de Premios:**
+  - Edge Function `check-prizes` conectada a endpoints oficiales de El País y SELAE con caché en memoria.
+  - Componente `<PrizeCheckCard />` con desglose de premios proporcionales y confirmación de cobro.
+- **Trazabilidad y Notificaciones:**
+  - Bandeja interactiva `Mis Notificaciones` con marcas temporales `HH:mm - DD/MM`.
+  - `Centro de Auditoría y Trazabilidad` con buscador y explorador cronológico global.
+- **Optimización de Despliegue en Vercel:**
+  - Configuración `vercel.json` con reescrituras SPA y cabeceras anti-caché estrictas para Service Workers y manifiesto.
+
 ## [0.6.0] - 2026-11-15
 
 ### Added

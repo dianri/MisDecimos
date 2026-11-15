@@ -1,13 +1,14 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `0.6.0`  
+**Versión Actual:** `1.0.0` (Producción Lista · Release 1.0.0)  
 **Última Actualización:** 2026-11-15  
-**Rama Activa:** `develop` (Fase 6 completada — Proyecto Base 100% Funcional)  
+**Rama de Producción:** `main` (Tag `v1.0.0`)  
+**Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
 ---
 
-## 🧭 Fases del Proyecto
+## 🧭 Fases del Proyecto — Estado General de Entrega
 
 ### [x] Fase 1 (v0.1.0) — Cimientos, Gobernanza y Esquema Central
 - [x] Ramas base Git Flow (`main`, `develop`) y workflow multi-agente (`AGENTS.md`).
@@ -75,6 +76,14 @@
 - [x] RPC `mark_all_notifications_read` para marcado masivo de alertas leídas.
 - [x] Pantalla `Mis Notificaciones` con diseño fiel, marcas temporales `HH:mm - DD/MM` y acciones de renuncia directa.
 - [x] Pantalla `Auditoría` global con buscador en tiempo real, chips de categoría y marco educativo de las 4 reglas.
+
+---
+
+### 🚀 Release de Producción (v1.0.0)
+- [x] Configuración de enrutado SPA y cabeceras anti-caché en `vercel.json`.
+- [x] Metaetiquetas móviles PWA completas en `index.html`.
+- [x] Fusión en `develop` y promoción definitiva a `main`.
+- [x] Etiquetado con tag anotado de Git `v1.0.0`.
 
 ### [ ] Fase 5 (v0.5.0) — Auditoría Inmutable, Comprobación de Sorteos y Liquidación
 - [ ] Comprobación automática de premios (Lotería de Navidad, El Niño y LoteriasAPI).
