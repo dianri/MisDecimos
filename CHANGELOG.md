@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.1] - 2026-11-16
+
+### Fixed
+- **Login OTP Robusto (Email & Signup):** Reintento automático con `type: 'signup'` en `LoginPage.tsx` si `supabase.auth.verifyOtp` con `type: 'email'` falla en cuentas de usuario recién creadas sin confirmar, permitiendo validar códigos OTP de 6 dígitos tanto en el primer registro como en inicios de sesión sucesivos.
+- **Versión Dinámica en Login:** Reemplazado el texto estático `v0.2.0` en el pie de página de `LoginPage.tsx` por la constante global dinámica `v${__APP_VERSION__}` sincronizada con `package.json`.
+- **Optimización de Bundles Rollup (`manualChunks`):** Configurado `build.rollupOptions.output.manualChunks` en `vite.config.ts` segregando los paquetes en chunks independientes: `vendor-react` (`react`, `react-dom`, `scheduler`), `vendor-supabase` (`@supabase/supabase-js` y librerías cliente) y `vendor-scanner` (`html5-qrcode`, `qrcode.react`), eliminando el warning de chunks superiores a 500 kB en Vercel.
+
 ## [1.0.0] - 2026-11-15
 
 ### Summary
