@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `0.3.0`  
+**Versión Actual:** `0.4.0`  
 **Última Actualización:** 2026-11-15  
-**Rama Activa:** `develop` (Fase 3 completada y fusionada)  
+**Rama Activa:** `develop` (Fase 4 completada)  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
 ---
@@ -46,13 +46,18 @@
 
 ---
 
-### [ ] Fase 4 (v0.4.0) — Reparto de Participaciones, Códigos de 6 Dígitos e Invitaciones
-- [ ] Modal de asignación manual de % y stepper de reparto a partes iguales (2 a 10 partes).
-- [ ] Generación de enlaces de invitación y códigos cortos numéricos de 6 dígitos.
-- [ ] Flujo de aceptación/rechazo de invitación con vista previa del décimo.
-- [ ] Flujo de solicitud y respuesta de renuncia unilateral (`waiver_requested`).
+### [x] Fase 4 (v0.4.0) — Reparto de Participaciones, Códigos de 6 Dígitos e Invitaciones
+- [x] Cuadro de propiedad interactivo y gráfico Donut SVG (`OwnershipBreakdownCard.tsx`).
+- [x] Bottom Sheet `Nueva participación` con modos Porcentaje Manual y Partes Iguales (`CreateParticipationSheet.tsx`).
+- [x] Modal de invitación con código de 6 dígitos, QR dinámico y compartir por WhatsApp (`ShareInviteModal.tsx`).
+- [x] Modal de reclamo y rechazo de invitaciones pendientes (`reject_pending_invite` en `<InviteClaimModal />`).
+- [x] Flujo bilateral estricto de solicitud y respuesta de renuncia de cotitulares (`waiver_requested`, `request_share_waiver`, `respond_share_waiver`).
+- [x] Cancelación de invitaciones pendientes por el propietario (`cancel_pending_invite`) con devolución íntegra de cuota.
+- [x] Línea temporal enriquecida de auditoría del décimo con iconos, badges y metadatos (`TicketAuditTimeline.tsx`).
 
 ---
+
+### [ ] Fase 5 (v0.5.0) — Liquidación de Premios, Comprobación SELAE y Auditoría Inmutable
 
 ### [ ] Fase 5 (v0.5.0) — Auditoría Inmutable, Comprobación de Sorteos y Liquidación
 - [ ] Comprobación automática de premios (Lotería de Navidad, El Niño y LoteriasAPI).
