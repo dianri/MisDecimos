@@ -33,6 +33,7 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   const [preview, setPreview] = useState<TicketPreview | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
+  const [isRejecting, setIsRejecting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
@@ -80,7 +81,32 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
     }
   }
 
-  // 2. Confirmar y aceptar participación (p_confirm = true)
+  // 3. Rechazar participación (reintegro al propietario)
+  const handleRejectInvite = async () => {
+    if (!code.trim() || isRejecting) return
+    setIsRejecting(true)
+    setErrorMsg(null)
+
+    try {
+      const { error } = await supabase.rpc('reject_pending_invite', {
+        p_code_or_token: code.trim(),
+      })
+
+      if (error) throw error
+
+      setSuccessMsg('Invitación rechazada. El porcentaje ha regresado a la cuota del propietario.')
+      setTimeout(() => {
+        onClose()
+      }, 1400)
+    } catch (err: unknown) {
+      console.error('Error rechazando invitación:', err)
+      setErrorMsg(
+        err instanceof Error ? err.message : 'Error al rechazar la invitación.'
+      )
+    } finally {
+      setIsRejecting(false)
+    }
+  }
   const handleConfirmAccept = async () => {
     if (!code.trim()) return
 
@@ -243,29 +269,40 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreview(null)}
+                    disabled={isConfirming || isRejecting}
+                    className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmAccept}
+                    disabled={isConfirming || isRejecting}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-lottery text-white text-xs font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+                  >
+                    {isConfirming ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Confirmando...</span>
+                      </>
+                    ) : (
+                      <span>Reclamar {preview.percentage}%</span>
+                    )}
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => setPreview(null)}
-                  disabled={isConfirming}
-                  className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                  onClick={handleRejectInvite}
+                  disabled={isConfirming || isRejecting}
+                  className="w-full py-2 px-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition active:scale-98 disabled:opacity-50"
                 >
-                  Volver
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmAccept}
-                  disabled={isConfirming}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-lottery text-white text-xs font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
-                >
-                  {isConfirming ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Confirmando...</span>
-                    </>
-                  ) : (
-                    <span>Aceptar {preview.percentage}%</span>
-                  )}
+                  {isRejecting ? 'Rechazando...' : 'Rechazar participación'}
                 </button>
               </div>
             </div>

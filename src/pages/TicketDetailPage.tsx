@@ -2,6 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { RealisticTicketCard } from '../components/tickets/RealisticTicketCard'
+import {
+  OwnershipBreakdownCard,
+  type OwnershipShare,
+  type PendingInvite,
+} from '../components/tickets/OwnershipBreakdownCard'
+import {
+  TicketAuditTimeline,
+  type AuditEvent,
+} from '../components/tickets/TicketAuditTimeline'
 import type { Database } from '../types/database.types'
 import {
   ArrowLeft,
@@ -14,15 +23,12 @@ import {
   Loader2,
   Calendar,
   Barcode,
-  Clock,
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
 type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
-type OwnershipShare = Database['public']['Tables']['ownership_shares']['Row']
-type AuditEvent = Database['public']['Tables']['audit_events']['Row']
 
 export interface TicketDetailPageProps {
   ticketId: string
@@ -38,6 +44,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [ticket, setTicket] = useState<TicketRow | null>(null)
   const [template, setTemplate] = useState<DrawTemplate | null>(null)
   const [shares, setShares] = useState<OwnershipShare[]>([])
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
   const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -73,24 +80,36 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         setTemplate(tplData)
       }
 
-      // 3. Cargar participaciones (ownership_shares)
-      const { data: sharesData } = await supabase
+      // 3. Cargar participaciones (ownership_shares con perfiles)
+      const { data: sharesData, error: sharesErr } = await supabase
         .from('ownership_shares')
-        .select('*')
+        .select('*, profiles(id, display_name, avatar_url, email)')
         .eq('ticket_id', ticketId)
 
-      setShares(sharesData || [])
+      if (sharesErr) console.error('Error cargando participaciones:', sharesErr)
+      setShares((sharesData as unknown as OwnershipShare[]) || [])
 
-      // 4. Cargar eventos de auditoría
-      const { data: auditData } = await supabase
-        .from('audit_events')
+      // 4. Cargar invitaciones pendientes (pending_invites)
+      const { data: invitesData, error: invitesErr } = await supabase
+        .from('pending_invites')
         .select('*')
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true })
+
+      if (invitesErr) console.error('Error cargando invitaciones pendientes:', invitesErr)
+      setPendingInvites(invitesData || [])
+
+      // 5. Cargar eventos de auditoría con perfil del actor
+      const { data: auditData, error: auditErr } = await supabase
+        .from('audit_events')
+        .select('*, actor:profiles!audit_events_actor_id_fkey(display_name, email, avatar_url)')
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: false })
 
-      setAuditEvents(auditData || [])
+      if (auditErr) console.error('Error cargando eventos de auditoría:', auditErr)
+      setAuditEvents((auditData as unknown as AuditEvent[]) || [])
 
-      // 5. Comprobar si está archivado por el usuario actual
+      // 6. Comprobar si está archivado por el usuario actual
       const { data: hideData } = await supabase
         .from('ticket_archive_hides')
         .select('ticket_id')
@@ -123,7 +142,17 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       )
       .on(
         'postgres_changes',
+        { event: '*', schema: 'public', table: 'pending_invites', filter: `ticket_id=eq.${ticketId}` },
+        () => loadTicketDetails()
+      )
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'audit_events', filter: `ticket_id=eq.${ticketId}` },
+        () => loadTicketDetails()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tickets', filter: `id=eq.${ticketId}` },
         () => loadTicketDetails()
       )
       .subscribe()
@@ -321,7 +350,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       )}
 
       {/* 4. Pestañas de PROPIEDAD e HISTORIAL */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-4 pt-2">
         <div className="flex border-b border-gray-200">
           <button
             type="button"
@@ -333,7 +362,9 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             }`}
           >
             <Users className="h-3.5 w-3.5" />
-            <span>Propiedad y Reparto ({shares.length})</span>
+            <span>
+              Propiedad y Reparto ({shares.length + pendingInvites.length})
+            </span>
           </button>
 
           <button
@@ -346,73 +377,26 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             }`}
           >
             <Shield className="h-3.5 w-3.5" />
-            <span>Historial de Auditoría ({auditEvents.length})</span>
+            <span>Historial ({auditEvents.length})</span>
           </button>
         </div>
 
         {activeTab === 'propiedad' ? (
-          <div className="space-y-3">
-            <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm divide-y divide-gray-100">
-              {shares.map((share) => (
-                <div key={share.id} className="py-3 flex items-center justify-between text-xs">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900">
-                        {share.user_id === user?.id ? 'Tú' : 'Cotitular'}
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                        {share.role}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 font-mono">
-                      Estado: {share.status}
-                    </p>
-                  </div>
-
-                  <span className="text-sm font-extrabold font-mono text-lottery bg-lottery-50 px-2.5 py-1 rounded-xl">
-                    {share.percentage}%
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[11px] text-center text-gray-400">
-              El reparto a partes iguales y solicitudes de renuncia se activarán en la Fase 4.
-            </p>
-          </div>
+          <OwnershipBreakdownCard
+            ticketId={ticket.id}
+            ticketNumber={ticket.number}
+            drawName={ticket.draw_name}
+            ticketStatus={ticket.status}
+            isOwner={isOwner}
+            shares={shares}
+            pendingInvites={pendingInvites}
+            onRefresh={loadTicketDetails}
+          />
         ) : (
-          /* Pestaña: Historial */
-          <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-sm divide-y divide-gray-100">
-            {auditEvents.length === 0 ? (
-              <p className="text-xs text-center text-gray-400 py-4">Sin eventos registrados</p>
-            ) : (
-              auditEvents.map((evt) => (
-                <div key={evt.id} className="py-3 flex items-center justify-between text-xs">
-                  <div className="space-y-0.5">
-                    <span className="font-mono font-bold text-lottery bg-lottery-50 px-2 py-0.5 rounded text-[10px]">
-                      {evt.action}
-                    </span>
-                    {evt.percentage !== null && (
-                      <p className="text-[11px] text-gray-600 pt-0.5">
-                        Cuota: {evt.percentage}%
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
-                    <Clock className="h-3 w-3" />
-                    <span>
-                      {new Date(evt.created_at).toLocaleDateString('es-ES', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <TicketAuditTimeline
+            events={auditEvents}
+            onRefresh={loadTicketDetails}
+          />
         )}
       </div>
     </div>
