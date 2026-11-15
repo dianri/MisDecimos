@@ -52,7 +52,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        importScripts: ['/push-sw.js']
       }
     })
   ],

@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `0.5.0`  
+**Versión Actual:** `0.6.0`  
 **Última Actualización:** 2026-11-15  
-**Rama Activa:** `develop` (Fase 5 completada)  
+**Rama Activa:** `develop` (Fase 6 completada — Proyecto Base 100% Funcional)  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
 ---
@@ -67,7 +67,14 @@
 
 ---
 
-### [ ] Fase 6 (v0.6.0) — Notificaciones Push en Background, Automatización y QA End-to-End
+### [x] Fase 6 (v0.6.0) — Notificaciones Push en Background, Automatización y QA End-to-End
+- [x] Generación de claves VAPID y configuración de secretos en Supabase (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+- [x] Service Worker con soporte nativo para eventos `push` y `notificationclick` (`public/push-sw.js`).
+- [x] Edge Function `send-push` desplegada con `npm:web-push`, soporte para pruebas y auto-limpieza 404/410.
+- [x] Trigger PostgreSQL no bloqueante en `public.notifications` con extensión `pg_net`.
+- [x] RPC `mark_all_notifications_read` para marcado masivo de alertas leídas.
+- [x] Pantalla `Mis Notificaciones` con diseño fiel, marcas temporales `HH:mm - DD/MM` y acciones de renuncia directa.
+- [x] Pantalla `Auditoría` global con buscador en tiempo real, chips de categoría y marco educativo de las 4 reglas.
 
 ### [ ] Fase 5 (v0.5.0) — Auditoría Inmutable, Comprobación de Sorteos y Liquidación
 - [ ] Comprobación automática de premios (Lotería de Navidad, El Niño y LoteriasAPI).

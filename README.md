@@ -25,6 +25,9 @@
 │   ├── ARCHITECTURE.md         # Modelo ER, catálogo de RPCs y diseño Web Push
 │   ├── BUSINESS_RULES.md       # Reglas de negocio inmutables
 │   └── STATUS.md               # Panel vivo del estado del proyecto
+├── public/
+│   ├── push-sw.js              # Service Worker para eventos Web Push nativos
+│   └── badge-mono.png          # Badge monocromo para notificaciones
 ├── src/
 │   ├── components/
 │   │   ├── common/             # VersionBadge anti-caché y modales

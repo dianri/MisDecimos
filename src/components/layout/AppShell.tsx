@@ -124,8 +124,23 @@ export const AppShell: React.FC = () => {
             />
           )
         )}
-        {activeTab === 'alertas' && <AlertsPage />}
-        {activeTab === 'auditoria' && <AuditPage />}
+        {activeTab === 'alertas' && (
+          <AlertsPage
+            onBack={() => setActiveTab('billetes')}
+            onSelectTicket={(ticketId) => {
+              setSelectedTicketId(ticketId)
+              setActiveTab('billetes')
+            }}
+          />
+        )}
+        {activeTab === 'auditoria' && (
+          <AuditPage
+            onSelectTicket={(ticketId) => {
+              setSelectedTicketId(ticketId)
+              setActiveTab('billetes')
+            }}
+          />
+        )}
         {activeTab === 'perfil' && <ProfilePage />}
       </main>
 

@@ -161,6 +161,7 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 | `record_ticket_prize_check` | `p_ticket_id, p_prize_amount_cents, p_check_source, p_list_status` | Actualiza el premio del billete, marca estado `VALIDADO` si estaba `PENDIENTE`, registra `PREMIO_COMPROBADO` en auditoría y genera alertas con importes proporcionales a cotitulares. |
 | `request_payout_confirmation_reminder` | `p_ticket_id` | Permite enviar un recordatorio formal de cobro (`SOLICITUD_VALIDAR_COBRO`) a participantes pendientes o al propietario. |
 | `confirm_prize_received` | `p_ticket_id` | El participante o custodio confirma recepción de su cobro. Si todos los cotitulares activos han confirmado, conmuta el estado del décimo a `LIQUIDADO`. |
+| `mark_all_notifications_read` | - | Marca de forma masiva todas las notificaciones pendientes del usuario autenticado como leídas (`is_read = true`). |
 | `toggle_archive_ticket` | `p_ticket_id, p_archive` | Gestiona el registro en `ticket_archive_hides` para ocultar o desocultar el décimo en la vista del usuario llamante. |
 
 ---
@@ -172,10 +173,11 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 - **iOS (16.4+):** Requiere que la aplicación sea instalada en la pantalla de inicio ("Añadir a pantalla de inicio" / PWA standalone) para conceder permisos y suscribirse al Notification API mediante el Service Worker.
 
 ### Flujo de Suscripción y Envío
-1. El cliente genera una suscripción mediante `PushManager.subscribe()` usando la clave pública VAPID expuesta.
+1. El cliente genera una suscripción mediante `PushManager.subscribe()` usando la clave pública VAPID expuesta (`VITE_VAPID_PUBLIC_KEY`).
 2. La suscripción (`endpoint`, `p256dh`, `auth`) se persiste en `public.web_push_subscriptions` asociada al usuario autenticado.
-3. Al dispararse un evento crítico en la base de datos (nueva invitación, renuncia, premio o liquidación), un trigger o llamada a Supabase Edge Function (`supabase/functions/push-notifier`) recupera la clave privada VAPID de Supabase Secrets y despacha la notificación cifrada al Push Service correspondiente (FCM / Mozilla / Apple).
-4. El Service Worker `sw.js` recibe el evento `push`, muestra la notificación con iconos de alta resolución y badge monocromo, y redirige a la URL absoluta correspondiente `https://misdecimos.dianrie.com/...`.
+3. Al insertarse una notificación en `public.notifications` (por premio, invitación, renuncia o aviso), el trigger PostgreSQL `on_notification_created_send_push` dispara de forma asíncrona no bloqueante (`pg_net` / `net.http_post`) la Edge Function `send-push`.
+4. La Edge Function `send-push` recupera las claves VAPID de los secretos del proyecto y despacha la notificación a los dispositivos suscritos con `npm:web-push`, realizando auto-limpieza de suscripciones 404/410.
+5. El Service Worker `push-sw.js` (importado por Workbox) intercepta el evento `push`, muestra la alerta con icono de alta resolución y badge monocromo (`/badge-mono.png`), y al pulsar (`notificationclick`) enfoca o abre la PWA navegando a la URL correspondiente.
 
 ---
 
