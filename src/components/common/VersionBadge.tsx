@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Wifi, WifiOff, RefreshCw, X, ShieldCheck, Terminal, Clock, HardDriveDownload } from 'lucide-react'
 
-export const VersionBadge: React.FC = () => {
+interface VersionBadgeProps {
+  className?: string
+}
+
+export const VersionBadge: React.FC<VersionBadgeProps> = ({ className }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isPurging, setIsPurging] = useState(false)
@@ -106,10 +110,12 @@ export const VersionBadge: React.FC = () => {
         </aside>
       )}
 
-      {/* Badge fijo y discreto en esquina inferior derecha */}
+      {/* Badge fijo y discreto */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-2 right-2 z-40 flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-white/90 px-2.5 py-1 text-[11px] font-mono text-gray-600 shadow-sm backdrop-blur-sm transition-all hover:border-lottery-400 hover:text-lottery-700 hover:shadow"
+        className={`fixed z-40 flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-white/90 px-2.5 py-1 text-[11px] font-mono text-gray-600 shadow-sm backdrop-blur-sm transition-all hover:border-lottery-400 hover:text-lottery-700 hover:shadow ${
+          className || 'bottom-20 right-3'
+        }`}
         title="Información de compilación y diagnóstico"
       >
         <span

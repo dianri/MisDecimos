@@ -4,7 +4,8 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
 
 ## 1. Stack y Principios de Arquitectura
 - **Frontend:** React 18+ + Vite + TypeScript + Tailwind CSS + `vite-plugin-pwa` (Mobile-First PWA).
-- **Backend:** Supabase Cloud (Proyecto ID: `xmdghpyfrblmtjtevtru`) — PostgreSQL, RLS, Funciones RPC (`SECURITY DEFINER`), Triggers PL/pgSQL, Supabase Realtime y Edge Functions (Deno/TypeScript).
+- **Backend:** Supabase Cloud (Proyecto ID: `xmdghpyfrblmtjtevtru`) — PostgreSQL, RLS, Funciones RPC (`SECURITY DEFINER`), Triggers PL/pgSQL, Supabase Realtime, Storage (bucket público `avatars` con 2MB de límite) y Edge Functions (Deno/TypeScript).
+- **Seguridad y Sanitización:** Toda entrada de texto de usuario (nombres, teléfonos, notas) debe pasar por `sanitizeText` (`src/lib/sanitize.ts`) antes de persistirse. Toda URL de imagen externa debe validarse mediante `safeImageUrl`.
 - **PWA & Push:** Service Worker con soporte offline (`vite-plugin-pwa`) y Web Push nativo vía VAPID (iconos, badges monocromos y URLs absolutas `https://misdecimos.dianrie.com/...`).
 - **Single Source of Truth (Fuente Única de Verdad):**
   - Toda la lógica crítica (creación de décimos, cálculo y cesión de porcentajes, códigos de 6 dígitos, aceptación/rechazo de invitaciones, solicitudes de renuncia, confirmación de cobro de premios y auditoría inmutable) reside **exclusivamente** en funciones RPC transaccionales (`SECURITY DEFINER`) y Edge Functions en Supabase, nunca únicamente en el cliente React.

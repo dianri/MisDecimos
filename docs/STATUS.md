@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `0.1.0`  
+**Versión Actual:** `0.2.0`  
 **Última Actualización:** 2026-11-15  
-**Rama Activa:** `develop` (Fase 1 completada y fusionada)  
+**Rama Activa:** `develop` (Fase 2 completada y fusionada)    
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
 ---
@@ -26,10 +26,13 @@
 
 ---
 
-### [ ] Fase 2 (v0.2.0) — Autenticación OTP y Gestión de Perfil
-- [ ] Flujo de login sin contraseña por Email / SMS / WhatsApp OTP vía Supabase Auth.
-- [ ] Pantalla de perfil de usuario y avatar dinámico con iniciales y color distintivo.
-- [ ] Edición de datos personales y estado de suscripción a notificaciones push.
+### [x] Fase 2 (v0.2.0) — Autenticación OTP y Gestión de Perfil
+- [x] Flujo de login sin contraseña por Email OTP vía Supabase Auth con deep-link de invitación.
+- [x] App Shell Mobile-First con cabecera y BottomNav de 4 pestañas (Billetes, Alertas con badge en tiempo real, Auditoría, Perfil).
+- [x] Módulo de sanitización de entradas (`sanitizeText`, `safeImageUrl`).
+- [x] Migración del bucket `avatars` en Supabase Storage con RLS por usuario.
+- [x] Pantalla de perfil de usuario con avatar circular, compresión WebP en cliente y subida a bucket `avatars`.
+- [x] Gestión de suscripción Web Push nativa y banner de instalación PWA (Android / iOS).
 
 ---
 

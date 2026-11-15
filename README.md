@@ -26,14 +26,26 @@
 │   ├── BUSINESS_RULES.md       # Reglas de negocio inmutables
 │   └── STATUS.md               # Panel vivo del estado del proyecto
 ├── src/
-│   ├── components/             # Componentes de UI y utilidades comunes
-│   │   └── common/
-│   │       └── VersionBadge.tsx# Badge de versión anti-caché y control de SW
+│   ├── components/
+│   │   ├── common/             # VersionBadge anti-caché y modales
+│   │   ├── layout/             # AppShell, Header y BottomNav fijo
+│   │   └── pwa/                # PwaInstallBanner nativo e instrucciones iOS
+│   ├── context/
+│   │   └── AuthContext.tsx     # Sesión OTP y persistencia de deep-links
 │   ├── lib/
+│   │   ├── sanitize.ts         # Sanitización XSS y validación de URLs
 │   │   └── supabase.ts         # Cliente Supabase singleton
+│   ├── pages/
+│   │   ├── LoginPage.tsx       # Login OTP por Email con soporte de pegado
+│   │   ├── TicketsPage.tsx     # Pestaña Billetes
+│   │   ├── AlertsPage.tsx      # Pestaña Alertas con Realtime
+│   │   ├── AuditPage.tsx       # Pestaña Auditoría
+│   │   └── ProfilePage.tsx     # Mi Perfil, subida WebP y switch Web Push
+│   ├── services/
+│   │   └── push/               # Suscripción VAPID y detección de plataforma
 │   ├── types/
 │   │   └── database.types.ts   # Tipos generados de Supabase
-│   ├── App.tsx                 # Entrada principal de la aplicación
+│   ├── App.tsx                 # Enrutador principal de autenticación
 │   └── main.tsx                # Bootstrap de React
 ├── supabase/
 │   └── migrations/             # Migraciones SQL secuenciales
