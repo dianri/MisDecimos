@@ -11,6 +11,7 @@ import {
   TicketAuditTimeline,
   type AuditEvent,
 } from '../components/tickets/TicketAuditTimeline'
+import { PrizeCheckCard } from '../components/tickets/PrizeCheckCard'
 import type { Database } from '../types/database.types'
 import {
   ArrowLeft,
@@ -239,9 +240,23 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   }
 
   const isOwner = ticket.owner_id === user?.id
+  const userShare = shares.find((s) => s.user_id === user?.id)
   const hasAcceptedThirdPartyShares = shares.some(
     (s) => s.user_id !== user?.id && s.status === 'ACEPTADA'
   )
+
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'LIQUIDADO':
+        return 'bg-emerald-50 text-emerald-800 border-emerald-300'
+      case 'VALIDADO':
+        return 'bg-amber-50 text-amber-800 border-amber-300'
+      case 'ARCHIVADO':
+        return 'bg-gray-100 text-gray-700 border-gray-300'
+      default:
+        return 'bg-lottery-50 text-lottery border-lottery-200'
+    }
+  }
 
   return (
     <div className="space-y-6 pb-16 max-w-xl mx-auto">
@@ -264,7 +279,11 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           </div>
         </div>
 
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider bg-lottery-50 text-lottery border-lottery-200">
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider ${getStatusBadgeStyle(
+            ticket.status
+          )}`}
+        >
           {ticket.status}
         </span>
       </div>
@@ -304,7 +323,16 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       </div>
 
-      {/* 3. Acciones del Décimo */}
+      {/* 3. Tarjeta de Comprobación Oficial de Premios */}
+      <PrizeCheckCard
+        ticket={ticket}
+        userShare={userShare}
+        shares={shares}
+        isOwner={isOwner}
+        onRefresh={loadTicketDetails}
+      />
+
+      {/* 4. Acciones del Décimo */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
         <button
           type="button"
@@ -387,6 +415,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             ticketNumber={ticket.number}
             drawName={ticket.draw_name}
             ticketStatus={ticket.status}
+            prizeAmountCents={ticket.prize_amount_cents}
             isOwner={isOwner}
             shares={shares}
             pendingInvites={pendingInvites}

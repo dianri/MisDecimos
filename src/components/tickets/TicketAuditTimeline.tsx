@@ -11,11 +11,13 @@ import {
   XCircle,
   AlertTriangle,
   Trash2,
-  Award,
   ShieldCheck,
   Send,
   CheckCheck,
   BadgeAlert,
+  Trophy,
+  Bell,
+  BadgeCheck,
 } from 'lucide-react'
 
 export type AuditEvent = Database['public']['Tables']['audit_events']['Row'] & {
@@ -123,15 +125,29 @@ const ACTION_CONFIGS: Record<string, ActionConfig> = {
   },
   PREMIO_COMPROBADO: {
     title: 'Sorteo comprobado',
-    icon: Award,
-    colorClass: 'text-purple-700',
-    bgClass: 'bg-purple-50',
-    borderClass: 'border-purple-200',
+    icon: Trophy,
+    colorClass: 'text-amber-700',
+    bgClass: 'bg-amber-50',
+    borderClass: 'border-amber-200',
   },
-  PREMIO_COBRADO_CONFIRMADO: {
-    title: 'Cobro de premio liquidado',
-    icon: ShieldCheck,
+  SOLICITUD_VALIDAR_COBRO: {
+    title: 'Recordatorio de cobro',
+    icon: Bell,
+    colorClass: 'text-amber-800',
+    bgClass: 'bg-amber-50',
+    borderClass: 'border-amber-200',
+  },
+  COBRO_PREMIO_CONFIRMADO: {
+    title: 'Cobro de premio confirmado',
+    icon: BadgeCheck,
     colorClass: 'text-emerald-800',
+    bgClass: 'bg-emerald-50',
+    borderClass: 'border-emerald-200',
+  },
+  DECIMO_LIQUIDADO: {
+    title: 'Décimo liquidado',
+    icon: ShieldCheck,
+    colorClass: 'text-emerald-900',
     bgClass: 'bg-emerald-100',
     borderClass: 'border-emerald-300',
   },
@@ -239,6 +255,17 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
                   {/* Metadatos adicionales si existen */}
                   {evt.metadata && typeof evt.metadata === 'object' && Object.keys(evt.metadata).length > 0 && (
                     <div className="text-[10px] text-gray-500 font-mono bg-white/70 p-2 rounded-xl mt-1.5 border border-gray-100 space-y-0.5">
+                      {Boolean((evt.metadata as Record<string, unknown>).prize_amount_cents !== undefined) && (
+                        <p>
+                          Premio total:{' '}
+                          <strong className="text-lottery font-bold">
+                            {(Number((evt.metadata as Record<string, unknown>).prize_amount_cents) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
+                          </strong>
+                        </p>
+                      )}
+                      {Boolean((evt.metadata as Record<string, unknown>).check_source) && (
+                        <p>Fuente: {String((evt.metadata as Record<string, unknown>).check_source)}</p>
+                      )}
                       {Boolean((evt.metadata as Record<string, unknown>).short_code) && (
                         <p>
                           Código:{' '}

@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `0.4.0`  
+**Versión Actual:** `0.5.0`  
 **Última Actualización:** 2026-11-15  
-**Rama Activa:** `develop` (Fase 4 completada)  
+**Rama Activa:** `develop` (Fase 5 completada)  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
 ---
@@ -57,7 +57,17 @@
 
 ---
 
-### [ ] Fase 5 (v0.5.0) — Liquidación de Premios, Comprobación SELAE y Auditoría Inmutable
+### [x] Fase 5 (v0.5.0) — Liquidación de Premios, Comprobación SELAE y Auditoría Inmutable
+- [x] Migración RPC de comprobación (`record_ticket_prize_check`), recordatorios (`request_payout_confirmation_reminder`) y liquidación (`confirm_prize_received`).
+- [x] Edge Function `check-prizes` desplegada y activa con motores El País (Navidad/Niño) y fallback Loterías API.
+- [x] Tarjeta de comprobación `<PrizeCheckCard />` con botón de búsqueda, desglose proporcional de premio y nota legal.
+- [x] Flujo de confirmación de cobro ("He recibido mi premio") para cotitulares y propietarios.
+- [x] Estado `LIQUIDADO` del décimo tras cobro unánime de todos los participantes.
+- [x] Visualización de premios y estados de cobro en `<OwnershipBreakdownCard />` y línea temporal `<TicketAuditTimeline />`.
+
+---
+
+### [ ] Fase 6 (v0.6.0) — Notificaciones Push en Background, Automatización y QA End-to-End
 
 ### [ ] Fase 5 (v0.5.0) — Auditoría Inmutable, Comprobación de Sorteos y Liquidación
 - [ ] Comprobación automática de premios (Lotería de Navidad, El Niño y LoteriasAPI).

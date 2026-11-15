@@ -515,8 +515,21 @@ export type Database = {
         }
         Returns: string
       }
+      record_ticket_prize_check: {
+        Args: {
+          p_check_source: string
+          p_list_status?: string
+          p_prize_amount_cents: number
+          p_ticket_id: string
+        }
+        Returns: Json
+      }
       reject_pending_invite: {
         Args: { p_code_or_token: string }
+        Returns: boolean
+      }
+      request_payout_confirmation_reminder: {
+        Args: { p_ticket_id: string }
         Returns: boolean
       }
       request_share_waiver: { Args: { p_share_id: string }; Returns: boolean }

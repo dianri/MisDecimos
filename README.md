@@ -30,7 +30,7 @@
 │   │   ├── common/             # VersionBadge anti-caché y modales
 │   │   ├── layout/             # AppShell, Header y BottomNav fijo
 │   │   ├── pwa/                # PwaInstallBanner nativo e instrucciones iOS
-│   │   └── tickets/            # Escáner GS1-128, boleto realista, Donut SVG, reparto y timeline auditoría
+│   │   └── tickets/            # Escáner GS1-128, boleto realista, Donut SVG, comprobación de premios y auditoría
 │   ├── context/
 │   │   └── AuthContext.tsx     # Sesión OTP y persistencia de deep-links
 │   ├── lib/
