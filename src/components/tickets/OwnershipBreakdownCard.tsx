@@ -35,6 +35,7 @@ interface OwnershipBreakdownCardProps {
   ticketNumber: string
   drawName: string
   ticketStatus: string
+  prizeAmountCents?: number
   isOwner: boolean
   shares: OwnershipShare[]
   pendingInvites: PendingInvite[]
@@ -48,6 +49,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   ticketNumber,
   drawName,
   ticketStatus,
+  prizeAmountCents = 0,
   isOwner,
   shares,
   pendingInvites,
@@ -404,9 +406,20 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
               <span className="text-base font-extrabold font-mono text-lottery">
                 {ownerShare.percentage}%
               </span>
-              <p className="text-[10px] text-gray-500 font-mono">
-                {((Number(ownerShare.percentage) / 100) * 20).toFixed(2)} €
-              </p>
+              {prizeAmountCents > 0 ? (
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold text-lottery font-mono">
+                    {((prizeAmountCents / 100) * (Number(ownerShare.percentage) / 100)).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                  </p>
+                  <span className="inline-block px-1.5 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    {ownerShare.prize_paid_confirmed ? 'COBRADO' : 'CUSTODIO'}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-[10px] text-gray-500 font-mono">
+                  {((Number(ownerShare.percentage) / 100) * 20).toFixed(2)} €
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -457,9 +470,26 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                     <span className="text-base font-extrabold font-mono text-blue-700">
                       {share.percentage}%
                     </span>
-                    <p className="text-[10px] text-gray-400 font-mono">
-                      {((Number(share.percentage) / 100) * 20).toFixed(2)} €
-                    </p>
+                    {prizeAmountCents > 0 ? (
+                      <div className="space-y-0.5">
+                        <p className="text-[11px] font-bold text-blue-700 font-mono">
+                          {((prizeAmountCents / 100) * (Number(share.percentage) / 100)).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                        </p>
+                        <span
+                          className={`inline-block px-1.5 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase border ${
+                            share.prize_paid_confirmed
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                              : 'bg-amber-100 text-amber-800 border-amber-300'
+                          }`}
+                        >
+                          {share.prize_paid_confirmed ? 'COBRO CONFIRMADO' : 'PENDIENTE DE COBRO'}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-gray-400 font-mono">
+                        {((Number(share.percentage) / 100) * 20).toFixed(2)} €
+                      </p>
+                    )}
                   </div>
 
                   {/* Menú de acciones para el Propietario (Solicitar Renuncia) */}
