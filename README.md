@@ -29,15 +29,18 @@
 │   ├── components/
 │   │   ├── common/             # VersionBadge anti-caché y modales
 │   │   ├── layout/             # AppShell, Header y BottomNav fijo
-│   │   └── pwa/                # PwaInstallBanner nativo e instrucciones iOS
+│   │   ├── pwa/                # PwaInstallBanner nativo e instrucciones iOS
+│   │   └── tickets/            # Escáner GS1-128, alta de décimo y boleto realista
 │   ├── context/
 │   │   └── AuthContext.tsx     # Sesión OTP y persistencia de deep-links
 │   ├── lib/
 │   │   ├── sanitize.ts         # Sanitización XSS y validación de URLs
+│   │   ├── selaeBarcodeParser.ts # Parser de códigos de barras GS1-128 SELAE
 │   │   └── supabase.ts         # Cliente Supabase singleton
 │   ├── pages/
 │   │   ├── LoginPage.tsx       # Login OTP por Email con soporte de pegado
-│   │   ├── TicketsPage.tsx     # Pestaña Billetes
+│   │   ├── TicketsPage.tsx     # Dashboard Billetes Compartidos
+│   │   ├── TicketDetailPage.tsx# Detalle del décimo, bloqueo y auditoría
 │   │   ├── AlertsPage.tsx      # Pestaña Alertas con Realtime
 │   │   ├── AuditPage.tsx       # Pestaña Auditoría
 │   │   └── ProfilePage.tsx     # Mi Perfil, subida WebP y switch Web Push

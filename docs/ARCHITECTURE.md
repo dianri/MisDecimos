@@ -174,3 +174,22 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 2. La suscripción (`endpoint`, `p256dh`, `auth`) se persiste en `public.web_push_subscriptions` asociada al usuario autenticado.
 3. Al dispararse un evento crítico en la base de datos (nueva invitación, renuncia, premio o liquidación), un trigger o llamada a Supabase Edge Function (`supabase/functions/push-notifier`) recupera la clave privada VAPID de Supabase Secrets y despacha la notificación cifrada al Push Service correspondiente (FCM / Mozilla / Apple).
 4. El Service Worker `sw.js` recibe el evento `push`, muestra la notificación con iconos de alta resolución y badge monocromo, y redirige a la URL absoluta correspondiente `https://misdecimos.dianrie.com/...`.
+
+---
+
+## 4. Captura GS1-128 y Motor de Plantillas de Boletos
+
+### Parser de Códigos de Barras SELAE (`src/lib/selaeBarcodeParser.ts`)
+- **Estructura Decodificada:** Normaliza secuencias numéricas canónicas de 20 a 24 dígitos (Code-128, GS1-128, ITF) presentes en los décimos físicos de Lotería Nacional:
+  - Extracción de número de 5 dígitos (`^\d{5}$`).
+  - Detección de Serie (3 dígitos) y Fracción (2 dígitos).
+  - Normalización ante errores comunes de caracteres alfabéticos (`O->0`, `I/L->1`, `S->5`, `B->8`, `Z->2`).
+  - Detección de tipo de sorteo (`NAVIDAD`, `EL_NINO`, `JUEVES`, `SABADO`, `ESPECIAL`) y precio oficial por defecto.
+
+### Motor de Renderizado Híbrido (`<RealisticTicketCard />`)
+- **Modo Plantilla Oficial (`draw_templates`):** Cuando existe una plantilla oficial registrada en la base de datos con `template_image_url`, superpone dinámicamente el número registrado, serie, fracción, fecha e importe según las coordenadas porcentuales de `overlay_config`.
+- **Modo Vectorial Realista:** Si no se dispone de imagen externa, genera una réplica fotorrealista en SVG/CSS del boleto nacional:
+  - Trama guilloche geométrica decorativa en verde lotería `#2E6146` y oro `#D97706`.
+  - Capilla artística con el sello oficial **MisDecimos · SELLO DIGITAL**.
+  - Tipografía matricial monoespaciada emulando la imprenta de la Fábrica Nacional de Moneda y Timbre (FNMT).
+  - Código de barras GS1-128 simulado con checksum visible en la base.

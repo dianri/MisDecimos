@@ -5,6 +5,7 @@ import { safeImageUrl } from '../../lib/sanitize'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
 import { VersionBadge } from '../common/VersionBadge'
 import { TicketsPage } from '../../pages/TicketsPage'
+import { TicketDetailPage } from '../../pages/TicketDetailPage'
 import { AlertsPage } from '../../pages/AlertsPage'
 import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
@@ -15,6 +16,7 @@ export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 export const AppShell: React.FC = () => {
   const { user, profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('billetes')
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
   const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(0)
 
   // Consultar notificaciones no leídas y suscribirse a Realtime
@@ -106,7 +108,22 @@ export const AppShell: React.FC = () => {
 
       {/* 3. Contenedor de Contenido Principal según Pestaña */}
       <main className="max-w-xl mx-auto px-4 pt-4 flex-1 w-full">
-        {activeTab === 'billetes' && <TicketsPage />}
+        {activeTab === 'billetes' && (
+          selectedTicketId ? (
+            <TicketDetailPage
+              ticketId={selectedTicketId}
+              onBack={() => setSelectedTicketId(null)}
+            />
+          ) : (
+            <TicketsPage
+              onSelectTicket={(id) => setSelectedTicketId(id)}
+              onNavigateToAlerts={() => {
+                setSelectedTicketId(null)
+                setActiveTab('alertas')
+              }}
+            />
+          )
+        )}
         {activeTab === 'alertas' && <AlertsPage />}
         {activeTab === 'auditoria' && <AuditPage />}
         {activeTab === 'perfil' && <ProfilePage />}
@@ -124,7 +141,12 @@ export const AppShell: React.FC = () => {
           {/* Pestaña: Billetes */}
           <button
             type="button"
-            onClick={() => setActiveTab('billetes')}
+            onClick={() => {
+              if (activeTab === 'billetes') {
+                setSelectedTicketId(null)
+              }
+              setActiveTab('billetes')
+            }}
             className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
               activeTab === 'billetes'
                 ? 'text-lottery font-bold'
