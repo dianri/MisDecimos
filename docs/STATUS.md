@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `0.2.0`  
+**Versión Actual:** `0.3.0`  
 **Última Actualización:** 2026-11-15  
-**Rama Activa:** `develop` (Fase 2 completada y fusionada)    
+**Rama Activa:** `develop` (Fase 3 completada y fusionada)  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
 ---
@@ -36,11 +36,13 @@
 
 ---
 
-### [ ] Fase 3 (v0.3.0) — Captura de Décimos (GS1-128 / Código de Barras / Manual) y Boleto Realista
-- [ ] Escáner con cámara de código de barras GS1-128 / Code 128 (SELAE).
-- [ ] Formulario de alta manual con validación de número (5 dígitos), serie y fracción.
-- [ ] Visualización de boleto realista interactivo usando `draw_templates` (sin subida pesada de fotos).
-- [ ] Donut SVG interactivo del desglose de participaciones en tiempo real.
+### [x] Fase 3 (v0.3.0) — Captura de Décimos (GS1-128 / Código de Barras / Manual) y Boleto Realista
+- [x] Parser de código de barras GS1-128 / Code-128 de SELAE (`selaeBarcodeParser.ts`).
+- [x] Modal de escáner multimodal con cámara y subida de imagen (`html5-qrcode`).
+- [x] Modal de alta manual y sincronización con `create_ticket` RPC.
+- [x] Componente de boleto digital realista `<RealisticTicketCard />` con plantillas oficiales y guilloche.
+- [x] Dashboard principal `Mis Billetes Compartidos` con filtrado por pestañas y deep-link de invitación.
+- [x] Vista de detalle del décimo `TicketDetailPage` con estado, auditoría y bloqueo de seguridad.
 
 ---
 
