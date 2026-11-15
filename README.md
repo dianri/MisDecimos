@@ -70,8 +70,29 @@ Crear un archivo `.env` en la raíz (puedes copiar de `.env.example`):
 
 ```bash
 VITE_SUPABASE_URL=https://xmdghpyfrblmtjtevtru.supabase.co
-VITE_SUPABASE_ANON_KEY=<tu-anon-key-de-supabase>
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtZGdocHlmcmJsbXRqdGV2dHJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ3NjU2NzIsImV4cCI6MjExMDM0MTY3Mn0.W8VjcQB4nV8IPZGCKsAiZEF-xIza_CZMRdw8LY3f-QM
+VITE_VAPID_PUBLIC_KEY=BJEnxKuSifaT3qA_Go4HgQ-TUhDy2_f_BowWw6e-SpMLfRNan7ly83swkhQYQ8bnetdwWC8a6RbMSB8lUoh_4b8
 ```
+
+---
+
+## ☁️ Despliegue en Producción (Vercel)
+
+La aplicación está completamente optimizada para desplegarse en **Vercel** como Mobile-First PWA:
+
+1. **Configuración del Proyecto en Vercel:**
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** `./`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm install`
+2. **Variables de Entorno en Vercel Dashboard (`Settings` -> `Environment Variables`):**
+   - `VITE_SUPABASE_URL` = `https://xmdghpyfrblmtjtevtru.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtZGdocHlmcmJsbXRqdGV2dHJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ3NjU2NzIsImV4cCI6MjExMDM0MTY3Mn0.W8VjcQB4nV8IPZGCKsAiZEF-xIza_CZMRdw8LY3f-QM`
+   - `VITE_VAPID_PUBLIC_KEY` = `BJEnxKuSifaT3qA_Go4HgQ-TUhDy2_f_BowWw6e-SpMLfRNan7ly83swkhQYQ8bnetdwWC8a6RbMSB8lUoh_4b8`
+3. **Mecanismo Anti-Caché y SPA:**
+   - El archivo `vercel.json` garantiza que todas las rutas profundas (`/invite/:token`, `/billetes/:id`, etc.) se sirvan limpiamente sin errores 404.
+   - Las cabeceras HTTP `Cache-Control: public, max-age=0, must-revalidate` sobre `sw.js`, `push-sw.js` y `manifest.webmanifest` aseguran que las actualizaciones se sirvan de inmediato a los clientes móviles sin retención en CDN ni navegadores.
 
 ---
 
