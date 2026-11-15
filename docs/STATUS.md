@@ -1,0 +1,99 @@
+# Panel de Estado del Proyecto — MisDecimos
+
+**Versión Actual:** `1.0.0` (Producción Lista · Release 1.0.0)  
+**Última Actualización:** 2026-11-15  
+**Rama de Producción:** `main` (Tag `v1.0.0`)  
+**Rama Activa de Desarrollo:** `develop`  
+**Backend Supabase:** `xmdghpyfrblmtjtevtru`
+
+---
+
+## 🧭 Fases del Proyecto — Estado General de Entrega
+
+### [x] Fase 1 (v0.1.0) — Cimientos, Gobernanza y Esquema Central
+- [x] Ramas base Git Flow (`main`, `develop`) y workflow multi-agente (`AGENTS.md`).
+- [x] Workflows de Antigravity en `.agent/workflows/`.
+- [x] Documentación de Arquitectura, Estado y Reglas de Negocio en `/docs`.
+- [x] Migración SQL inicial (`20261115000001_init_misdecimos_schema.sql`):
+  - [x] Tablas: `profiles`, `draw_templates`, `tickets`, `ownership_shares`, `pending_invites`, `ticket_archive_hides`, `audit_events`, `notifications`, `web_push_subscriptions`.
+  - [x] Triggers automáticos (creación de perfil al autenticar con OTP).
+  - [x] Políticas RLS estrictas para todas las tablas.
+  - [x] Funciones RPC transaccionales `SECURITY DEFINER` (creación de décimos, reparto igualitario, gestión de invitaciones, renuncias y confirmación de premios).
+  - [x] Publicaciones Realtime activadas.
+- [x] Configuración frontend React + Vite + TypeScript + Tailwind CSS.
+- [x] PWA configurada con `vite-plugin-pwa` y manifiesto completo.
+- [x] Componente `<VersionBadge />` anti-caché con control de SW y purga en 1 clic.
+- [x] Cliente Supabase en `src/lib/supabase.ts` y tipos generados en `src/types/database.types.ts`.
+
+---
+
+### [x] Fase 2 (v0.2.0) — Autenticación OTP y Gestión de Perfil
+- [x] Flujo de login sin contraseña por Email OTP vía Supabase Auth con deep-link de invitación.
+- [x] App Shell Mobile-First con cabecera y BottomNav de 4 pestañas (Billetes, Alertas con badge en tiempo real, Auditoría, Perfil).
+- [x] Módulo de sanitización de entradas (`sanitizeText`, `safeImageUrl`).
+- [x] Migración del bucket `avatars` en Supabase Storage con RLS por usuario.
+- [x] Pantalla de perfil de usuario con avatar circular, compresión WebP en cliente y subida a bucket `avatars`.
+- [x] Gestión de suscripción Web Push nativa y banner de instalación PWA (Android / iOS).
+
+---
+
+### [x] Fase 3 (v0.3.0) — Captura de Décimos (GS1-128 / Código de Barras / Manual) y Boleto Realista
+- [x] Parser de código de barras GS1-128 / Code-128 de SELAE (`selaeBarcodeParser.ts`).
+- [x] Modal de escáner multimodal con cámara y subida de imagen (`html5-qrcode`).
+- [x] Modal de alta manual y sincronización con `create_ticket` RPC.
+- [x] Componente de boleto digital realista `<RealisticTicketCard />` con plantillas oficiales y guilloche.
+- [x] Dashboard principal `Mis Billetes Compartidos` con filtrado por pestañas y deep-link de invitación.
+- [x] Vista de detalle del décimo `TicketDetailPage` con estado, auditoría y bloqueo de seguridad.
+
+---
+
+### [x] Fase 4 (v0.4.0) — Reparto de Participaciones, Códigos de 6 Dígitos e Invitaciones
+- [x] Cuadro de propiedad interactivo y gráfico Donut SVG (`OwnershipBreakdownCard.tsx`).
+- [x] Bottom Sheet `Nueva participación` con modos Porcentaje Manual y Partes Iguales (`CreateParticipationSheet.tsx`).
+- [x] Modal de invitación con código de 6 dígitos, QR dinámico y compartir por WhatsApp (`ShareInviteModal.tsx`).
+- [x] Modal de reclamo y rechazo de invitaciones pendientes (`reject_pending_invite` en `<InviteClaimModal />`).
+- [x] Flujo bilateral estricto de solicitud y respuesta de renuncia de cotitulares (`waiver_requested`, `request_share_waiver`, `respond_share_waiver`).
+- [x] Cancelación de invitaciones pendientes por el propietario (`cancel_pending_invite`) con devolución íntegra de cuota.
+- [x] Línea temporal enriquecida de auditoría del décimo con iconos, badges y metadatos (`TicketAuditTimeline.tsx`).
+
+---
+
+### [x] Fase 5 (v0.5.0) — Liquidación de Premios, Comprobación SELAE y Auditoría Inmutable
+- [x] Migración RPC de comprobación (`record_ticket_prize_check`), recordatorios (`request_payout_confirmation_reminder`) y liquidación (`confirm_prize_received`).
+- [x] Edge Function `check-prizes` desplegada y activa con motores El País (Navidad/Niño) y fallback Loterías API.
+- [x] Tarjeta de comprobación `<PrizeCheckCard />` con botón de búsqueda, desglose proporcional de premio y nota legal.
+- [x] Flujo de confirmación de cobro ("He recibido mi premio") para cotitulares y propietarios.
+- [x] Estado `LIQUIDADO` del décimo tras cobro unánime de todos los participantes.
+- [x] Visualización de premios y estados de cobro en `<OwnershipBreakdownCard />` y línea temporal `<TicketAuditTimeline />`.
+
+---
+
+### [x] Fase 6 (v0.6.0) — Notificaciones Push en Background, Automatización y QA End-to-End
+- [x] Generación de claves VAPID y configuración de secretos en Supabase (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+- [x] Service Worker con soporte nativo para eventos `push` y `notificationclick` (`public/push-sw.js`).
+- [x] Edge Function `send-push` desplegada con `npm:web-push`, soporte para pruebas y auto-limpieza 404/410.
+- [x] Trigger PostgreSQL no bloqueante en `public.notifications` con extensión `pg_net`.
+- [x] RPC `mark_all_notifications_read` para marcado masivo de alertas leídas.
+- [x] Pantalla `Mis Notificaciones` con diseño fiel, marcas temporales `HH:mm - DD/MM` y acciones de renuncia directa.
+- [x] Pantalla `Auditoría` global con buscador en tiempo real, chips de categoría y marco educativo de las 4 reglas.
+
+---
+
+### 🚀 Release de Producción (v1.0.0)
+- [x] Configuración de enrutado SPA y cabeceras anti-caché en `vercel.json`.
+- [x] Metaetiquetas móviles PWA completas en `index.html`.
+- [x] Fusión en `develop` y promoción definitiva a `main`.
+- [x] Etiquetado con tag anotado de Git `v1.0.0`.
+
+### [ ] Fase 5 (v0.5.0) — Auditoría Inmutable, Comprobación de Sorteos y Liquidación
+- [ ] Comprobación automática de premios (Lotería de Navidad, El Niño y LoteriasAPI).
+- [ ] Historial inmutable de auditoría por décimo (`audit_events`).
+- [ ] Flujo de confirmación de cobro de premios por participante.
+- [ ] Cierre automático del décimo al estado `LIQUIDADO` y animación de confeti.
+
+---
+
+### [ ] Fase 6 (v0.6.0) — Web Push Nativo VAPID y Experiencia Offline PWA
+- [ ] Integración Web Push VAPID para Android y pantalla de inicio de iOS (PWA standalone).
+- [ ] Notificaciones en segundo plano para invitaciones, renuncias y premios.
+- [ ] Caché offline de décimos y sincronización resiliente al recuperar red.
