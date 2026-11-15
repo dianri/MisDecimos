@@ -66,5 +66,29 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(packageJson.version),
     __COMMIT_HASH__: JSON.stringify(commitHash),
     __BUILD_TIME__: JSON.stringify(buildTime)
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@supabase/supabase-js') || id.includes('@supabase/')) {
+              return 'vendor-supabase'
+            }
+            if (id.includes('html5-qrcode') || id.includes('qrcode.react')) {
+              return 'vendor-scanner'
+            }
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/react-router-dom/') ||
+              id.includes('/scheduler/')
+            ) {
+              return 'vendor-react'
+            }
+          }
+        }
+      }
+    }
   }
 })

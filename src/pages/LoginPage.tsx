@@ -78,14 +78,26 @@ export const LoginPage: React.FC = () => {
 
     try {
       setIsLoading(true)
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
+      const cleanEmail = email.trim().toLowerCase()
+      const { error: emailError } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
         token: code,
         type: 'email',
       })
 
-      if (error) {
-        throw error
+      if (emailError) {
+        // Si type: 'email' devuelve error (habitual en usuario recién creado sin confirmar),
+        // reintentamos automáticamente con type: 'signup'
+        console.warn('verifyOtp con type: email falló, reintentando con type: signup...', emailError.message)
+        const { error: signupError } = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: code,
+          type: 'signup',
+        })
+
+        if (signupError) {
+          throw signupError
+        }
       }
 
       // La sesión se actualiza automáticamente y AuthContext detectará el cambio
@@ -273,7 +285,7 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <p className="mt-6 text-[11px] text-gray-400 text-center max-w-xs">
-        MisDecimos v0.2.0 · Plataforma segura PWA de reparto de Lotería
+        MisDecimos v{__APP_VERSION__} · Plataforma segura PWA de reparto de Lotería
       </p>
 
       {/* Control visual de versión anti-caché */}
