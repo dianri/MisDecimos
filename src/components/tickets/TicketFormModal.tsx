@@ -18,17 +18,35 @@ type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
 
 export interface TicketFormModalProps {
   isOpen: boolean
+  initialTab?: 'scanner' | 'manual'
   onClose: () => void
   onCreated: (ticketId: string) => void
 }
 
 export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   isOpen,
+  initialTab = 'manual',
   onClose,
   onCreated,
 }) => {
   const [tab, setTab] = useState<'scan' | 'manual'>('manual')
   const [isScannerOpen, setIsScannerOpen] = useState(false)
+
+  // Sincronizar pestaña inicial y escáner al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      if (initialTab === 'scanner') {
+        setTab('scan')
+        setIsScannerOpen(true)
+      } else {
+        setTab('manual')
+        setIsScannerOpen(false)
+      }
+      setErrorMsg(null)
+    } else {
+      setIsScannerOpen(false)
+    }
+  }, [isOpen, initialTab])
 
   // Campos del décimo
   const [number, setNumber] = useState('')
@@ -376,7 +394,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
       <BarcodeScannerModal
         isOpen={isScannerOpen}
         mode="TICKET_BARCODE"
-        onClose={() => setIsScannerOpen(false)}
+        onClose={() => {
+          setIsScannerOpen(false)
+          setTab('manual')
+        }}
         onScanSuccess={handleBarcodeScanned}
       />
     </>
