@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.7] - 2026-11-16
+
+### Changed
+- **Pestaña "Partes iguales" como primera opción por defecto (`CreateParticipationSheet.tsx`):**
+  - Invertido el orden visual de las pestañas en el selector superior: ahora *Partes iguales* se sitúa en la primera posición (izquierda) y *Porcentaje manual* en la segunda (derecha).
+  - Inicialización inteligente del modo: si el custodio conserva el 100% de la cuota (sin participaciones previas), la hoja se abre automáticamente en *Partes iguales*; si ya existen participaciones parciales previas, conmuta de forma automática a *Porcentaje manual*.
+  - En *Porcentaje manual*, se predetermina un valor inicial del 20% (o el máximo disponible) en lugar del 1%, adaptado al reparto habitual de participaciones.
+- **Documentación de Pantallas (`docs/SCREENS_GUIDE.md`):** Actualizado el manual de pantallas reflejando la nueva disposición de pestañas y comportamiento por defecto de `<CreateParticipationSheet />`.
+
 ## [1.0.6] - 2026-11-16
 
 ### Fixed
