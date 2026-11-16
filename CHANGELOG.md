@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.3] - 2026-11-16
+
+### Added
+- **Manual Funcional de Pantallas (`docs/SCREENS_GUIDE.md`):** Documentación exhaustiva y detallada de cada pantalla, modal y control de la aplicación (Login OTP, AppShell, Dashboard de Billetes, Detalle con boleto realista, Cuadro de Propiedad Donut SVG, Comprobador de Premios con IRPF, Bandeja de Alertas, Centro de Auditoría y Perfil/PWA) con enlaces relativos directos a los componentes de código fuente.
+- **Índice de Navegación Rápida en `README.md`:** Incorporadas dos tablas interactivas con enlaces relativos Markdown para acceso inmediato a la documentación/decisiones del proyecto y acceso directo al código por pantalla o módulo funcional.
+- **Actualización de Normas Multi-Agente (`AGENTS.md`):** Inclusión de `docs/SCREENS_GUIDE.md` en el protocolo de revisión obligatoria previa a merge.
+
 ## [1.0.2] - 2026-11-16
 
 ### Fixed

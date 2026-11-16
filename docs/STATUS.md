@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.2` (Producción Estable · Parche RLS y Creación de Billetes)  
+**Versión Actual:** `1.0.3` (Producción Estable · Navegación Rápida y Manual de Pantallas)  
 **Última Actualización:** 2026-11-16  
-**Rama de Producción:** `main` (Tag `v1.0.2`)  
+**Rama de Producción:** `main` (Tag `v1.0.3`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
