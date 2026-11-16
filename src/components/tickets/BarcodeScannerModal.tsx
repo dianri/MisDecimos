@@ -146,7 +146,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
       <div
         className="w-full max-w-sm rounded-3xl bg-gray-900 border border-gray-800 text-white shadow-2xl overflow-hidden flex flex-col"
         role="dialog"
