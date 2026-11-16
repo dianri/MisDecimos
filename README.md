@@ -4,6 +4,48 @@
 
 ---
 
+## 🗺️ Índice Rápido de Navegación
+
+### 📚 Documentación y Decisiones del Proyecto
+
+| Documento | Descripción |
+| :--- | :--- |
+| [Guía de Pantallas y Flujos de Usuario](./docs/SCREENS_GUIDE.md) | Qué hace cada vista, modal y botón de la aplicación. |
+| [Reglas de Negocio y Decisiones Funcionales](./docs/BUSINESS_RULES.md) | Fórmulas de reparto, estados del décimo, renuncias y liquidación. |
+| [Arquitectura Técnica y Base de Datos](./docs/ARCHITECTURE.md) | Esquema ER de las tablas, catálogo de RPCs, GS1-128 y Edge Functions. |
+| [Estado del Proyecto y Roadmap](./docs/STATUS.md) | Fases completadas, versión activa y trazabilidad de releases. |
+| [Reglas de Agentes y Git Flow](./AGENTS.md) | Normas de ingeniería, flujo Git estricto y concurrencia multi-agente. |
+| [Historial de Versiones (Changelog)](./CHANGELOG.md) | Registro cronológico detallado de cambios por versión. |
+
+### 🖥️ Acceso Directo al Código por Pantalla / Módulo
+
+| Módulo / Pantalla | Componente / Archivo Fuente | Descripción |
+| :--- | :--- | :--- |
+| **Login y OTP** | [`src/pages/LoginPage.tsx`](./src/pages/LoginPage.tsx) · [`src/context/AuthContext.tsx`](./src/context/AuthContext.tsx) | Autenticación OTP por email, reintento `email`/`signup` y gestión de tokens. |
+| **Shell y Navegación** | [`src/components/layout/AppShell.tsx`](./src/components/layout/AppShell.tsx) | Header, BottomNav fijo de 4 pestañas y contador Realtime de alertas. |
+| **Anti-Caché PWA** | [`src/components/common/VersionBadge.tsx`](./src/components/common/VersionBadge.tsx) | Badge visual dinámico, diagnóstico y purga de caché/SW en 1 clic. |
+| **Billetes (Dashboard)** | [`src/pages/TicketsPage.tsx`](./src/pages/TicketsPage.tsx) | Métricas, filtros (Mis Décimos, Participaciones, Archivados) y lista. |
+| **Tarjeta de Listado** | [`src/components/tickets/TicketListItemCard.tsx`](./src/components/tickets/TicketListItemCard.tsx) | Ficha resumen con insignia de custodia, porcentaje y estado. |
+| **Alta de Décimos** | [`src/components/tickets/TicketFormModal.tsx`](./src/components/tickets/TicketFormModal.tsx) | Modal de captura (manual vs escaneo) y llamada a RPC `create_ticket`. |
+| **Escáner GS1-128 / QR** | [`src/components/tickets/BarcodeScannerModal.tsx`](./src/components/tickets/BarcodeScannerModal.tsx) · [`src/lib/selaeBarcodeParser.ts`](./src/lib/selaeBarcodeParser.ts) | Cámara con linterna, selector de foto y parser de códigos de SELAE. |
+| **Canje de Invitaciones** | [`src/components/tickets/InviteClaimModal.tsx`](./src/components/tickets/InviteClaimModal.tsx) | Previsualización y asignación/rechazo de participaciones por código o QR. |
+| **Detalle del Décimo** | [`src/pages/TicketDetailPage.tsx`](./src/pages/TicketDetailPage.tsx) | Vista integral de boleto, auditoría, cuotas y liquidación de premios. |
+| **Boleto Realista** | [`src/components/tickets/RealisticTicketCard.tsx`](./src/components/tickets/RealisticTicketCard.tsx) | Replicación fiel de billete oficial con guilloche y sellos de seguridad. |
+| **Comprobador de Premios**| [`src/components/tickets/PrizeCheckCard.tsx`](./src/components/tickets/PrizeCheckCard.tsx) | Consulta de premios en vivo, desglose de IRPF y confirmación de cobro. |
+| **Cuadro de Propiedad** | [`src/components/tickets/OwnershipBreakdownCard.tsx`](./src/components/tickets/OwnershipBreakdownCard.tsx) | Gráfico Donut SVG (`100% Distribuido`), lista de cotitulares y renuncias. |
+| **Reparto y Cuotas** | [`src/components/tickets/CreateParticipationSheet.tsx`](./src/components/tickets/CreateParticipationSheet.tsx) | Reparto manual o a partes iguales con absorción de redondeos. |
+| **Compartir Invitación** | [`src/components/tickets/ShareInviteModal.tsx`](./src/components/tickets/ShareInviteModal.tsx) | Generación de enlace web, PIN de 6 dígitos, código QR y botón WhatsApp. |
+| **Línea de Auditoría** | [`src/components/tickets/TicketAuditTimeline.tsx`](./src/components/tickets/TicketAuditTimeline.tsx) | Historial inmutable de eventos por décimo. |
+| **Bandeja de Alertas** | [`src/pages/AlertsPage.tsx`](./src/pages/AlertsPage.tsx) | Notificaciones Realtime, marcado masivo y botones directos de renuncia. |
+| **Centro de Auditoría** | [`src/pages/AuditPage.tsx`](./src/pages/AuditPage.tsx) | Las 4 Reglas de Oro, buscador global y filtrado por categorías. |
+| **Perfil y Ajustes** | [`src/pages/ProfilePage.tsx`](./src/pages/ProfilePage.tsx) | Edición de perfil, avatar WebP, interruptor Push y test de notificación. |
+| **Servicio Web Push** | [`src/services/push/pushSubscription.ts`](./src/services/push/pushSubscription.ts) · [`public/push-sw.js`](./public/push-sw.js) | Suscripción VAPID y manejador de notificaciones del Service Worker. |
+| **Instalador PWA** | [`src/components/pwa/PwaInstallBanner.tsx`](./src/components/pwa/PwaInstallBanner.tsx) | Prompt nativo en Android y tutorial guiado en iOS Safari. |
+| **Edge Functions** | [`supabase/functions/check-prizes/index.ts`](./supabase/functions/check-prizes/index.ts) · [`supabase/functions/send-push/index.ts`](./supabase/functions/send-push/index.ts) | Comprobación de lotería y envío asíncrono de notificaciones Web Push. |
+| **Migraciones SQL** | [`supabase/migrations/`](./supabase/migrations/) | Migraciones PostgreSQL (tablas, RLS, triggers y RPCs transaccionales). |
+
+---
+
 ## 🛠️ Stack Tecnológico
 
 - **Frontend:** React 18+, Vite 6, TypeScript, Tailwind CSS, Lucide React, `vite-plugin-pwa`.
@@ -24,6 +66,7 @@
 ├── docs/
 │   ├── ARCHITECTURE.md         # Modelo ER, catálogo de RPCs y diseño Web Push
 │   ├── BUSINESS_RULES.md       # Reglas de negocio inmutables
+│   ├── SCREENS_GUIDE.md        # Manual funcional de pantallas y flujos
 │   └── STATUS.md               # Panel vivo del estado del proyecto
 ├── public/
 │   ├── push-sw.js              # Service Worker para eventos Web Push nativos

@@ -44,4 +44,4 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
 4. **Regeneración de tipos TypeScript:**
    - Tras cualquier cambio en PostgreSQL, regenerar `src/types/database.types.ts` desde Supabase (`xmdghpyfrblmtjtevtru`).
 5. **Cierre de tarea:**
-   - Es obligatorio actualizar `CHANGELOG.md`, `README.md`, `docs/STATUS.md` y comprobar si `AGENTS.md` o `docs/ARCHITECTURE.md` requieren actualización antes de integrar la rama en `develop`.
+   - Es obligatorio actualizar `CHANGELOG.md`, `README.md`, `docs/STATUS.md` y comprobar si `AGENTS.md`, `docs/ARCHITECTURE.md` o `docs/SCREENS_GUIDE.md` requieren actualización antes de integrar la rama en `develop`.
