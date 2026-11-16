@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.6] - 2026-11-16
+
+### Fixed
+- **Gestión de Invitaciones no Reclamadas en Décimos Validados (`OwnershipBreakdownCard.tsx`):**
+  - Habilitado el botón visible **"Eliminar"** (con icono de papelera en rojo) en cada invitación `PENDIENTE` para el propietario sin importar si el décimo se encuentra en estado `PENDIENTE`, `VALIDADO` o `ARCHIVADO` (salvo `LIQUIDADO`), devolviendo de forma inmediata el `%` a la cuota del propietario.
+  - Añadido el botón masivo **"Cancelar todas las pendientes (recuperar X%)"** cuando existen 2 o más invitaciones pendientes, ejecutando la nueva RPC atómica `cancel_all_pending_invites`.
+  - Mantenido disponible el botón inferior **"Añadir participación"** tanto en estado `PENDIENTE` como en `VALIDADO` mientras el propietario conserve cuota libre.
+- **Eliminación de Décimos Validados sin Terceros (`TicketDetailPage.tsx`):**
+  - Habilitado el botón **"Eliminar décimo"** para el propietario tanto en estado `PENDIENTE` como en `VALIDADO` siempre que no existan cuotas de terceros con `status = 'ACEPTADA'`.
+- **RPCs y Políticas RLS en Supabase:**
+  - Creada y aplicada la migración `20261116000008_allow_cancel_invites_in_validated_tickets.sql` que flexibiliza `cancel_pending_invite` y define la función RPC `cancel_all_pending_invites(p_ticket_id UUID)`.
+
 ## [1.0.5] - 2026-11-16
 
 ### Changed

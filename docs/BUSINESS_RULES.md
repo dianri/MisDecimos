@@ -10,9 +10,11 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 1. **`PENDIENTE`:**
    - Estado inicial al registrar el décimo.
-   - **Permisos de edición y eliminación:** El propietario solo puede modificar o borrar el décimo si **ningún** participante tercero tiene una participación en estado `ACEPTADA`. Si existen participaciones aceptadas por otros usuarios, el décimo queda bloqueado contra edición de metadatos o eliminación.
+   - **Permisos de gestión y eliminación:** El propietario puede cancelar invitaciones no reclamadas o borrar el décimo si **ningún** participante tercero tiene una participación en estado `ACEPTADA`. Si existen participaciones aceptadas por otros usuarios, el décimo queda bloqueado contra edición de metadatos o eliminación directa.
 2. **`VALIDADO`:**
    - Se alcanza tras ejecutarse la comprobación oficial del sorteo frente a las fuentes de datos.
+   - **Independencia de gestión de cuotas no reclamadas:** La validación del sorteo **no bloquea** la gestión de invitaciones pendientes (`status = 'PENDIENTE'`). El propietario puede cancelarlas individualmente o en bloque y recuperar su cuota al 100%, así como añadir nuevas participaciones mientras conserve porcentaje disponible.
+   - Asimismo, el propietario puede eliminar el décimo en estado `VALIDADO` siempre que no existan cuotas de terceros con `status = 'ACEPTADA'`.
    - Si el décimo no resulta premiado (`prize_amount_cents = 0`), permanece en este estado para archivo histórico.
 3. **`ARCHIVADO`:**
    - La acción de archivar no borra ni modifica globalmente el décimo; se gestiona de forma individual por usuario mediante la tabla de relación `public.ticket_archive_hides`.
@@ -44,7 +46,7 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 ## 3. Cancelación y Rechazo de Invitaciones Pendientes (Cero Porcentaje Huérfano)
 
-- **Cancelación por el Propietario:** El propietario puede cancelar cualquier invitación en estado `PENDIENTE` en cualquier momento antes de su aceptación. La función RPC marca la invitación como `CANCELADA` y **suma inmediatamente el porcentaje cancelado a la participación del propietario**.
+- **Cancelación por el Propietario (Individual o Masiva):** El propietario puede cancelar cualquier invitación en estado `PENDIENTE` en cualquier momento antes de su aceptación, tanto individualmente como en bloque mediante `cancel_all_pending_invites`, sin importar si el décimo se encuentra en estado `PENDIENTE`, `VALIDADO` o `ARCHIVADO` (salvo que ya esté `LIQUIDADO`). La función RPC marca la invitación como `CANCELADA` y **suma inmediatamente el porcentaje cancelado a la participación del propietario**.
 - **Rechazo por el Invitado:** Si el destinatario decide rechazar la invitación, esta pasa al estado `RECHAZADA` y **su porcentaje se restituye automáticamente al propietario**.
 - **Invariante:** Bajo ninguna circunstancia puede existir porcentaje huérfano ni la suma total de participaciones activas + invitaciones pendientes puede ser distinta del 100.00%.
 
