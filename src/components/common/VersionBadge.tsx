@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
-import { Wifi, WifiOff, RefreshCw, X, ShieldCheck, Terminal, Clock, HardDriveDownload } from 'lucide-react'
+import { Wifi, WifiOff, RefreshCw, X, ShieldCheck, Terminal, Clock } from 'lucide-react'
 
 interface VersionBadgeProps {
   className?: string
@@ -11,17 +11,47 @@ export const VersionBadge: React.FC<VersionBadgeProps> = ({ className }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isPurging, setIsPurging] = useState(false)
 
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegistered(r) {
-      console.log('SW registrado correctamente:', r)
+  const { updateServiceWorker } = useRegisterSW({
+    onRegisteredSW(_swUrl, r) {
+      if (r) {
+        // Comprobar actualizaciones periódicamente cada 60 segundos
+        setInterval(() => {
+          r.update().catch((err) => console.error('Error al comprobar actualización de SW:', err))
+        }, 60 * 1000)
+
+        // Comprobar actualización al recuperar visibilidad o foco
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            r.update().catch((err) => console.error('Error al comprobar actualización de SW:', err))
+          }
+        })
+      }
+    },
+    onNeedRefresh() {
+      // Auto-aplicar la actualización inmediatamente sin mostrar ningún cartel al usuario
+      updateServiceWorker(true).catch((err) => console.error('Error al auto-actualizar SW:', err))
     },
     onRegisterError(error) {
       console.error('Error al registrar SW:', error)
     },
   })
+
+  // Recarga limpia cuando el nuevo Service Worker toma el control (clientes activos)
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      let refreshing = false
+      const handleControllerChange = () => {
+        if (!refreshing) {
+          refreshing = true
+          window.location.reload()
+        }
+      }
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
+      return () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true)
@@ -77,39 +107,6 @@ export const VersionBadge: React.FC<VersionBadgeProps> = ({ className }) => {
 
   return (
     <>
-      {/* Aviso flotante de actualización de Service Worker */}
-      {needRefresh && (
-        <aside
-          aria-label="Aviso de nueva versión"
-          className="fixed bottom-12 right-4 z-50 flex max-w-sm items-center justify-between gap-3 rounded-xl border border-gold-400 bg-white p-3.5 shadow-2xl transition-all"
-        >
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-100 text-gold-700">
-              <HardDriveDownload className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-xs font-semibold text-gray-900">Nueva versión disponible</p>
-              <p className="text-[11px] text-gray-500">Pulsa para actualizar y aplicar cambios.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => updateServiceWorker(true)}
-              className="rounded-lg bg-lottery px-3 py-1.5 text-xs font-medium text-white transition hover:bg-lottery-600 active:scale-95"
-            >
-              Actualizar
-            </button>
-            <button
-              onClick={() => setNeedRefresh(false)}
-              className="rounded-lg p-1 text-gray-400 hover:text-gray-600"
-              title="Descartar aviso"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </aside>
-      )}
-
       {/* Badge fijo y discreto */}
       <button
         onClick={() => setIsOpen(true)}
