@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import type { Database } from '../../types/database.types'
 import { ShieldCheck, Sparkles } from 'lucide-react'
 
@@ -18,8 +18,19 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
   variant = 'full',
   className = '',
 }) => {
+  const [imageLoadError, setImageLoadError] = useState(false)
   const isCompact = variant === 'compact'
-  const hasTemplateImage = template?.template_image_url && template.template_image_url.startsWith('http')
+
+  // Resetear el estado de error si cambia la URL de la plantilla
+  useEffect(() => {
+    setImageLoadError(false)
+  }, [template?.template_image_url])
+
+  const hasValidTemplateImage = Boolean(
+    template?.template_image_url &&
+    template.template_image_url.startsWith('http') &&
+    !imageLoadError
+  )
 
   const formattedDate = ticket.draw_date
     ? new Date(ticket.draw_date).toLocaleDateString('es-ES', {
@@ -38,12 +49,13 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
         background: 'linear-gradient(135deg, #FFFCF7 0%, #F5F1E8 100%)',
       }}
     >
-      {/* Fondo con imagen de plantilla oficial si existe */}
-      {hasTemplateImage ? (
+      {/* Fondo con imagen de plantilla oficial si existe y carga sin errores */}
+      {hasValidTemplateImage ? (
         <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-inner border border-gray-200">
           <img
-            src={template.template_image_url!}
+            src={template!.template_image_url!}
             alt={ticket.draw_name}
+            onError={() => setImageLoadError(true)}
             className="w-full h-full object-cover"
           />
           {/* Overlays posicionados según overlay_config */}

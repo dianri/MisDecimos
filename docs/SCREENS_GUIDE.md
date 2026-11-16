@@ -119,6 +119,7 @@ flowchart TD
 
 #### A) Tarjeta de Décimo Realista (`<RealisticTicketCard />`)
 - Representación visual del décimo con diseño fiel al papel oficial de SELAE, textura guilloché de seguridad, código de barras simulado, fecha del sorteo, precio e insignia de custodia legal asignada al propietario.
+- **Mecanismo de Fallback Anti-Imagen Rota:** Integra un listener reactivo `onError` que, ante cualquier fallo de carga o ausencia de imagen de plantilla externa (`template_image_url`), conmuta de forma automática e inmediata al motor vectorial completo (filigrana guilloché, capilla artística con sello digital `MisDecimos`, número matricial y código GS1-128), evitando iconos de imagen rota en el navegador.
 
 #### B) Comprobador Oficial de Premios (`<PrizeCheckCard />`)
 - **Consulta Oficial:** Botón *"Comprobar premio"* que invoca la Supabase Edge Function `check-prizes`, conectada a endpoints oficiales y de alta disponibilidad con caché en memoria.

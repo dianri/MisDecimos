@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.4] - 2026-11-16
+
+### Fixed
+- **Fallback Reactivo Anti-Imagen Rota en Décimo Realista (`RealisticTicketCard.tsx`):** Añadido estado reactivo `imageLoadError` con manejador `onError` en la etiqueta de imagen y reset por URL, garantizando que si una imagen de plantilla no existe o falla su carga, el componente conmuta de forma automática e imperceptible al diseño vectorial completo de Lotería Nacional (orla guilloché, capilla artística con sello digital, tipografía matricial y código GS1-128).
+- **Limpieza de URLs en Plantillas de Sorteo (`draw_templates`):** Aplicada la migración `20261116000006_fix_draw_templates_urls.sql` en Supabase estableciendo `template_image_url = NULL` en las plantillas por defecto, asegurando renderizado vectorial instantáneo desde el primer milisegundo y eliminando peticiones HTTP 404 innecesarias.
+
 ## [1.0.3] - 2026-11-16
 
 ### Added
