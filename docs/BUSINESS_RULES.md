@@ -71,19 +71,23 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 ---
 
-## 6. Captura por Código de Barras GS1-128 y Boleto Realista
+## 6. Sorteos Admitidos, Captura GS1-128 y Boleto Realista
 
+- **Sorteos Exclusivos Admitidos:** La plataforma opera exclusivamente con los dos grandes sorteos extraordinarios de Lotería Nacional:
+  1. **Lotería de Navidad (`NAVIDAD`):** Sorteo celebrado el 22 de diciembre, precio oficial 20,00 € por décimo.
+  2. **Sorteo de El Niño (`EL_NINO`):** Sorteo celebrado el 6 de enero, precio oficial 20,00 € por décimo.
+  *(Quedan expresamente excluidos los sorteos ordinarios de jueves y sábados para focalizar la experiencia en custodia compartida de sorteos extraordinarios).*
 - Para evitar costes y riesgos de almacenamiento de imágenes pesadas y problemas de privacidad, **no se permite la subida libre de fotos arbitrarias de boletos al storage**.
 - Los décimos se registran mediante:
-  1. **Lectura de Código de Barras GS1-128 / Code-128:** Decodifica número (5 dígitos), serie, fracción y fecha de sorteo.
-  2. **Entrada Manual Asistida:** En caso de desgaste del código de barras.
-- **Renderizado del Boleto Realista:** La interfaz web utiliza las plantillas maestras registradas en `public.draw_templates` y superpone mediante CSS/SVG los dígitos exactos, serie, fracción y metadatos sobre la ilustración oficial de SELAE correspondiente al año y tipo de sorteo.
+  1. **Lectura de Código de Barras GS1-128 / Code-128:** Decodifica número (5 dígitos), serie, fracción y asigna automáticamente el sorteo (`NAVIDAD` o `EL_NINO` según fecha).
+  2. **Entrada Manual Asistida:** En caso de desgaste del código de barras, con selector exclusivo de 2 botones (**Navidad** y **El Niño**).
+- **Renderizado del Boleto Realista:** La interfaz web utiliza el motor vectorial hiperrealista nativo (con orla guilloché, capilla artística con sello digital `MisDecimos`, tipografía matricial y código GS1-128), asegurando renderizado instantáneo y fallback anti-imagen rota sin errores 404.
 
 ---
 
-## 7. Verificación de Sorteos y Fuentes de Datos
+## 7. Verificación Oficial de Premios
 
-- Para Lotería de Navidad y Sorteo de El Niño, las comprobaciones se ejecutan primariamente contra los endpoints públicos de alta disponibilidad:
+- Las comprobaciones de premios se ejecutan primariamente contra los endpoints oficiales de alta disponibilidad de El País / SELAE:
   - Lotería de Navidad: `https://api.elpais.com/ws/LoteriaNavidadPremiados?n=XXXXX`
   - Sorteo de El Niño: `https://api.elpais.com/ws/LoteriaNinoPremiados?n=XXXXX`
-- Para el resto de sorteos ordinarios (jueves y sábados) o en caso de indisponibilidad de la fuente primaria, se utiliza el servicio `loteriasapi.com` ejecutado a través de Supabase Edge Functions con la API Key protegida en Supabase Secrets.
+- Como respaldo ante cualquier contingencia, se utiliza el servicio `loteriasapi.com` ejecutado a través de Supabase Edge Functions con la API Key protegida en Supabase Secrets.

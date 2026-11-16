@@ -94,7 +94,7 @@ flowchart TD
    - Abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx).
    - Permite dos métodos de captura:
      - **Modo Escáner Multimodal:** Abre la cámara trasera del móvil con selector de linterna o permite seleccionar una imagen/foto del décimo. Procesa códigos GS1-128 / ITF de SELAE extrayendo automáticamente el número de 5 dígitos, serie, fracción y fecha de sorteo.
-     - **Modo Manual:** Permite indicar sorteo (Navidad, El Niño, Jueves, Sábado, etc.), número (00000-99999), serie, fracción, fecha del sorteo y precio del décimo (por defecto 20,00 €).
+     - **Modo Manual:** Permite seleccionar el sorteo extraordinario mediante una cuadrícula limpia de 2 opciones (**Navidad** y **El Niño**), autocompletando la fecha oficial (22 de diciembre o 6 de enero), el nombre del sorteo y el precio oficial (20,00 €), además de número (00000-99999), serie y fracción.
    - Al guardar, ejecuta la RPC `create_ticket`, asegurando el 100% de titularidad inicial y navegando inmediatamente a la ficha de detalle.
 2. **Botón "Reclamar / Canjear Código" (o QR):**
    - Abre [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx).

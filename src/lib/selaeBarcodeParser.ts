@@ -7,7 +7,7 @@ export interface SelaeParsedTicket {
   number: string
   serie: string
   fraccion: string
-  drawType: 'NAVIDAD' | 'EL_NINO' | 'JUEVES' | 'SABADO' | 'ESPECIAL'
+  drawType: 'NAVIDAD' | 'EL_NINO'
   drawName: string
   drawDate: string // YYYY-MM-DD
   ticketPrice: number
@@ -53,7 +53,7 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
   let number = ''
   let serie = '001'
   let fraccion = '01'
-  let drawType: 'NAVIDAD' | 'EL_NINO' | 'JUEVES' | 'SABADO' | 'ESPECIAL' = 'NAVIDAD'
+  let drawType: 'NAVIDAD' | 'EL_NINO' = 'NAVIDAD'
   let drawDate = `${currentYear}-12-22`
   let drawName = 'Sorteo Extraordinario de Navidad'
   let ticketPrice = 20.0

@@ -8,7 +8,6 @@ import {
   Ticket,
   Camera,
   Edit3,
-  Calendar,
   Layers,
   Sparkles,
   Loader2,
@@ -35,9 +34,7 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   const [number, setNumber] = useState('')
   const [serie, setSerie] = useState('001')
   const [fraccion, setFraccion] = useState('01')
-  const [drawType, setDrawType] = useState<
-    'NAVIDAD' | 'EL_NINO' | 'JUEVES' | 'SABADO' | 'ESPECIAL'
-  >('NAVIDAD')
+  const [drawType, setDrawType] = useState<'NAVIDAD' | 'EL_NINO'>('NAVIDAD')
   const [drawName, setDrawName] = useState('Sorteo Extraordinario de Navidad')
   const [drawDate, setDrawDate] = useState('2026-12-22')
   const [ticketPrice, setTicketPrice] = useState('20.00')
@@ -77,27 +74,22 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   }, [])
 
   // Al cambiar drawType, actualizar valores por defecto
-  const handleDrawTypeChange = (type: 'NAVIDAD' | 'EL_NINO' | 'JUEVES' | 'SABADO' | 'ESPECIAL') => {
+  const handleDrawTypeChange = (type: 'NAVIDAD' | 'EL_NINO') => {
     setDrawType(type)
-    const currentYear = new Date().getFullYear()
+    const now = new Date()
+    const currentYear = now.getFullYear()
 
     if (type === 'NAVIDAD') {
-      setDrawName(`Sorteo Extraordinario de Navidad ${currentYear}`)
-      setDrawDate(`${currentYear}-12-22`)
+      const year = now > new Date(currentYear, 11, 22) ? currentYear + 1 : currentYear
+      setDrawName('Sorteo Extraordinario de Navidad')
+      setDrawDate(`${year}-12-22`)
       setTicketPrice('20.00')
-    } else if (type === 'EL_NINO') {
-      setDrawName(`Sorteo Extraordinario de El Niño ${currentYear}`)
-      setDrawDate(`${currentYear}-01-06`)
-      setTicketPrice('20.00')
-    } else if (type === 'JUEVES') {
-      setDrawName('Lotería Nacional del Jueves')
-      setTicketPrice('3.00')
-    } else if (type === 'SABADO') {
-      setDrawName('Lotería Nacional del Sábado')
-      setTicketPrice('6.00')
     } else {
-      setDrawName('Sorteo Especial Lotería Nacional')
-      setTicketPrice('15.00')
+      // El Niño es el 6 de enero
+      const year = (now.getMonth() > 0 || now.getDate() > 6) ? currentYear + 1 : currentYear
+      setDrawName('Sorteo Extraordinario de El Niño')
+      setDrawDate(`${year}-01-06`)
+      setTicketPrice('20.00')
     }
 
     // Vincular plantilla correspondiente si existe
@@ -275,31 +267,25 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
               </p>
             </div>
 
-            {/* Selector de Sorteo */}
+            {/* Selector de Sorteo (Exclusivo Navidad y El Niño) */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-700">Tipo de Sorteo</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {[
                   { id: 'NAVIDAD', label: 'Navidad', icon: Sparkles },
                   { id: 'EL_NINO', label: 'El Niño', icon: Sparkles },
-                  { id: 'JUEVES', label: 'Jueves', icon: Calendar },
-                  { id: 'SABADO', label: 'Sábado', icon: Calendar },
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() =>
-                      handleDrawTypeChange(
-                        item.id as 'NAVIDAD' | 'EL_NINO' | 'JUEVES' | 'SABADO' | 'ESPECIAL'
-                      )
-                    }
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition text-left ${
+                    onClick={() => handleDrawTypeChange(item.id as 'NAVIDAD' | 'EL_NINO')}
+                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-xs font-semibold transition text-center ${
                       drawType === item.id
-                        ? 'border-lottery bg-lottery-50/70 text-lottery font-bold shadow-xs'
+                        ? 'border-lottery bg-lottery-50/70 text-lottery font-bold shadow-xs ring-1 ring-lottery/30'
                         : 'border-gray-200 hover:border-gray-300 text-gray-600 bg-white'
                     }`}
                   >
-                    <item.icon className="h-3.5 w-3.5 shrink-0" />
+                    <item.icon className="h-4 w-4 shrink-0 text-amber-500" />
                     <span>{item.label}</span>
                   </button>
                 ))}
