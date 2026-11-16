@@ -90,12 +90,10 @@ flowchart TD
 - **Archivados:** Décimos ocultados o archivados por el usuario para limpiar su vista principal.
 
 ### Botones y Acciones:
-1. **Botón Flotante / Primario "+ Registrar Décimo":**
-   - Abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx).
-   - Permite dos métodos de captura:
-     - **Modo Escáner Multimodal:** Abre la cámara trasera del móvil con selector de linterna o permite seleccionar una imagen/foto del décimo. Procesa códigos GS1-128 / ITF de SELAE extrayendo automáticamente el número de 5 dígitos, serie, fracción y fecha de sorteo.
-     - **Modo Manual:** Permite seleccionar el sorteo extraordinario mediante una cuadrícula limpia de 2 opciones (**Navidad** y **El Niño**), autocompletando la fecha oficial (22 de diciembre o 6 de enero), el nombre del sorteo y el precio oficial (20,00 €), además de número (00000-99999), serie y fracción.
-   - Al guardar, ejecuta la RPC `create_ticket`, asegurando el 100% de titularidad inicial y navegando inmediatamente a la ficha de detalle.
+1. **Fila "Añadir un Décimo" (Botón Principal + Botón Rápido de Cámara):**
+   - **Botón Principal Verde (`Añadir décimo`):** Abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) directamente en la pestaña de **Datos Manuales** (`initialTab="manual"`), permitiendo seleccionar sorteo (**Navidad** o **El Niño**), número (5 dígitos), serie y fracción.
+   - **Botón Cuadrado con Icono de Cámara (Acceso Directo):** Ubicado a la derecha con proporción 1:1, abre directamente el escáner de cámara trasera sin pasos intermedios (`initialTab="scanner"` activando [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx) en modo GS1-128). Al detectar el código oficial del décimo físico, rellena automáticamente los datos y los presenta en pantalla para confirmación y guardado.
+   - Al guardar, ejecuta la RPC transaccional `create_ticket`, asegurando el 100% de titularidad inicial y navegando inmediatamente a la ficha de detalle.
 2. **Botón "Reclamar / Canjear Código" (o QR):**
    - Abre [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx).
    - Permite introducir el código de 6 dígitos o escanear el código QR recibido por WhatsApp/email.

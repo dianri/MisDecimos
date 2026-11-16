@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.9] - 2026-11-16
+
+### Added
+- **Acceso Rápido a Escáner por Cámara en Dashboard (`TicketsPage.tsx`):**
+  - Añadido un botón cuadrado `aspect-square` con icono `Camera` destacado a la derecha de la acción "Añadir décimo".
+  - Al pulsar el botón de cámara, activa directamente el escáner de códigos GS1-128 con la cámara trasera sin pasos intermedios.
+  - Soportada la prop `initialTab?: 'scanner' | 'manual'` en `TicketFormModal.tsx`, permitiendo abrir directamente en modo escáner inmediato o en modo datos manuales según el botón pulsado.
+  - Elevado el índice de apilamiento en `BarcodeScannerModal.tsx` a `z-[60]` para garantizar prioridad visual absoluta sobre cualquier diálogo modal.
+- **Documentación de Pantallas (`docs/SCREENS_GUIDE.md`):** Actualizada la descripción de la sección "Añadir un Décimo" con el botón principal verde y el botón rápido de cámara.
+
 ## [1.0.8] - 2026-11-16
 
 ### Changed

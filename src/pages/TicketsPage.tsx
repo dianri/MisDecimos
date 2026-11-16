@@ -14,6 +14,7 @@ import {
   Users,
   Archive,
   Loader2,
+  Camera,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -44,6 +45,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
   // Modales
   const [isAddTicketOpen, setIsAddTicketOpen] = useState(false)
+  const [addTicketInitialTab, setAddTicketInitialTab] = useState<'scanner' | 'manual'>('manual')
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
   const [claimInitialCode, setClaimInitialCode] = useState<string | null>(null)
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
@@ -238,14 +240,32 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase px-1">
             Añadir un Décimo
           </span>
-          <button
-            type="button"
-            onClick={() => setIsAddTicketOpen(true)}
-            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition"
-          >
-            <Ticket className="h-4 w-4" />
-            <span>Añadir décimo (Escáner o Manual)</span>
-          </button>
+          <div className="flex items-stretch gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                setAddTicketInitialTab('manual')
+                setIsAddTicketOpen(true)
+              }}
+              className="flex-1 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition"
+            >
+              <Ticket className="h-4 w-4" />
+              <span>Añadir décimo</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAddTicketInitialTab('scanner')
+                setIsAddTicketOpen(true)
+              }}
+              aria-label="Escanear décimo con cámara"
+              title="Escanear décimo con cámara"
+              className="aspect-square shrink-0 flex items-center justify-center rounded-2xl bg-lottery-50 border border-lottery-200 text-lottery hover:bg-lottery-100 hover:text-lottery-700 hover:border-lottery-300 active:scale-95 transition shadow-sm"
+            >
+              <Camera className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Sección: AÑADIR UNA PARTICIPACIÓN */}
@@ -404,6 +424,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       {/* Modales */}
       <TicketFormModal
         isOpen={isAddTicketOpen}
+        initialTab={addTicketInitialTab}
         onClose={() => setIsAddTicketOpen(false)}
         onCreated={(newTicketId) => {
           loadTickets()
