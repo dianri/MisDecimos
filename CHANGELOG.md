@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.8] - 2026-11-16
+
+### Changed
+- **Auto-Actualización Silenciosa e Inmediata de la PWA (`vite.config.ts`, `VersionBadge.tsx`):**
+  - Eliminado por completo el banner flotante de "Nueva versión disponible — Pulsa para actualizar y aplicar cambios".
+  - Configurado `registerType: 'autoUpdate'` con `skipWaiting: true`, `clientsClaim: true` y `cleanupOutdatedCaches: true` en Workbox.
+  - Implementada comprobación periódica de nuevas versiones cada 60 segundos y al recuperar el foco de la ventana (`visibilitychange`).
+  - Añadido disparador automático de actualización en `onNeedRefresh()` (`updateServiceWorker(true)`) y recarga limpia transparente de una sola vez vía el listener `controllerchange` en `navigator.serviceWorker`.
+  - Mantenido el modal de diagnóstico técnico y purga de caché manual en `<VersionBadge />`.
+- **Documentación de Arquitectura y Pantallas (`docs/ARCHITECTURE.md`, `docs/SCREENS_GUIDE.md`, `AGENTS.md`):** Actualizados los documentos técnicos detallando el nuevo ciclo de vida de la PWA.
+
 ## [1.0.7] - 2026-11-16
 
 ### Changed

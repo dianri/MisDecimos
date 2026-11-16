@@ -18,7 +18,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'MisDecimos - Trazabilidad Asegurada',
@@ -51,8 +51,8 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: false,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        skipWaiting: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         importScripts: ['/push-sw.js']
       }
     })
