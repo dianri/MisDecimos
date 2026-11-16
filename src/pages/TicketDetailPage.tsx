@@ -84,7 +84,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       // 3. Cargar participaciones (ownership_shares con perfiles)
       const { data: sharesData, error: sharesErr } = await supabase
         .from('ownership_shares')
-        .select('*, profiles(id, display_name, avatar_url, email)')
+        .select('*, profiles:profiles!ownership_shares_user_id_fkey(id, display_name, avatar_url, email)')
         .eq('ticket_id', ticketId)
 
       if (sharesErr) console.error('Error cargando participaciones:', sharesErr)
@@ -227,12 +227,21 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
   if (!ticket) {
     return (
-      <div className="text-center py-12 space-y-3">
-        <p className="text-sm font-semibold text-gray-700">Décimo no encontrado.</p>
+      <div className="text-center py-12 px-4 space-y-4 max-w-sm mx-auto">
+        <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
+        <div>
+          <h3 className="text-sm font-bold text-gray-800">Décimo no encontrado</h3>
+          <p className="text-xs text-gray-500 mt-1">
+            {statusMsg?.type === 'error'
+              ? statusMsg.text
+              : 'No se ha podido localizar el décimo o no tienes permisos para acceder a él.'}
+          </p>
+        </div>
         <button
           onClick={onBack}
-          className="px-4 py-2 rounded-xl bg-lottery text-white text-xs font-semibold"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-lottery text-white text-xs font-semibold shadow hover:bg-lottery-600 transition"
         >
+          <ArrowLeft className="w-3.5 h-3.5" />
           Volver a la lista
         </button>
       </div>

@@ -153,9 +153,23 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
 
       if (error) throw error
 
-      if (data) {
-        onCreated(data as string)
+      // Extraer UUID con máxima robustez (manejar string UUID directo, u objeto { id, ticket_id, ... })
+      let createdTicketId: string | null = null
+      if (typeof data === 'string' && data.trim().length > 0) {
+        createdTicketId = data.trim()
+      } else if (data && typeof data === 'object') {
+        const obj = data as Record<string, unknown>
+        const val = obj.id || obj.ticket_id || obj.ticketId
+        if (typeof val === 'string' && val.trim().length > 0) {
+          createdTicketId = val.trim()
+        }
+      }
+
+      if (createdTicketId) {
+        onCreated(createdTicketId)
         onClose()
+      } else {
+        throw new Error('No se recibió el identificador único del décimo creado en el sistema.')
       }
     } catch (err: unknown) {
       console.error('Error al registrar décimo:', err)
