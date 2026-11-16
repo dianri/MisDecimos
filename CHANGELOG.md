@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.5] - 2026-11-16
+
+### Changed
+- **Exclusividad de Sorteos Extraordinarios (Navidad y El Niño):** Simplificado el selector de sorteos en `TicketFormModal.tsx` eliminando las opciones de Jueves y Sábado, dejando una cuadrícula limpia de 2 opciones: **Navidad** (`NAVIDAD`, fecha 22 de diciembre, 20,00 €) y **El Niño** (`EL_NINO`, fecha 6 de enero, 20,00 €).
+- **Ajuste en Parser GS1-128 (`selaeBarcodeParser.ts`):** Restringido el tipado y clasificación automática de códigos de barras exclusivamente a `NAVIDAD` y `EL_NINO`, fijando el importe oficial de 20,00 €.
+- **Migración de Plantillas de Sorteo (`draw_templates`):** Aplicada la migración `20261116000007_only_navidad_and_nino_templates.sql` desactivando cualquier plantilla ajena a Navidad y El Niño y asegurando que las plantillas oficiales se muestren con el motor vectorial realista nativo.
+- **Actualización Normativa en Documentación:** Reflejada la exclusividad de sorteos en `docs/BUSINESS_RULES.md` y `docs/SCREENS_GUIDE.md`.
+
 ## [1.0.4] - 2026-11-16
 
 ### Fixed
