@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.7` (Producción Estable · Pestaña Partes Iguales por Defecto y Cuotas)  
+**Versión Actual:** `1.0.8` (Producción Estable · PWA Auto-Actualización Silenciosa)  
 **Última Actualización:** 2026-11-16  
-**Rama de Producción:** `main` (Tag `v1.0.7`)  
+**Rama de Producción:** `main` (Tag `v1.0.8`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -79,7 +79,7 @@
 
 ---
 
-### 🚀 Release de Producción (v1.0.0 a v1.0.7)
+### 🚀 Release de Producción (v1.0.0 a v1.0.8)
 - [x] Configuración de enrutado SPA y cabeceras anti-caché en `vercel.json`.
 - [x] Metaetiquetas móviles PWA completas en `index.html`.
 - [x] v1.0.1: Chunks manuales de Rollup, versión dinámica y retry de OTP email/signup.
@@ -89,3 +89,4 @@
 - [x] v1.0.5: Sorteos exclusivos oficiales (Navidad y El Niño) y parser GS1-128 sincronizado.
 - [x] v1.0.6: Cancelación de invitaciones pendientes no reclamadas en décimos validados (`cancel_all_pending_invites`).
 - [x] v1.0.7: Pestaña "Partes iguales" como primera opción por defecto (100% libre) y valor inicial 20% manual.
+- [x] v1.0.8: Ciclo de vida PWA en modo `autoUpdate` silencioso sin banner flotante ni clics manuales.

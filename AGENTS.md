@@ -30,7 +30,7 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
 2. **Badge Visual Permanente (`<VersionBadge />`):**
    - La aplicación muestra en todo momento de forma fija y discreta el componente `<VersionBadge />` con el formato `vX.Y.Z · <git-short-hash>` e indicador de estado de red (online/offline).
    - Permite abrir un modal de diagnóstico con la fecha exacta del build y un botón directo *"Forzar actualización y limpiar caché"* que desregistra Service Workers, vacía `window.caches` y recarga limpiamente.
-   - Si el Service Worker detecta una nueva versión en espera (`waiting`), muestra un aviso flotante inmediato para aplicar la actualización al instante (`skipWaiting`).
+   - El Service Worker opera en modo `autoUpdate` silencioso con `skipWaiting: true` y `clientsClaim: true`, comprobando actualizaciones periódicamente (cada 60s) y al recuperar el foco (`visibilitychange`), recargando limpiamente una sola vez de forma automática cuando el nuevo Service Worker toma el control.
 
 ## 4. Reglas Multi-Agente (Trabajo Concurrente sin Colisiones)
 1. **Revisión previa obligatoria:** Todo agente debe consultar `docs/STATUS.md` y `AGENTS.md` antes de iniciar cualquier desarrollo.
