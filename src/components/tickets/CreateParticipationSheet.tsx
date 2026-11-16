@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { supabase } from '../../lib/supabase'
 import { sanitizeText } from '../../lib/sanitize'
 import {
@@ -42,20 +42,32 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
   onInviteCreated,
   onEqualSplitComplete,
 }) => {
-  const [mode, setMode] = useState<'manual' | 'equal'>('manual')
+  // Inicializa en 'equal' (Partes iguales) si el propietario conserva el 100%, o 'manual' si ya existen cuotas previas
+  const [mode, setMode] = React.useState<'equal' | 'manual'>(() => {
+    return availablePercentage >= 100 ? 'equal' : 'manual'
+  })
 
-  // Modo Manual
-  const [label, setLabel] = useState('')
-  const [manualPercentage, setManualPercentage] = useState<number>(
-    Math.min(20, Math.floor(availablePercentage) || 1)
-  )
+  // Modo Manual: inicializa por defecto en 20% (o el disponible)
+  const [label, setLabel] = React.useState('')
+  const [manualPercentage, setManualPercentage] = React.useState<number>(() => {
+    return Math.min(20, Math.max(1, Math.floor(availablePercentage)))
+  })
 
   // Modo Partes Iguales
-  const [partsCount, setPartsCount] = useState<number>(2)
-  const [ownerParticipates, setOwnerParticipates] = useState<boolean>(true)
+  const [partsCount, setPartsCount] = React.useState<number>(2)
+  const [ownerParticipates, setOwnerParticipates] = React.useState<boolean>(true)
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
+
+  // Sincronizar modo y porcentaje por defecto cada vez que se abra el sheet
+  React.useEffect(() => {
+    if (isOpen) {
+      setMode(availablePercentage >= 100 ? 'equal' : 'manual')
+      setManualPercentage(Math.min(20, Math.max(1, Math.floor(availablePercentage))))
+      setErrorMsg(null)
+    }
+  }, [isOpen, availablePercentage])
 
   if (!isOpen) return null
 
@@ -172,22 +184,10 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
           </button>
         </div>
 
-        {/* Selector de modo estilo píldora */}
+        {/* Selector de modo estilo píldora: 1. Partes iguales | 2. Porcentaje manual */}
         <div className="p-4 pb-2">
           <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-gray-100 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setMode('manual')}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
-                mode === 'manual'
-                  ? 'bg-white text-lottery shadow-sm font-bold'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Sliders className="h-3.5 w-3.5" />
-              <span>Porcentaje manual</span>
-            </button>
-
+            {/* 1. Primera pestaña (izquierda): Partes iguales */}
             <button
               type="button"
               onClick={() => setMode('equal')}
@@ -200,6 +200,20 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
               <PieChart className="h-3.5 w-3.5" />
               <span>Partes iguales</span>
             </button>
+
+            {/* 2. Segunda pestaña (derecha): Porcentaje manual */}
+            <button
+              type="button"
+              onClick={() => setMode('manual')}
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+                mode === 'manual'
+                  ? 'bg-white text-lottery shadow-sm font-bold'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Sliders className="h-3.5 w-3.5" />
+              <span>Porcentaje manual</span>
+            </button>
           </div>
         </div>
 
@@ -211,84 +225,8 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
             </div>
           )}
 
-          {/* MODO A: Porcentaje Manual */}
-          {mode === 'manual' ? (
-            <form onSubmit={handleCreateManual} className="space-y-4">
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-gray-700">
-                  Nombre base <span className="text-gray-400 font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={30}
-                  placeholder="Ej. Para papá / Primo Carlos"
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lottery/20 focus:border-lottery"
-                />
-              </div>
-
-              {/* Slider de porcentaje con indicador visual */}
-              <div className="space-y-2 pt-1">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-gray-700">Porcentaje a ceder:</span>
-                  <span className="text-base font-extrabold font-mono text-lottery bg-lottery-50 px-2.5 py-0.5 rounded-lg border border-lottery-200">
-                    {manualPercentage}%
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  min="1"
-                  max={Math.max(1, availablePercentage)}
-                  step="1"
-                  value={manualPercentage}
-                  onChange={(e) => setManualPercentage(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-lottery"
-                />
-
-                {/* Botones rápidos */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  {[10, 20, 25, 50].map((preset) => {
-                    const disabled = preset > availablePercentage
-                    return (
-                      <button
-                        key={preset}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => setManualPercentage(preset)}
-                        className={`flex-1 py-1 rounded-lg text-[11px] font-mono font-semibold border transition ${
-                          manualPercentage === preset
-                            ? 'border-lottery bg-lottery text-white shadow-xs'
-                            : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:pointer-events-none'
-                        }`}
-                      >
-                        {preset}%
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading || manualPercentage <= 0 || manualPercentage > availablePercentage}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Generando invitación...</span>
-                    </>
-                  ) : (
-                    <span>Crear participación de {manualPercentage}%</span>
-                  )}
-                </button>
-              </div>
-            </form>
-          ) : (
-            /* MODO B: Partes Iguales */
+          {/* MODO A: Partes Iguales */}
+          {mode === 'equal' ? (
             <div className="space-y-4">
               {/* Stepper de partes */}
               <div className="space-y-2">
@@ -403,6 +341,82 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
                 </button>
               </div>
             </div>
+          ) : (
+            /* MODO B: Porcentaje Manual */
+            <form onSubmit={handleCreateManual} className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-gray-700">
+                  Nombre base <span className="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={30}
+                  placeholder="Ej. Para papá / Primo Carlos"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lottery/20 focus:border-lottery"
+                />
+              </div>
+
+              {/* Slider de porcentaje con indicador visual */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-gray-700">Porcentaje a ceder:</span>
+                  <span className="text-base font-extrabold font-mono text-lottery bg-lottery-50 px-2.5 py-0.5 rounded-lg border border-lottery-200">
+                    {manualPercentage}%
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="1"
+                  max={Math.max(1, availablePercentage)}
+                  step="1"
+                  value={manualPercentage}
+                  onChange={(e) => setManualPercentage(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-lottery"
+                />
+
+                {/* Botones rápidos */}
+                <div className="flex items-center gap-1.5 pt-1">
+                  {[10, 20, 25, 50].map((preset) => {
+                    const disabled = preset > availablePercentage
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setManualPercentage(preset)}
+                        className={`flex-1 py-1 rounded-lg text-[11px] font-mono font-semibold border transition ${
+                          manualPercentage === preset
+                            ? 'border-lottery bg-lottery text-white shadow-xs'
+                            : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:pointer-events-none'
+                        }`}
+                      >
+                        {preset}%
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading || manualPercentage <= 0 || manualPercentage > availablePercentage}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Generando invitación...</span>
+                    </>
+                  ) : (
+                    <span>Crear participación de {manualPercentage}%</span>
+                  )}
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </div>
