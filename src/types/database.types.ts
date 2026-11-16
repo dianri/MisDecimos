@@ -515,10 +515,8 @@ export type Database = {
         }
         Returns: string
       }
-      mark_all_notifications_read: {
-        Args: Record<string, never>
-        Returns: number
-      }
+      is_ticket_owner: { Args: { p_ticket_id: string }; Returns: boolean }
+      mark_all_notifications_read: { Args: never; Returns: number }
       record_ticket_prize_check: {
         Args: {
           p_check_source: string
@@ -543,6 +541,10 @@ export type Database = {
       }
       toggle_archive_ticket: {
         Args: { p_archive: boolean; p_ticket_id: string }
+        Returns: boolean
+      }
+      user_can_access_ticket: {
+        Args: { p_ticket_id: string }
         Returns: boolean
       }
     }

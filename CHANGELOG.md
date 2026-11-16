@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.2] - 2026-11-16
+
+### Fixed
+- **Políticas RLS y Eliminación de Recursión Infinita (`tickets`, `ownership_shares`, `pending_invites`, `audit_events`):** Creadas las funciones auxiliares `SECURITY DEFINER` `public.user_can_access_ticket(p_ticket_id UUID)` e `is_ticket_owner(p_ticket_id UUID)` en la migración `20261116000005_fix_rls_and_create_ticket.sql`, rompiendo las referencias circulares cruzadas entre las políticas RLS que bloqueaban la lectura de billetes tras su inserción en PostgreSQL y provocaban el falso estado "Décimo no encontrado."
+- **Extracción Defensiva de UUID en `TicketFormModal.tsx`:** Mejorada la validación del retorno de la RPC `create_ticket` para extraer con máxima robustez el identificador del décimo (string UUID u objeto) y mostrar cualquier excepción de Supabase en pantalla en lugar de navegar con identificador vacío.
+- **Relaciones PostgREST en Detalle de Décimo (`TicketDetailPage.tsx`):** Explicitada la clave foránea `profiles!ownership_shares_user_id_fkey` en la carga de participaciones y añadido mensaje descriptivo de error en pantalla en caso de fallo de consulta.
+
 ## [1.0.1] - 2026-11-16
 
 ### Fixed
