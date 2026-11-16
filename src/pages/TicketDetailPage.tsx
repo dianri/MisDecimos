@@ -362,7 +362,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           )}
         </button>
 
-        {isOwner && !hasAcceptedThirdPartyShares && ticket.status === 'PENDIENTE' && (
+        {isOwner && !hasAcceptedThirdPartyShares && ticket.status !== 'LIQUIDADO' && (
           <button
             type="button"
             onClick={handleDeleteTicket}
