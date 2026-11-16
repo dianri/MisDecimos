@@ -137,9 +137,10 @@ flowchart TD
   - El custodio recibe una alerta y puede *"Aceptar renuncia"* (reintegrando el porcentaje a su bolsa) o *"Rechazar renuncia"*.
 
 #### D) Reparto de Participaciones (`<CreateParticipationSheet />`)
-- Permite crear nuevas participaciones antes del sorteo:
-  - **Reparto Manual:** Especificando porcentaje (%) o importe en euros (€).
-  - **Reparto a Partes Iguales:** Entre N personas (ej. 3, 4, 5 cotitulares), aplicando el algoritmo de absorción de redondeo en el custodio para garantizar suma exacta del 100,00%.
+- Permite crear nuevas participaciones antes del sorteo con selector de pestañas reordenado:
+  - **Pestaña por defecto:** Abre automáticamente en **"Partes iguales"** (primera pestaña, izquierda) cuando el custodio conserva el 100% de la cuota y no existen participaciones previas; si ya existen participaciones parciales, selecciona automáticamente **"Porcentaje manual"** (segunda pestaña, derecha) con un valor predeterminado del 20% (o el máximo disponible).
+  - **Reparto a Partes Iguales:** Entre N personas (ej. 2, 3, 4, 5 cotitulares), aplicando el algoritmo de absorción de redondeo en el custodio para garantizar suma exacta del 100,00%. Genera una bolsa de invitaciones pendientes con un código único de 6 dígitos y enlace para cada cotitular.
+  - **Reparto Manual:** Especificando porcentaje (%) o importe en euros (€), con preconfiguración al 20%.
 - Al guardar, abre [`ShareInviteModal.tsx`](../src/components/tickets/ShareInviteModal.tsx), que genera:
   - Enlace web directo `https://misdecimos.dianrie.com/invite/<token>`
   - Código numérico de 6 dígitos

@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.6` (Producción Estable · Cancelación de Invitaciones No Reclamadas)  
+**Versión Actual:** `1.0.7` (Producción Estable · Pestaña Partes Iguales por Defecto y Cuotas)  
 **Última Actualización:** 2026-11-16  
-**Rama de Producción:** `main` (Tag `v1.0.6`)  
+**Rama de Producción:** `main` (Tag `v1.0.7`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -79,21 +79,13 @@
 
 ---
 
-### 🚀 Release de Producción (v1.0.0)
+### 🚀 Release de Producción (v1.0.0 a v1.0.7)
 - [x] Configuración de enrutado SPA y cabeceras anti-caché en `vercel.json`.
 - [x] Metaetiquetas móviles PWA completas en `index.html`.
-- [x] Fusión en `develop` y promoción definitiva a `main`.
-- [x] Etiquetado con tag anotado de Git `v1.0.0`.
-
-### [ ] Fase 5 (v0.5.0) — Auditoría Inmutable, Comprobación de Sorteos y Liquidación
-- [ ] Comprobación automática de premios (Lotería de Navidad, El Niño y LoteriasAPI).
-- [ ] Historial inmutable de auditoría por décimo (`audit_events`).
-- [ ] Flujo de confirmación de cobro de premios por participante.
-- [ ] Cierre automático del décimo al estado `LIQUIDADO` y animación de confeti.
-
----
-
-### [ ] Fase 6 (v0.6.0) — Web Push Nativo VAPID y Experiencia Offline PWA
-- [ ] Integración Web Push VAPID para Android y pantalla de inicio de iOS (PWA standalone).
-- [ ] Notificaciones en segundo plano para invitaciones, renuncias y premios.
-- [ ] Caché offline de décimos y sincronización resiliente al recuperar red.
+- [x] v1.0.1: Chunks manuales de Rollup, versión dinámica y retry de OTP email/signup.
+- [x] v1.0.2: RLS sin recursión infinita en PostgreSQL y corrección de "Décimo no encontrado.".
+- [x] v1.0.3: Manual de Pantallas (`docs/SCREENS_GUIDE.md`) e índices de navegación rápida en `README.md`.
+- [x] v1.0.4: Fallback reactivo anti-imagen rota en `RealisticTicketCard.tsx` y plantillas vectoriales.
+- [x] v1.0.5: Sorteos exclusivos oficiales (Navidad y El Niño) y parser GS1-128 sincronizado.
+- [x] v1.0.6: Cancelación de invitaciones pendientes no reclamadas en décimos validados (`cancel_all_pending_invites`).
+- [x] v1.0.7: Pestaña "Partes iguales" como primera opción por defecto (100% libre) y valor inicial 20% manual.
