@@ -486,6 +486,10 @@ export type Database = {
         Args: { p_code_or_token: string; p_confirm?: boolean }
         Returns: Json
       }
+      cancel_all_pending_invites: {
+        Args: { p_ticket_id: string }
+        Returns: number
+      }
       cancel_pending_invite: { Args: { p_invite_id: string }; Returns: boolean }
       confirm_prize_received: { Args: { p_ticket_id: string }; Returns: Json }
       create_equal_split_participations: {

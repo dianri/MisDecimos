@@ -101,6 +101,43 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
     }
   }
 
+  // Cancelar todas las invitaciones pendientes en bloque
+  const handleCancelAllPendingInvites = async () => {
+    if (
+      !confirm(
+        `¿Estás seguro de que deseas cancelar todas las ${activePendingInvites.length} invitaciones pendientes y recuperar el ${totalPendingPct}% para tu cuenta?`
+      )
+    ) {
+      return
+    }
+
+    setActionLoadingId('all-pending')
+    setActionMsg(null)
+    try {
+      const { error } = await supabase.rpc('cancel_all_pending_invites', {
+        p_ticket_id: ticketId,
+      })
+      if (error) throw error
+
+      setActionMsg({
+        type: 'success',
+        text: `Se han cancelado las ${activePendingInvites.length} invitaciones pendientes. Has recuperado el ${totalPendingPct}% de cuota.`,
+      })
+      await onRefresh()
+    } catch (err: unknown) {
+      console.error('Error cancelando todas las invitaciones pendientes:', err)
+      setActionMsg({
+        type: 'error',
+        text:
+          err instanceof Error
+            ? err.message
+            : 'Error al cancelar todas las invitaciones pendientes.',
+      })
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
   // Solicitar renuncia (Propietario pide al participante que devuelva su cuota)
   const handleRequestWaiver = async (shareId: string) => {
     if (
@@ -175,6 +212,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   const ownerShare = shares.find((s) => s.role === 'PROPIETARIO' && s.status === 'ACEPTADA')
   const participantShares = shares.filter((s) => s.role === 'PARTICIPANTE' && s.status === 'ACEPTADA')
   const activePendingInvites = pendingInvites.filter((i) => i.status === 'PENDIENTE')
+  const totalPendingPct = activePendingInvites.reduce((acc, i) => acc + Number(i.percentage), 0)
 
   const ownerPct = ownerShare ? Number(ownerShare.percentage) : 0
   const totalAllocated =
@@ -629,20 +667,20 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 <span>Ver QR / Compartir</span>
               </button>
 
-              {isOwner && ticketStatus === 'PENDIENTE' && (
+              {isOwner && ticketStatus !== 'LIQUIDADO' && (
                 <button
                   type="button"
                   onClick={() => handleCancelInvite(invite.id)}
                   disabled={actionLoadingId === invite.id}
-                  className="py-1.5 px-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 hover:bg-rose-100 active:scale-95 transition"
-                  title="Cancelar invitación y recuperar cuota"
+                  className="py-1.5 px-3 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition"
+                  title="Eliminar invitación y recuperar cuota"
                 >
                   {actionLoadingId === invite.id ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <>
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>Cancelar</span>
+                      <Trash2 className="h-3.5 w-3.5 text-rose-600" />
+                      <span>Eliminar</span>
                     </>
                   )}
                 </button>
@@ -650,10 +688,29 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
             </div>
           </div>
         ))}
+
+        {/* Botón para cancelar todas las invitaciones pendientes en bloque */}
+        {isOwner && activePendingInvites.length >= 2 && ticketStatus !== 'LIQUIDADO' && (
+          <div className="flex justify-end pt-1">
+            <button
+              type="button"
+              onClick={handleCancelAllPendingInvites}
+              disabled={actionLoadingId === 'all-pending'}
+              className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-rose-200 bg-rose-50/80 text-rose-700 hover:bg-rose-100 text-xs font-semibold active:scale-95 transition shadow-xs"
+            >
+              {actionLoadingId === 'all-pending' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5 text-rose-600" />
+              )}
+              <span>Cancelar todas las pendientes (recuperar {totalPendingPct}%)</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 5. Botón Inferior: "Añadir participación" */}
-      {isOwner && ticketStatus === 'PENDIENTE' && (
+      {isOwner && ticketStatus !== 'LIQUIDADO' && (
         <div className="pt-2">
           <button
             type="button"
