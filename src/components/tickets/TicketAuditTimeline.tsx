@@ -18,6 +18,7 @@ import {
   Trophy,
   Bell,
   BadgeCheck,
+  LogOut,
 } from 'lucide-react'
 
 export type AuditEvent = Database['public']['Tables']['audit_events']['Row'] & {
@@ -115,6 +116,13 @@ const ACTION_CONFIGS: Record<string, ActionConfig> = {
     colorClass: 'text-rose-800',
     bgClass: 'bg-rose-50',
     borderClass: 'border-rose-200',
+  },
+  RENUNCIA_VOLUNTARIA_PARTICIPANTE: {
+    title: 'Renuncia voluntaria de cuota',
+    icon: LogOut,
+    colorClass: 'text-amber-800',
+    bgClass: 'bg-amber-100',
+    borderClass: 'border-amber-300',
   },
   PARTICIPACION_CANCELADA: {
     title: 'Invitación cancelada',

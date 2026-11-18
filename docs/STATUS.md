@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.13` (Producción Estable · Navegación Atrás Android y Protección de Cierre PWA)  
+**Versión Actual:** `1.0.14` (Producción Estable · Renuncia Voluntaria de Participaciones)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.13`)  
+**Rama de Producción:** `main` (Tag `v1.0.14`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -95,3 +95,4 @@
 - [x] v1.0.11: Botón ergonómico de cámara en verde sólido con icono blanco (54px) y menú contextual flotante desbloqueado (`z-30`/`z-40`).
 - [x] v1.0.12: Bloqueo de comprobación previa al sorteo (hora peninsular española), tarjeta informativa `CalendarClock`, defensiva en Edge Function (`DRAW_NOT_HELD_YET`) y reseteo a `PENDIENTE` en BD.
 - [x] v1.0.13: Navegación Atrás nativa Android en PWA, centinela `exitGuard`, toast de confirmación (2,5s), hook `useModalBackHandler` y conservación de historial en `BottomNav`.
+- [x] v1.0.14: Renuncia voluntaria de participaciones por el cotitular (`renounce_own_participation`), modal de confirmación `z-50`, reintegro íntegro al propietario y auditoría `RENUNCIA_VOLUNTARIA_PARTICIPANTE`.

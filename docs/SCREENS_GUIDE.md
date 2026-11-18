@@ -140,8 +140,11 @@ flowchart TD
 - **Invitaciones Pendientes:** Listado de códigos activos emitidos aún no reclamados, con botón para abrir el modal de compartición y botón **"Eliminar"** visible para el propietario en cualquier estado del décimo (`PENDIENTE`, `VALIDADO`, `ARCHIVADO`, salvo liquidado), devolviendo de inmediato la cuota al propietario. Si existen 2 o más invitaciones pendientes, muestra además el botón masivo **"Cancelar todas las pendientes (recuperar X%)"** para cancelar en un solo clic mediante la RPC `cancel_all_pending_invites`.
 - **Añadir Participación y Eliminación de Décimo:** El botón inferior *"Añadir participación"* permanece disponible tanto en `PENDIENTE` como en `VALIDADO` mientras el propietario conserve cuota libre. Asimismo, el botón *"Eliminar décimo"* está habilitado en ambos estados siempre que no existan cuotas de terceros en estado `ACEPTADA`.
 - **Flujo Bilateral de Renuncia de Participaciones:**
-  - Un participante puede pulsar *"Solicitar renuncia"* indicando el motivo.
-  - El custodio recibe una alerta y puede *"Aceptar renuncia"* (reintegrando el porcentaje a su bolsa) o *"Rechazar renuncia"*.
+  - El custodio puede pulsar *"Solicitar renuncia"* sobre cualquier participante aceptado en estado `PENDIENTE`.
+  - El participante recibe una alerta y puede *"Aceptar y devolver"* (reintegrando el porcentaje al propietario) o *"Rechazar"*.
+- **Renuncia Voluntaria Directa del Participante:**
+  - En la tarjeta de participación del propio usuario autenticado (`share.user_id === user.id`), mientras el décimo no esté liquidado ni premiado pendiente de cobro, se muestra de forma permanente el botón *"Renunciar a mi participación"* con icono `LogOut`.
+  - Al pulsarlo, abre un diálogo de confirmación (`z-50` sobre `BottomNav` con integración `useModalBackHandler`) indicando el porcentaje y su importe exacto en euros. Al confirmar, ejecuta la función transaccional `renounce_own_participation`, reintegrando el porcentaje íntegro al propietario, registrando la auditoría y notificando al custodio.
 
 #### D) Reparto de Participaciones (`<CreateParticipationSheet />`)
 - **Arquitectura Móvil Flex con Scroll Interno y Pie Fijo:**
