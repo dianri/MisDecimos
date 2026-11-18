@@ -69,12 +69,12 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-sm rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-sm rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
         role="dialog"
         aria-modal="true"
       >
-        {/* Cabecera */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
+        {/* Cabecera (shrink-0) */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-lottery text-white shadow-xs">
               <Share2 className="h-4 w-4" />
@@ -94,7 +94,8 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
           </button>
         </div>
 
-        <div className="p-5 space-y-5 text-center">
+        {/* Cuerpo scrolleable */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-5 text-center">
           {/* Código de 6 Dígitos Prominente */}
           <div className="rounded-2xl border border-gold-300 bg-gold-50/50 p-4 space-y-1 relative">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gold-700">
@@ -147,31 +148,31 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
             </p>
           </div>
 
-          {/* Botones de Compartir */}
-          <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={handleShareWhatsApp}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#25D366] text-white text-xs font-bold shadow-md shadow-emerald-500/20 hover:bg-[#20bd5a] active:scale-98 transition"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span>Enviar por WhatsApp</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleShareSystem}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 active:scale-98 transition shadow-xs"
-            >
-              <Share2 className="h-3.5 w-3.5 text-gray-500" />
-              <span>Otras aplicaciones del sistema</span>
-            </button>
-          </div>
-
           <div className="pt-1 flex items-center justify-center gap-1.5 text-[10px] text-gray-400 font-medium">
             <Sparkles className="h-3 w-3 text-gold-500" />
             <span>Trazabilidad asegurada · Cero porcentaje huérfano</span>
           </div>
+        </div>
+
+        {/* Botones de Compartir fijos abajo (shrink-0) */}
+        <div className="shrink-0 border-t border-gray-100 bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2">
+          <button
+            type="button"
+            onClick={handleShareWhatsApp}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#25D366] text-white text-xs font-bold shadow-md shadow-emerald-500/20 hover:bg-[#20bd5a] active:scale-98 transition"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>Enviar por WhatsApp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShareSystem}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 active:scale-98 transition shadow-xs"
+          >
+            <Share2 className="h-3.5 w-3.5 text-gray-500" />
+            <span>Otras aplicaciones del sistema</span>
+          </button>
         </div>
       </div>
     </div>
