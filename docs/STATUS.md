@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.11` (Producción Estable · Botón Verde de Cámara y Menú Contextual Desbloqueado)  
+**Versión Actual:** `1.0.12` (Producción Estable · Bloqueo de Comprobación Previa al Sorteo)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.11`)  
+**Rama de Producción:** `main` (Tag `v1.0.12`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -93,3 +93,4 @@
 - [x] v1.0.9: Botón cuadrado de acceso directo a la cámara para escanear décimos en el Dashboard.
 - [x] v1.0.10: Jerarquía `z-index` de `BottomNav` (`z-30`) y modales con `max-h-[88dvh]`, scroll interno y pie fijo `env(safe-area-inset-bottom)`.
 - [x] v1.0.11: Botón ergonómico de cámara en verde sólido con icono blanco (54px) y menú contextual flotante desbloqueado (`z-30`/`z-40`).
+- [x] v1.0.12: Bloqueo de comprobación previa al sorteo (hora peninsular española), tarjeta informativa `CalendarClock`, defensiva en Edge Function (`DRAW_NOT_HELD_YET`) y reseteo a `PENDIENTE` en BD.

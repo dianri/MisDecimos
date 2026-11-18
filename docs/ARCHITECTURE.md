@@ -212,7 +212,11 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 1. **Lotería de Navidad (`NAVIDAD`):** Endpoint oficial JSONP de El País (`https://api.elpais.com/ws/LoteriaNavidadPremiados?n={numero}`). Limpieza de prefijo `busqueda=`, conversión de euros a céntimos y estado `provisional` o `final` (`status === 4`).
 2. **Sorteo de El Niño (`EL_NINO`):** Endpoint oficial JSONP de El País (`https://api.elpais.com/ws/LoteriaNinoPremiados?n={numero}`).
 3. **Sorteos Semanales y Ordinarios (`JUEVES`, `SABADO`, `ESPECIAL`):** API de SELAE con fallback mediante `loteriasapi.com` autenticado por `LOTERIAS_API_KEY`.
-4. **Resiliencia ante Sorteos Futuros:** Si la API oficial devuelve error o el sorteo no se ha celebrado, la Edge Function responde con `prizeAmountCents = 0`, `checkSource = 'elpais'` y `listStatus = 'sin_resultados_aun'`.
+4. **Blindaje Defensivo Pre-Sorteo (Hora Peninsular Española CET):**
+   - La Edge Function recupera de la base de datos la fecha canónica del sorteo (`draw_date`) y su modalidad (`draw_type`).
+   - Calcula el inicio oficial del sorteo en CET (`Europe/Madrid`, UTC+1): 09:00 para `NAVIDAD` y 12:00 para `EL_NINO`.
+   - Si `now < drawStart`, devuelve inmediatamente `{ ok: false, code: 'DRAW_NOT_HELD_YET', message: 'El sorteo aún no se ha celebrado...' }` sin mutar el décimo ni registrar auditorías erróneas.
+   - Durante la celebración, si la API indica que el sorteo sigue en curso (`error === 1` o `status === 0`), devuelve `{ ok: false, code: 'DRAW_IN_PROGRESS', ... }` sin marcar el billete como `VALIDADO` o sin premio.
 
 ### Estrategia de Caché y Persistencia Atómica
 - **Caché en Memoria (Edge Runtime):** Map con clave `${drawType}:${number}`. TTL de 24 horas para resultados finales (`listStatus === 'final'`) y 5 minutos para listas provisionales durante la celebración del sorteo.

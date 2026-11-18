@@ -1,12 +1,15 @@
 import { supabase } from '../lib/supabase'
 
 export interface CheckPrizeResult {
+  ok?: boolean
   success: boolean
   prizeAmountCents: number
   formattedPrize: string
   checkSource: string
   listStatus: string
   checkedAt: string
+  code?: string
+  message?: string
   error?: string
 }
 
@@ -28,6 +31,20 @@ export async function checkTicketPrize(params: {
 
   if (data?.error) {
     throw new Error(data.error)
+  }
+
+  if (data?.ok === false) {
+    return {
+      ok: false,
+      success: false,
+      code: data.code,
+      message: data.message,
+      prizeAmountCents: 0,
+      formattedPrize: '0,00 €',
+      checkSource: 'none',
+      listStatus: 'sin_sorteo',
+      checkedAt: new Date().toISOString(),
+    }
   }
 
   return data as CheckPrizeResult
