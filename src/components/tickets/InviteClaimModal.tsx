@@ -144,12 +144,12 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-sm rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-sm rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
         role="dialog"
         aria-modal="true"
       >
-        {/* Cabecera */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        {/* Cabecera (shrink-0) */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold-100 text-gold-700">
               <KeyRound className="h-4 w-4" />
@@ -167,7 +167,7 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
           {errorMsg && (
             <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />

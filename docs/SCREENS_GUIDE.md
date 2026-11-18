@@ -63,7 +63,7 @@ flowchart TD
    - **Botón de Campana de Alertas:** Acceso directo a la pestaña de notificaciones con insignia numérica roja en tiempo real si existen alertas no leídas.
    - **Avatar de Usuario:** Enlace rápido al perfil del usuario autenticado.
 2. **Barra Inferior Móvil (`BottomNav`):**
-   - 4 accesos fijos adaptados a pantallas táctiles:
+   - 4 accesos fijos adaptados a pantallas táctiles (con capa base `z-30` para permanecer siempre por debajo de cualquier modal o bottom sheet `z-50`):
      - 🎟️ **Billetes:** Dashboard de décimos en custodia y participaciones.
      - 🔔 **Alertas:** Centro de notificaciones con badge interactivo.
      - 🛡️ **Auditoría:** Registro global de operaciones inmutables.
@@ -135,6 +135,11 @@ flowchart TD
   - El custodio recibe una alerta y puede *"Aceptar renuncia"* (reintegrando el porcentaje a su bolsa) o *"Rechazar renuncia"*.
 
 #### D) Reparto de Participaciones (`<CreateParticipationSheet />`)
+- **Arquitectura Móvil Flex con Scroll Interno y Pie Fijo:**
+  - Contenedor con altura dinámica `max-h-[88dvh]` y capa `z-50` que cubre por completo tanto la cabecera como la barra de navegación inferior (`BottomNav`).
+  - **Cabecera fija (`shrink-0`):** Muestra el título *"Nueva Participación"*, el porcentaje disponible en tiempo real y el botón de cierre (`X`).
+  - **Cuerpo con scroll (`flex-1 overflow-y-auto overscroll-contain`):** Contiene el selector de modo, stepper de partes o slider de porcentaje, e información matemática sin desbordar la pantalla en navegadores móviles (Chrome/Safari).
+  - **Pie fijo de acción (`shrink-0` con `env(safe-area-inset-bottom)`):** Botón verde de confirmación siempre accesible y anclado en la parte inferior sobre la zona segura de dispositivos iOS y Android.
 - Permite crear nuevas participaciones antes del sorteo con selector de pestañas reordenado:
   - **Pestaña por defecto:** Abre automáticamente en **"Partes iguales"** (primera pestaña, izquierda) cuando el custodio conserva el 100% de la cuota y no existen participaciones previas; si ya existen participaciones parciales, selecciona automáticamente **"Porcentaje manual"** (segunda pestaña, derecha) con un valor predeterminado del 20% (o el máximo disponible).
   - **Reparto a Partes Iguales:** Entre N personas (ej. 2, 3, 4, 5 cotitulares), aplicando el algoritmo de absorción de redondeo en el custodio para garantizar suma exacta del 100,00%. Genera una bolsa de invitaciones pendientes con un código único de 6 dígitos y enlace para cada cotitular.

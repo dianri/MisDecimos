@@ -150,7 +150,7 @@ export const AppShell: React.FC = () => {
       {/* 5. Barra de Navegación Inferior Fija (BottomNav) */}
       <nav
         aria-label="Navegación principal"
-        className="fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
+        className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
       >
         <div className="max-w-xl mx-auto px-2 h-16 flex items-center justify-around">
           {/* Pestaña: Billetes */}
