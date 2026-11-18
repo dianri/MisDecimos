@@ -5,6 +5,27 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.16] - 2026-11-19
+
+### Fixed
+- **Corrección de Offset en Extracción de Número SELAE (`src/lib/selaeBarcodeParser.ts`):**
+  - Solucionado el fallo que provocaba que al escanear un código de barras de 20 dígitos de SELAE (ej. `51020101100876719833`) se asignase erróneamente `02010` (código del sorteo) como número del décimo.
+  - Implementada la extracción matemática exacta de la especificación estándar de SELAE:
+    - Prefijo del juego: 2 dígitos (`51` o `01`).
+    - Código de sorteo: 5 dígitos (posiciones 2..7, ej. `02010`).
+    - Fracción: 2 dígitos (posiciones 7..9, ej. `11`).
+    - Serie: 3 dígitos (posiciones 9..12, ej. `008`).
+    - Número del décimo: 5 dígitos (posiciones 12..17, ej. `76719`).
+    - Dígitos de control: 3 dígitos (posiciones 17..20, ej. `833`).
+  - Empleo de la regex canónica `/(?:51|01)(\d{5})(\d{2})(\d{3})(\d{5})(\d{3})/` extrayendo el número real en el grupo 4, la fracción en el grupo 2 y la serie en el grupo 3.
+  - Compatibilidad de propiedades duales (`number`/`ticketNumber`, `serie`/`series`, `fraccion`/`fraction`).
+  - Eliminación de fallbacks hardcoded ficticios: ante códigos no reconocidos, devuelve `isValid: false`, `number: ''` y un mensaje descriptivo en `errorMessage`.
+  - Añadida suite de pruebas unitarias automatizadas (`src/lib/__tests__/selaeBarcodeParser.test.ts`) con 6 tests verificados vía `npm test`.
+
+### Added
+- **Banner de Confirmación Post-Escaneo (`TicketFormModal.tsx`):**
+  - Tras escanear satisfactoriamente un décimo, el modal cambia automáticamente a la pestaña de datos manuales con todos los campos cumplimentados y muestra un banner en verde esmeralda: *"Código leído correctamente — Verifica los datos antes de guardar"*.
+
 ## [1.0.15] - 2026-11-19
 
 ### Added

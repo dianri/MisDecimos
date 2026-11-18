@@ -1,12 +1,13 @@
 {
   "name": "misdecimos",
   "private": true,
-  "version": "1.0.15",
+  "version": "1.0.16",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types src/lib/__tests__/*.test.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
