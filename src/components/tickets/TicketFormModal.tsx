@@ -13,6 +13,7 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react'
 
 type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
@@ -34,6 +35,7 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
 
   const [tab, setTab] = useState<'scan' | 'manual'>('manual')
   const [isScannerOpen, setIsScannerOpen] = useState(false)
+  const [scanSuccessBanner, setScanSuccessBanner] = useState<string | null>(null)
 
   // Sincronizar pestaña inicial y escáner al abrir el modal
   useEffect(() => {
@@ -46,8 +48,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
         setIsScannerOpen(false)
       }
       setErrorMsg(null)
+      setScanSuccessBanner(null)
     } else {
       setIsScannerOpen(false)
+      setScanSuccessBanner(null)
     }
   }, [isOpen, initialTab])
 
@@ -129,12 +133,23 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
     setOrigin('BARCODE_GS1')
     setTab('manual') // Pasar a formulario para confirmación visual
 
-    if (parsed.number) setNumber(parsed.number)
-    if (parsed.serie) setSerie(parsed.serie)
-    if (parsed.fraccion) setFraccion(parsed.fraccion)
-    if (parsed.drawType) handleDrawTypeChange(parsed.drawType)
-    if (parsed.drawDate) setDrawDate(parsed.drawDate)
-    if (parsed.ticketPrice) setTicketPrice(parsed.ticketPrice.toFixed(2))
+    if (parsed.isValid) {
+      setScanSuccessBanner('Código leído correctamente — Verifica los datos antes de guardar')
+      setErrorMsg(null)
+
+      const ticketNum = parsed.number || parsed.ticketNumber
+      if (ticketNum) setNumber(ticketNum)
+      const ticketSerie = parsed.serie || parsed.series
+      if (ticketSerie) setSerie(ticketSerie)
+      const ticketFraccion = parsed.fraccion || parsed.fraction
+      if (ticketFraccion) setFraccion(ticketFraccion)
+      if (parsed.drawType) handleDrawTypeChange(parsed.drawType)
+      if (parsed.drawDate) setDrawDate(parsed.drawDate)
+      if (parsed.ticketPrice) setTicketPrice(parsed.ticketPrice.toFixed(2))
+    } else {
+      setScanSuccessBanner(null)
+      setErrorMsg(parsed.errorMessage || 'Código de barras no reconocido como décimo de Lotería Nacional')
+    }
   }
 
   // Guardar décimo invocando create_ticket RPC
@@ -260,6 +275,13 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
           {/* Formulario con scroll en campos y botón fijo abajo */}
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <div className="flex-1 overflow-y-auto overscroll-contain p-5 pt-3 space-y-4">
+              {scanSuccessBanner && (
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shadow-xs">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>{scanSuccessBanner}</span>
+                </div>
+              )}
+
               {errorMsg && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
                   <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
