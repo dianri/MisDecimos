@@ -56,12 +56,16 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 - Una vez que un participante ha aceptado una participación (`status = 'ACEPTADA'`), su derecho es inmutable de forma unilateral.
 - Ni el propietario ni un administrador pueden revocar o rebajar dicha cuota arbitrariamente.
-- **Flujo de Renuncia:**
+- **Flujo de Renuncia Bilateral (Iniciado por el Propietario):**
   1. El propietario pulsa *"Solicitar renuncia"*, ejecutando la RPC `request_share_waiver(share_id)`.
   2. El sistema marca `waiver_requested = true, waiver_requested_at = now()` y emite una notificación de alta prioridad al participante.
   3. El participante dispone de dos opciones exclusivas:
      - **Aceptar renuncia:** El porcentaje del participante pasa a 0.00%, su estado cambia a `RENUNCIADA`, `waiver_requested = false` y el porcentaje cedido se acredita de inmediato a la cuota del propietario.
      - **Rechazar renuncia:** Se cancela la petición (`waiver_requested = false`) y la participación se mantiene íntegra y vigente.
+- **Renuncia Voluntaria del Participante (`renounce_own_participation`):**
+  - Cualquier cotitular con cuota aceptada (`status = 'ACEPTADA'`, `role = 'PARTICIPANTE'`) puede renunciar de forma directa y voluntaria a su participación sin requerir solicitud previa del propietario.
+  - **Condiciones:** El décimo no debe encontrarse en estado `LIQUIDADO` ni en estado `VALIDADO` con premio pendiente de cobro (`prize_amount_cents > 0`).
+  - **Efectos Atómicos:** El porcentaje íntegro del participante se reintegra de inmediato a la cuota del propietario (`role = 'PROPIETARIO'`), la participación pasa al estado `RENUNCIADA` con 0,00%, se limpia cualquier solicitud de renuncia pendiente y se inserta un evento inmutable en `public.audit_events` (`RENUNCIA_VOLUNTARIA_PARTICIPANTE`), notificando al custodio mediante alerta interna y Web Push nativo.
 
 ---
 

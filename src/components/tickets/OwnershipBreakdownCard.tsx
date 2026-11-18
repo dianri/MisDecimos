@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
 import { CreateParticipationSheet } from './CreateParticipationSheet'
 import { ShareInviteModal } from './ShareInviteModal'
@@ -17,6 +18,7 @@ import {
   Loader2,
   ShieldCheck,
   Clock,
+  LogOut,
 } from 'lucide-react'
 
 export type OwnershipShare = Database['public']['Tables']['ownership_shares']['Row'] & {
@@ -64,7 +66,16 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [activeShareInvite, setActiveShareInvite] = useState<PendingInvite | null>(null)
   const [activeMenuShareId, setActiveMenuShareId] = useState<string | null>(null)
+  const [renouncingShare, setRenouncingShare] = useState<OwnershipShare | null>(null)
+  const [isRenouncing, setIsRenouncing] = useState(false)
   const menuContainerRef = useRef<HTMLDivElement>(null)
+
+  // Integración con botón Atrás de Android para el modal de renuncia voluntaria
+  useModalBackHandler({
+    isOpen: !!renouncingShare,
+    onClose: () => setRenouncingShare(null),
+    modalKey: 'voluntary_waiver_modal',
+  })
 
   // Cerrar menú al hacer clic o tocar fuera
   useEffect(() => {
@@ -228,6 +239,37 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       })
     } finally {
       setActionLoadingId(null)
+    }
+  }
+
+  // Renuncia voluntaria iniciada por el propio participante
+  const handleConfirmVoluntaryWaiver = async () => {
+    if (!renouncingShare) return
+
+    setIsRenouncing(true)
+    setActionMsg(null)
+
+    try {
+      const { error } = await supabase.rpc('renounce_own_participation', {
+        p_share_id: renouncingShare.id,
+      })
+
+      if (error) throw error
+
+      setActionMsg({
+        type: 'success',
+        text: `Has renunciado voluntariamente a tu participación del ${renouncingShare.percentage}%. La cuota ha vuelto a la custodia del propietario.`,
+      })
+      setRenouncingShare(null)
+      await onRefresh()
+    } catch (err: unknown) {
+      console.error('Error al renunciar voluntariamente:', err)
+      setActionMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al procesar la renuncia voluntaria.',
+      })
+    } finally {
+      setIsRenouncing(false)
     }
   }
 
@@ -650,6 +692,30 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                   )}
                 </div>
               )}
+
+              {/* Botón de renuncia voluntaria para el participante autenticado */}
+              {isMe &&
+                share.role === 'PARTICIPANTE' &&
+                share.status === 'ACEPTADA' &&
+                ticketStatus !== 'LIQUIDADO' &&
+                !(ticketStatus === 'VALIDADO' && prizeAmountCents > 0) &&
+                !share.waiver_requested && (
+                  <div className="pl-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 font-medium">
+                      ¿Ya no deseas tu participación?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setRenouncingShare(share)}
+                      disabled={actionLoadingId === share.id}
+                      className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-xl text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 active:scale-95 transition shadow-xs cursor-pointer"
+                      title="Renunciar voluntariamente a mi participación"
+                    >
+                      <LogOut className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                      <span>Renunciar a mi participación</span>
+                    </button>
+                  </div>
+                )}
             </div>
           )
         })}
@@ -815,6 +881,78 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
             : null
         }
       />
+
+      {/* Modal de confirmación de renuncia voluntaria (z-50) */}
+      {renouncingShare && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl border border-gray-100 space-y-4 animate-in zoom-in-95 duration-150">
+            {/* Cabecera con icono */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 shadow-xs">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 leading-tight">
+                  ¿Renunciar a tu participación?
+                </h3>
+                <p className="text-[11px] text-gray-500">
+                  Décimo #{ticketNumber} · {drawName}
+                </p>
+              </div>
+            </div>
+
+            {/* Explicación legal y de negocio */}
+            <div className="bg-rose-50/70 border border-rose-200/80 rounded-2xl p-3.5 text-xs text-rose-950 space-y-2">
+              <p className="leading-relaxed">
+                Vas a renunciar voluntariamente a tu participación del{' '}
+                <span className="font-extrabold text-rose-900">
+                  {renouncingShare.percentage}% (
+                  {((Number(renouncingShare.percentage) / 100) * 20).toFixed(2)} €
+                </span>
+                ). Esta cuota volverá automáticamente al propietario del décimo y quedará registrada
+                en el historial de auditoría.
+              </p>
+              <p className="text-[11px] font-bold text-rose-800 flex items-center gap-1.5">
+                <span>Esta acción no se puede deshacer.</span>
+              </p>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setRenouncingShare(null)}
+                disabled={isRenouncing}
+                className="flex-1 py-2.5 px-3 rounded-xl border border-gray-300 bg-white text-gray-700 text-xs font-bold hover:bg-gray-50 active:scale-98 transition disabled:opacity-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmVoluntaryWaiver}
+                disabled={isRenouncing}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                {isRenouncing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <span>Renunciando...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="h-4 w-4 text-white" />
+                    <span>Sí, renunciar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.14] - 2026-11-19
+
+### Added
+- **Renuncia Voluntaria de Participación por el Cotitular (`renounce_own_participation`):**
+  - Implementada función RPC transaccional `SECURITY DEFINER` en PostgreSQL que permite a cualquier participante con cuota aceptada (`status = 'ACEPTADA'`, `role = 'PARTICIPANTE'`) renunciar voluntariamente a su porcentaje mientras el décimo no esté liquidado ni premiado pendiente de cobro.
+  - Reintegración atómica e inmediata de la cuota al propietario registrador (`role = 'PROPIETARIO'`) garantizando la suma inmutable del 100,00% de la propiedad.
+  - Marcado de la participación en estado `RENUNCIADA` con `0.00%`, resolución automática de solicitudes de renuncia previas y registro inmutable en `public.audit_events` (`RENUNCIA_VOLUNTARIA_PARTICIPANTE`).
+  - Despacho automático de notificación interna y Web Push (`PARTICIPANT_WAIVED`) al custodio del décimo.
+- **Botón y Diálogo de Confirmación en Interfaz (`OwnershipBreakdownCard.tsx`):**
+  - Añadido el botón *"Renunciar a mi participación"* con icono `LogOut` en estilo suave rojo (`bg-rose-50 text-rose-700`) en la tarjeta del participante autenticado.
+  - Diálogo modal de confirmación (`z-50` sobre `BottomNav`) con advertencia clara de irreversibilidad, cálculo del importe equivalente en euros y protección mediante `useModalBackHandler`.
+- **Línea Temporal de Auditoría (`TicketAuditTimeline.tsx`):**
+  - Soporte e icono temático para eventos de auditoría `RENUNCIA_VOLUNTARIA_PARTICIPANTE`.
+
 ## [1.0.13] - 2026-11-19
 
 ### Added
