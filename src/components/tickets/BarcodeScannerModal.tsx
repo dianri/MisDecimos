@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { X, Camera, Upload, AlertCircle, RefreshCw } from 'lucide-react'
 
 export interface BarcodeScannerModalProps {
@@ -15,6 +16,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   onClose,
   onScanSuccess,
 }) => {
+  useModalBackHandler({ isOpen, onClose, modalKey: 'barcode_scanner_modal' })
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
   const [isScanningFile, setIsScanningFile] = useState(false)
