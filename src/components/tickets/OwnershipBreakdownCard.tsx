@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import type { Database } from '../../types/database.types'
@@ -64,6 +64,29 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [activeShareInvite, setActiveShareInvite] = useState<PendingInvite | null>(null)
   const [activeMenuShareId, setActiveMenuShareId] = useState<string | null>(null)
+  const menuContainerRef = useRef<HTMLDivElement>(null)
+
+  // Cerrar menú al hacer clic o tocar fuera
+  useEffect(() => {
+    if (!activeMenuShareId) return
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(e.target as Node)
+      ) {
+        setActiveMenuShareId(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [activeMenuShareId])
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true)
@@ -471,9 +494,11 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           return (
             <div
               key={share.id}
-              className="bg-white border border-gray-200/80 rounded-2xl p-3.5 relative overflow-hidden shadow-xs space-y-2"
+              className={`bg-white border border-gray-200/80 rounded-2xl p-3.5 relative shadow-xs space-y-2 transition ${
+                activeMenuShareId === share.id ? 'z-30' : 'z-10'
+              }`}
             >
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#2563EB]" />
+              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#2563EB] rounded-l-2xl" />
 
               <div className="flex items-center justify-between pl-2">
                 <div className="flex items-center gap-3">
@@ -532,29 +557,37 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
                   {/* Menú de acciones para el Propietario (Solicitar Renuncia) */}
                   {isOwner && !share.waiver_requested && ticketStatus === 'PENDIENTE' && (
-                    <div className="relative">
+                    <div
+                      className="relative"
+                      ref={activeMenuShareId === share.id ? menuContainerRef : null}
+                    >
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation()
                           setActiveMenuShareId(
                             activeMenuShareId === share.id ? null : share.id
                           )
-                        }
-                        className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                        title="Opciones"
+                        }}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                        title="Opciones del participante"
+                        aria-label="Opciones del participante"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </button>
 
                       {activeMenuShareId === share.id && (
-                        <div className="absolute right-0 top-7 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 text-xs">
+                        <div className="absolute right-0 top-full mt-1.5 min-w-[200px] rounded-xl bg-white shadow-xl border border-gray-200 z-40 py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
                           <button
                             type="button"
-                            onClick={() => handleRequestWaiver(share.id)}
+                            onClick={() => {
+                              setActiveMenuShareId(null)
+                              handleRequestWaiver(share.id)
+                            }}
                             disabled={actionLoadingId === share.id}
-                            className="w-full text-left px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                            className="w-full text-left py-2.5 px-3.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2 font-medium transition active:bg-rose-100"
                           >
-                            <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+                            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
                             <span>Solicitar renuncia</span>
                           </button>
                         </div>
