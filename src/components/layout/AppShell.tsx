@@ -3,19 +3,21 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { safeImageUrl } from '../../lib/sanitize'
 import { useAndroidBackNavigation } from '../../hooks/useAndroidBackNavigation'
+import { usePushPermissionPrompt } from '../../hooks/usePushPermissionPrompt'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
+import { PushPermissionModal } from '../pwa/PushPermissionModal'
 import { VersionBadge } from '../common/VersionBadge'
 import { TicketsPage } from '../../pages/TicketsPage'
 import { TicketDetailPage } from '../../pages/TicketDetailPage'
 import { AlertsPage } from '../../pages/AlertsPage'
 import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
-import { Ticket, Bell, Shield, User as UserIcon, LogOut } from 'lucide-react'
+import { Ticket, Bell, Shield, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
 
 export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 
 export const AppShell: React.FC = () => {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, refreshProfile } = useAuth()
   const {
     activeTab,
     selectedTicketId,
@@ -24,6 +26,22 @@ export const AppShell: React.FC = () => {
     goBack,
   } = useAndroidBackNavigation()
   const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(0)
+
+  // Onboarding inteligente de permisos de notificaciones push
+  const {
+    isPromptOpen,
+    promptContext,
+    isActivating,
+    showDismissToast,
+    handleActivate,
+    handleDismiss,
+    closeDismissToast,
+  } = usePushPermissionPrompt({
+    userId: user?.id,
+    profile,
+    unreadCount: unreadAlertsCount,
+    refreshProfile,
+  })
 
   // Consultar notificaciones no leídas y suscribirse a Realtime
   useEffect(() => {
@@ -144,7 +162,53 @@ export const AppShell: React.FC = () => {
       {/* 4. Badge Anti-Caché flotante (por encima de la barra inferior) */}
       <VersionBadge className="bottom-20 right-3" />
 
-      {/* 5. Toast flotante de confirmación de salida en Android (z-50 sobre BottomNav) */}
+      {/* 5. Modal de Solicitud Inteligente de Notificaciones Push */}
+      <PushPermissionModal
+        isOpen={isPromptOpen}
+        context={promptContext}
+        isActivating={isActivating}
+        onActivate={handleActivate}
+        onDismiss={handleDismiss}
+      />
+
+      {/* 6. Toast informativo al descartar notificaciones push (5s con enlace a Perfil) */}
+      {showDismissToast && (
+        <div
+          role="status"
+          className="fixed bottom-20 inset-x-4 max-w-md mx-auto z-50 bg-gray-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-white/10 flex items-start justify-between gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200"
+        >
+          <div className="flex items-start gap-2.5">
+            <BellOff className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <p className="font-semibold text-white">Notificaciones push no activadas</p>
+              <p className="text-gray-300 text-[11px] leading-relaxed">
+                No recibirás notificaciones push en este dispositivo. Siempre puedes activarlas o desactivarlas en tu{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeDismissToast()
+                    navigateTo({ tab: 'perfil', ticketId: null })
+                  }}
+                  className="underline font-bold text-amber-300 hover:text-amber-200 cursor-pointer"
+                >
+                  Perfil
+                </button>
+                .
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={closeDismissToast}
+            className="p-1 text-gray-400 hover:text-white rounded-lg transition shrink-0 cursor-pointer"
+            aria-label="Cerrar aviso"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 7. Toast flotante de confirmación de salida en Android (z-50 sobre BottomNav) */}
       {showExitToast && (
         <div
           role="status"
@@ -156,7 +220,7 @@ export const AppShell: React.FC = () => {
         </div>
       )}
 
-      {/* 6. Barra de Navegación Inferior Fija (BottomNav) */}
+      {/* 8. Barra de Navegación Inferior Fija (BottomNav) */}
       <nav
         aria-label="Navegación principal"
         className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
