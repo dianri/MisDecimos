@@ -93,3 +93,11 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   - Lotería de Navidad: `https://api.elpais.com/ws/LoteriaNavidadPremiados?n=XXXXX`
   - Sorteo de El Niño: `https://api.elpais.com/ws/LoteriaNinoPremiados?n=XXXXX`
 - Como respaldo ante cualquier contingencia, se utiliza el servicio `loteriasapi.com` ejecutado a través de Supabase Edge Functions con la API Key protegida en Supabase Secrets.
+- **Bloqueo de Comprobación Previa al Sorteo (Anti-Falsos Negativos):**
+  - Ningún décimo puede comprobarse antes de la fecha y hora oficial de inicio del sorteo en hora peninsular española (`Europe/Madrid` CET):
+    - **Lotería de Navidad (`NAVIDAD`):** 22 de diciembre a las 09:00 CET.
+    - **Sorteo de El Niño (`EL_NINO`):** 6 de enero a las 12:00 CET.
+  - La ausencia de resultados en la API antes de la fecha oficial **jamás** se interpreta como *"Sin premio (0,00 €)"* ni modifica el estado del billete a `VALIDADO`.
+  - Los décimos permanecen en estado `PENDIENTE` con todas las acciones de gestión, reparto y cancelación de cuotas activas.
+  - La Edge Function `check-prizes` valida en servidor la hora oficial y rechaza cualquier consulta prematura con el código `DRAW_NOT_HELD_YET` sin persistir mutaciones en base de datos.
+  - Si la API indica que el sorteo se encuentra en curso (`error: 1` o `status: 0`), se responde con `DRAW_IN_PROGRESS` sin registrar el décimo como no premiado.

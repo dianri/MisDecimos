@@ -5,7 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-## [1.0.11] - 2026-11-19
+## [1.0.12] - 2026-11-19
+
+### Fixed
+- **Bloqueo de Comprobación Previa al Sorteo (`PrizeCheckCard.tsx`):**
+  - Validación temporal contra la hora oficial de inicio del sorteo en hora peninsular española (`Europe/Madrid` CET): Navidad (22 de diciembre a las 09:00 CET) y El Niño (6 de enero a las 12:00 CET).
+  - Si el sorteo aún no se ha celebrado (`now < drawStart`), se deshabilita el botón de comprobación con el texto *"Disponible el DD/MM/YYYY"* y el icono `CalendarClock`.
+  - Reemplazo del recuadro *"Sin premio"* por una tarjeta informativa ámbar destacada: *"El sorteo aún no se ha realizado. Se celebrará el [fecha] (faltan X días). Podrás comprobar si tiene premio a partir de ese día."*
+- **Blindaje en Backend / Edge Function (`check-prizes/index.ts`):**
+  - Verificación estricta de la fecha y hora oficial de inicio en servidor. Si `now < drawStart`, devuelve código `DRAW_NOT_HELD_YET` sin mutar el estado del billete en la base de datos ni registrar auditorías erróneas.
+  - Gestión defensiva de la API durante la celebración del sorteo: si la API responde con sorteo no concluido (`error: 1` o `status === 0`), devuelve código `DRAW_IN_PROGRESS` sin marcar el décimo como `VALIDADO` o sin premio.
+- **Normalización de Base de Datos (`20261119000001_reset_future_validated_tickets.sql`):**
+  - Migración aplicada en Supabase Cloud restableciendo a estado `PENDIENTE` todos los décimos de sorteos futuros que hubieran sido marcados indebidamente como `VALIDADO` con `prize_amount_cents = 0` en comprobaciones previas.
+- **Soporte en Frontend (`prizeService.ts`):**
+  - Actualizada la interfaz `CheckPrizeResult` con campos `ok`, `code` y `message` para notificar al usuario sobre estados previos o en curso del sorteo.
+
 
 ### Fixed
 - **Botón de Cámara Ergonómico y Verde en Dashboard (`TicketsPage.tsx`):**

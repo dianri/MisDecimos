@@ -13,6 +13,7 @@ import {
   Sparkles,
   AlertCircle,
   BadgeCheck,
+  CalendarClock,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -38,7 +39,47 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
     text: string
   } | null>(null)
 
+  // Determinar si el sorteo ya se ha celebrado en hora peninsular española (Europe/Madrid)
+  // Navidad: 22 de diciembre a las 09:00 CET
+  // El Niño: 6 de enero a las 12:00 CET
+  const isElNino = ticket.draw_type === 'EL_NINO' || ticket.draw_date.includes('-01-06')
+  const drawStartHour = isElNino ? '12:00:00' : '09:00:00'
+  const drawStartIso = `${ticket.draw_date}T${drawStartHour}+01:00`
+  const parsedDrawStart = Date.parse(drawStartIso)
+  const drawStartTimestamp = isNaN(parsedDrawStart)
+    ? Date.parse(`${ticket.draw_date}T${drawStartHour}`)
+    : parsedDrawStart
+  const now = Date.now()
+  const isDrawHeld = now >= drawStartTimestamp
+
+  // Formateo de fechas para el mensaje y el botón
+  const [yearStr, monthStr, dayStr] = ticket.draw_date.split('-')
+  const drawDateObj = new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr))
+  const formattedDrawDate = new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(drawDateObj)
+  const shortDrawDate = new Intl.DateTimeFormat('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(drawDateObj)
+
+  const diffMs = drawStartTimestamp - now
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  const daysRemainingText =
+    diffDays <= 0 ? 'se celebra hoy' : diffDays === 1 ? 'falta 1 día' : `faltan ${diffDays} días`
+
   const handleCheckPrize = async () => {
+    if (!isDrawHeld) {
+      setFeedbackMsg({
+        type: 'error',
+        text: `El sorteo aún no se ha realizado. Podrás comprobar tu décimo el ${formattedDrawDate}.`,
+      })
+      return
+    }
+
     setIsChecking(true)
     setFeedbackMsg(null)
 
@@ -50,6 +91,14 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
         ticketPrice: Number(ticket.ticket_price),
         forceRefresh: !!ticket.last_checked_at,
       })
+
+      if (res.ok === false) {
+        setFeedbackMsg({
+          type: 'error',
+          text: res.message || 'El sorteo aún no se ha celebrado o está en curso.',
+        })
+        return
+      }
 
       if (res.prizeAmountCents > 0) {
         setFeedbackMsg({
@@ -156,7 +205,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
   const prizeAmountCents = ticket.prize_amount_cents || 0
   const isPrized = prizeAmountCents > 0
   const isLiquidated = ticket.status === 'LIQUIDADO'
-  const isChecked = ticket.last_checked_at !== null || ticket.status !== 'PENDIENTE'
+  const isChecked = isDrawHeld && (ticket.last_checked_at !== null || ticket.status !== 'PENDIENTE')
 
   const formattedTotalPrize = (prizeAmountCents / 100).toLocaleString('es-ES', {
     minimumFractionDigits: 2,
@@ -180,28 +229,40 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
   return (
     <div className="space-y-3">
       {/* 1. Botón Principal Dorado/Ámbar */}
-      <button
-        type="button"
-        onClick={handleCheckPrize}
-        disabled={isChecking}
-        className="w-full py-3.5 px-5 rounded-2xl bg-[#D97706] hover:bg-[#b45309] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-98 transition disabled:opacity-75 cursor-pointer"
-      >
-        {isChecking ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin text-white" />
-            <span>Consultando resultados oficiales...</span>
-          </>
-        ) : (
-          <>
-            <Search className="h-4 w-4 text-white" />
-            <span>
-              {!isChecked || ticket.status === 'PENDIENTE'
-                ? 'Comprobar premio'
-                : 'Comprobar de nuevo'}
-            </span>
-          </>
-        )}
-      </button>
+      {!isDrawHeld ? (
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          className="w-full py-3.5 px-5 rounded-2xl bg-amber-100/90 text-amber-900 border border-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs cursor-not-allowed select-none"
+        >
+          <CalendarClock className="h-4 w-4 text-amber-700" />
+          <span>Disponible el {shortDrawDate}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleCheckPrize}
+          disabled={isChecking}
+          className="w-full py-3.5 px-5 rounded-2xl bg-[#D97706] hover:bg-[#b45309] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-98 transition disabled:opacity-75 cursor-pointer"
+        >
+          {isChecking ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+              <span>Consultando resultados oficiales...</span>
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4 text-white" />
+              <span>
+                {!isChecked || ticket.status === 'PENDIENTE'
+                  ? 'Comprobar premio'
+                  : 'Comprobar de nuevo'}
+              </span>
+            </>
+          )}
+        </button>
+      )}
 
       {/* Mensaje de feedback temporal */}
       {feedbackMsg && (
@@ -221,8 +282,24 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
         </div>
       )}
 
-      {/* 2. Recuadro de Resultado (Si ya se ha comprobado al menos una vez) */}
-      {isChecked && (
+      {/* 2. Recuadro Informativo de Sorteo Pendiente O Resultado */}
+      {!isDrawHeld ? (
+        <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 text-amber-900 shadow-xs flex items-start gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-700 shadow-xs">
+            <CalendarClock className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800 font-mono">
+              Sorteo no celebrado
+            </h4>
+            <p className="text-xs text-amber-950/90 leading-relaxed">
+              El sorteo aún no se ha realizado. Se celebrará el{' '}
+              <span className="font-semibold text-amber-950">{formattedDrawDate}</span> ({daysRemainingText}).
+              Podrás comprobar si tiene premio a partir de ese día.
+            </p>
+          </div>
+        </div>
+      ) : isChecked ? (
         <div className="rounded-2xl overflow-hidden transition shadow-xs">
           {!isPrized ? (
             /* CASO A: Sin Premio */
@@ -380,7 +457,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
