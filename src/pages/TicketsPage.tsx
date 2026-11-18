@@ -247,10 +247,10 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                 setAddTicketInitialTab('manual')
                 setIsAddTicketOpen(true)
               }}
-              className="flex-1 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition"
+              className="flex-1 min-h-[54px] flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-white border-2 border-lottery text-lottery hover:bg-lottery-50 active:scale-[0.98] transition font-bold text-xs shadow-xs"
             >
-              <Ticket className="h-4 w-4" />
-              <span>Añadir décimo</span>
+              <Ticket className="h-4.5 w-4.5 text-lottery shrink-0" />
+              <span>Añadir décimo manual</span>
             </button>
 
             <button
@@ -261,9 +261,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
               }}
               aria-label="Escanear décimo con cámara"
               title="Escanear décimo con cámara"
-              className="aspect-square shrink-0 flex items-center justify-center rounded-2xl bg-lottery-50 border border-lottery-200 text-lottery hover:bg-lottery-100 hover:text-lottery-700 hover:border-lottery-300 active:scale-95 transition shadow-sm"
+              className="w-[54px] min-h-[54px] aspect-square shrink-0 flex items-center justify-center rounded-2xl bg-[#2E6146] hover:bg-[#244d37] active:scale-[0.98] text-white shadow-md shadow-lottery/25 transition"
             >
-              <Camera className="h-5 w-5" />
+              <Camera className="w-6 h-6 text-white" size={24} strokeWidth={2.2} />
             </button>
           </div>
         </div>

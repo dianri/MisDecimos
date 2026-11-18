@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.11] - 2026-11-19
+
+### Fixed
+- **Botón de Cámara Ergonómico y Verde en Dashboard (`TicketsPage.tsx`):**
+  - Ajustado el botón cuadrado de acceso rápido a la cámara a 54x54 px (`min-h-[54px] w-[54px]`) con fondo verde institucional `#2E6146` (`bg-[#2E6146] hover:bg-[#244d37]`) e icono `Camera` en blanco puro de 24 px (`w-6 h-6`, `strokeWidth={2.2}`).
+  - Estilizado el botón principal izquierdo en fondo blanco con doble borde verde corporativo y altura idéntica de 54 px con el texto *"Añadir décimo manual"*.
+- **Desbloqueo de Menú Contextual en Participantes Aceptados (`OwnershipBreakdownCard.tsx`):**
+  - Eliminado `overflow-hidden` de las tarjetas de cotitulares para evitar el recorte del menú de opciones flotante (`...`).
+  - Asignado dinámicamente `relative z-30` a la fila activa y `z-40` al desplegable flotante con posicionamiento `right-0 top-full mt-1.5 min-w-[200px]`.
+  - Ampliada el área táctil del botón interno a `py-2.5 px-3.5` e implementado listener de cierre automático al hacer clic o tocar fuera (`mousedown` y `touchstart`).
+- **Documentación de Pantallas (`docs/SCREENS_GUIDE.md`):** Actualizada la descripción de la botonera de Dashboard y del menú contextual en el cuadro de propiedad.
+
 ## [1.0.10] - 2026-11-19
 
 ### Fixed

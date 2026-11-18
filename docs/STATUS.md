@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.10` (Producción Estable · Blindaje Móvil de Modales y Jerarquía Z-Index)  
+**Versión Actual:** `1.0.11` (Producción Estable · Botón Verde de Cámara y Menú Contextual Desbloqueado)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.10`)  
+**Rama de Producción:** `main` (Tag `v1.0.11`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -79,7 +79,7 @@
 
 ---
 
-### 🚀 Release de Producción (v1.0.0 a v1.0.10)
+### 🚀 Release de Producción (v1.0.0 a v1.0.11)
 - [x] Configuración de enrutado SPA y cabeceras anti-caché en `vercel.json`.
 - [x] Metaetiquetas móviles PWA completas en `index.html`.
 - [x] v1.0.1: Chunks manuales de Rollup, versión dinámica y retry de OTP email/signup.
@@ -92,3 +92,4 @@
 - [x] v1.0.8: Ciclo de vida PWA en modo `autoUpdate` silencioso sin banner flotante ni clics manuales.
 - [x] v1.0.9: Botón cuadrado de acceso directo a la cámara para escanear décimos en el Dashboard.
 - [x] v1.0.10: Jerarquía `z-index` de `BottomNav` (`z-30`) y modales con `max-h-[88dvh]`, scroll interno y pie fijo `env(safe-area-inset-bottom)`.
+- [x] v1.0.11: Botón ergonómico de cámara en verde sólido con icono blanco (54px) y menú contextual flotante desbloqueado (`z-30`/`z-40`).

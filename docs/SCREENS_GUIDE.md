@@ -90,9 +90,9 @@ flowchart TD
 - **Archivados:** Décimos ocultados o archivados por el usuario para limpiar su vista principal.
 
 ### Botones y Acciones:
-1. **Fila "Añadir un Décimo" (Botón Principal + Botón Rápido de Cámara):**
-   - **Botón Principal Verde (`Añadir décimo`):** Abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) directamente en la pestaña de **Datos Manuales** (`initialTab="manual"`), permitiendo seleccionar sorteo (**Navidad** o **El Niño**), número (5 dígitos), serie y fracción.
-   - **Botón Cuadrado con Icono de Cámara (Acceso Directo):** Ubicado a la derecha con proporción 1:1, abre directamente el escáner de cámara trasera sin pasos intermedios (`initialTab="scanner"` activando [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx) en modo GS1-128). Al detectar el código oficial del décimo físico, rellena automáticamente los datos y los presenta en pantalla para confirmación y guardado.
+1. **Fila "Añadir un Décimo" (Botón Principal Manual + Botón Rápido de Cámara):**
+   - **Botón Principal Manual (`Añadir décimo manual`):** Con fondo blanco, borde doble verde corporativo (`#2E6146`), altura táctil ergonómica (`min-h-[54px]`) e icono de billete (`Ticket`), abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) directamente en la pestaña de **Datos Manuales** (`initialTab="manual"`), permitiendo seleccionar sorteo (**Navidad** o **El Niño**), número (5 dígitos), serie y fracción.
+   - **Botón Cuadrado Verde de Cámara (Acceso Directo):** Con tamaño idéntico de 54x54 px (`w-[54px] min-h-[54px]`), fondo verde sólido `#2E6146` e icono `Camera` en **blanco puro** de 24 px (`size={24}`, `strokeWidth={2.2}`), abre de forma instantánea la cámara trasera del dispositivo (`initialTab="scanner"` activando [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx) en modo GS1-128). Al detectar el código oficial del décimo físico, rellena automáticamente los datos y los presenta en pantalla para confirmación y guardado.
    - Al guardar, ejecuta la RPC transaccional `create_ticket`, asegurando el 100% de titularidad inicial y navegando inmediatamente a la ficha de detalle.
 2. **Botón "Reclamar / Canjear Código" (o QR):**
    - Abre [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx).
@@ -128,6 +128,7 @@ flowchart TD
 #### C) Cuadro de Propiedad y Gráfico Donut SVG (`<OwnershipBreakdownCard />`)
 - **Gráfico Donut SVG Dinámico:** Visualiza el 100% de la propiedad dividido en sectores de color por cotitular. En el centro certifica el estado `100% Distribuido` (Principio Cero Huérfanos).
 - **Lista de Cotitulares:** Nombre, avatar, porcentaje exacto, importe jugado y estado de cuota (`ACEPTADA`).
+  - **Menú Contextual Flotante (`...`):** En estado `PENDIENTE` del décimo, el propietario dispone del botón de opciones (`MoreVertical`) con menú contextual desbloqueado (`z-30`/`z-40` libre de recortes por `overflow`), área táctil cómoda (`py-2.5 px-3.5`) y auto-cierre al pulsar fuera (`mousedown`/`touchstart`) para iniciar el flujo de solicitud de renuncia de participación.
 - **Invitaciones Pendientes:** Listado de códigos activos emitidos aún no reclamados, con botón para abrir el modal de compartición y botón **"Eliminar"** visible para el propietario en cualquier estado del décimo (`PENDIENTE`, `VALIDADO`, `ARCHIVADO`, salvo liquidado), devolviendo de inmediato la cuota al propietario. Si existen 2 o más invitaciones pendientes, muestra además el botón masivo **"Cancelar todas las pendientes (recuperar X%)"** para cancelar en un solo clic mediante la RPC `cancel_all_pending_invites`.
 - **Añadir Participación y Eliminación de Décimo:** El botón inferior *"Añadir participación"* permanece disponible tanto en `PENDIENTE` como en `VALIDADO` mientras el propietario conserve cuota libre. Asimismo, el botón *"Eliminar décimo"* está habilitado en ambos estados siempre que no existan cuotas de terceros en estado `ACEPTADA`.
 - **Flujo Bilateral de Renuncia de Participaciones:**
