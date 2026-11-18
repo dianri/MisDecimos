@@ -179,6 +179,13 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 - **Android:** Notificaciones Web Push estándar mediante el Service Worker vía Chrome/Edge/Firefox.
 - **iOS (16.4+):** Requiere que la aplicación sea instalada en la pantalla de inicio ("Añadir a pantalla de inicio" / PWA standalone) para conceder permisos y suscribirse al Notification API mediante el Service Worker.
 
+### Onboarding Inteligente de Permisos Push (`src/hooks/usePushPermissionPrompt.ts`)
+- **Estrategia No Intrusiva:** La solicitud de permisos Web Push se gestiona de forma diferida y contextualizada para maximizar la tasa de aceptación sin saturar al usuario:
+  - **Disparador 1 (Primera Visita):** Se abre tras 1,5 segundos en la primera sesión (`dismissals === 0`) si el usuario no tiene permisos activos.
+  - **Disparador 2 (Notificación Pendiente):** Se abre de forma contextualizada (*"Tienes notificaciones nuevas"*) si existen alertas no leídas (`unreadCount > 0`) y no se ha preguntado en la sesión actual.
+- **Límite de 3 Cancelaciones:** Se almacena el contador `misdecimos_push_prompt_dismissals_${userId}` en `localStorage` con bloqueo de sesión en `sessionStorage`. Si el usuario descarta 3 veces el diálogo o si el navegador tiene el permiso en `denied`, no se vuelve a preguntar de forma automática.
+- **Aviso de Descarte:** Al pulsar *"Ahora no"* o cerrar el modal, se muestra un aviso flotante de 5 segundos con acceso directo para gestionar las alertas en **Perfil**. Al activar manualmente el interruptor en `ProfilePage.tsx`, el contador de descartes se restablece automáticamente a 0.
+
 ### Navegación Nativa Android y Gestión de Historial (PWA Anti-Cierre)
 - **Gestor Global (`src/hooks/useAndroidBackNavigation.ts`):**
   - Controla el evento `window.onpopstate` para sincronizar las vistas internas (`/`, `/billetes/:id`, `/alertas`, `/auditoria`, `/perfil`) con el botón o gesto físico de retroceso de Android sin depender de librerías externas pesadas.

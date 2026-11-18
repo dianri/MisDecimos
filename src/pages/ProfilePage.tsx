@@ -9,6 +9,7 @@ import {
   isStandaloneMode,
   detectPlatform,
 } from '../services/push/pushSubscription'
+import { resetPushPromptDismissals } from '../hooks/usePushPermissionPrompt'
 import {
   Camera,
   User,
@@ -201,6 +202,7 @@ export const ProfilePage: React.FC = () => {
         const success = await subscribeUserToPush(user.id)
         if (success) {
           setPushEnabled(true)
+          resetPushPromptDismissals(user.id)
           setStatusMsg({ type: 'success', text: 'Notificaciones push activadas correctamente.' })
         } else {
           setStatusMsg({
