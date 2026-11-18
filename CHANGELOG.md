@@ -5,6 +5,19 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.15] - 2026-11-19
+
+### Added
+- **Onboarding Inteligente de Permisos Push (`usePushPermissionPrompt.ts`):**
+  - Implementado sistema no intrusivo para la solicitud de permisos Web Push en PWA.
+  - **Disparador 1 (Primera entrada):** Se abre automáticamente a los 1,5 segundos de cargar la app si el usuario no tiene permisos activos y el contador de descartes es 0 (`dismissals === 0`).
+  - **Disparador 2 (Notificación no leída):** Se abre contextualizado si el usuario tiene alertas sin leer (`unreadCount > 0`), no tiene push activo y `dismissals < 3`.
+  - **Límite Estricto de 3 Cancelaciones:** Al alcanzar 3 descartes o si el permiso fue denegado en el navegador (`denied`), nunca más se vuelve a molestar al usuario con diálogos automáticos.
+- **Modal Adaptado a Móvil y Aviso de Gestión en Perfil (`PushPermissionModal.tsx`):**
+  - Modal accesible (`z-50` sobre `BottomNav` con soporte de botón Atrás nativo) detallando los beneficios de recibir alertas de participaciones, sorteos y premios.
+  - Al descartar ("Ahora no" o botón `X`), incrementa `dismissals` en `+1` y muestra un aviso flotante durante 5 segundos informando que no recibirá notificaciones en ese dispositivo e incluyendo un acceso directo a **Perfil**.
+  - Si el usuario activa manualmente las notificaciones push desde la pantalla de Perfil (`ProfilePage.tsx`), el contador de descartes se restablece automáticamente a 0.
+
 ## [1.0.14] - 2026-11-19
 
 ### Added
