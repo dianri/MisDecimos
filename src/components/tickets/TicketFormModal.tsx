@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { parseSelaeBarcode } from '../../lib/selaeBarcodeParser'
 import { BarcodeScannerModal } from './BarcodeScannerModal'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
 import {
   X,
@@ -29,6 +30,8 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   onClose,
   onCreated,
 }) => {
+  useModalBackHandler({ isOpen, onClose, modalKey: 'ticket_form_modal' })
+
   const [tab, setTab] = useState<'scan' | 'manual'>('manual')
   const [isScannerOpen, setIsScannerOpen] = useState(false)
 

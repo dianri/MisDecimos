@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { X, Copy, Check, Share2, MessageCircle, Sparkles } from 'lucide-react'
 
 export interface ShareInviteModalProps {
@@ -21,6 +22,8 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
   onClose,
   invite,
 }) => {
+  useModalBackHandler({ isOpen: isOpen && !!invite, onClose, modalKey: 'share_invite_modal' })
+
   const [copied, setCopied] = useState(false)
 
   if (!isOpen || !invite) return null

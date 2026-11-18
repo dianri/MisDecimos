@@ -62,13 +62,18 @@ flowchart TD
    - **Logo y Título:** Logotipo oficial de Loterías y marca MisDecimos.
    - **Botón de Campana de Alertas:** Acceso directo a la pestaña de notificaciones con insignia numérica roja en tiempo real si existen alertas no leídas.
    - **Avatar de Usuario:** Enlace rápido al perfil del usuario autenticado.
-2. **Barra Inferior Móvil (`BottomNav`):**
+6. **Barra Inferior Móvil (`BottomNav`):**
    - 4 accesos fijos adaptados a pantallas táctiles (con capa base `z-30` para permanecer siempre por debajo de cualquier modal o bottom sheet `z-50`):
      - 🎟️ **Billetes:** Dashboard de décimos en custodia y participaciones.
      - 🔔 **Alertas:** Centro de notificaciones con badge interactivo.
      - 🛡️ **Auditoría:** Registro global de operaciones inmutables.
      - 👤 **Perfil:** Configuración de cuenta, avatar y notificaciones Web Push.
-3. **Componente `<VersionBadge />`:**
+   - **Historial Completo de Navegación:** El cambio de pestaña añade entradas al historial de navegación (sin `replace: true`), permitiendo que el botón o gesto "Atrás" de Android regrese naturalmente a la vista anterior.
+3. **Gestión del Botón Atrás de Android y Protección contra Cierre PWA (`useAndroidBackNavigation` y `useModalBackHandler`):**
+   - **Cierre Natural de Modales y Sheets:** Al abrir cualquier diálogo (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal` o el modal de `<VersionBadge />`), pulsar el botón Atrás cierra limpiamente el modal sin abandonar la pantalla actual ni cerrar la aplicación.
+   - **Navegación Interior:** En pantallas secundarias (`/alertas`, `/auditoria`, `/perfil`, `/billetes/:id`), pulsar Atrás regresa a la pantalla previa. Si se accedió por enlace profundo o notificación sin historial (`idx === 0`), redirige a la raíz `/` en vez de cerrar la PWA.
+   - **Guardia Centinela en Ruta Raíz y Confirmación Doble Tap:** En la vista principal (`/`), el primer toque de Atrás muestra un toast flotante (`z-50`, encima de `BottomNav`): *"Pulsa atrás de nuevo para cerrar la aplicación"*. Si se pulsa de nuevo en menos de 2,5 segundos, la aplicación se cierra; si no, el aviso desaparece y la protección se rearma automáticamente.
+4. **Componente `<VersionBadge />`:**
    - Widget flotante discreto en la esquina inferior que muestra `vX.Y.Z · <git-hash>` y el indicador de red (*Online/Offline*).
    - Al pulsar, abre un modal de diagnóstico técnico con la fecha de build y el botón *"Forzar actualización y limpiar caché"*, que vacía `caches`, desregistra Service Workers y recarga en limpio.
    - **Ciclo de vida `autoUpdate` silencioso:** El Service Worker descarga y activa inmediatamente las nuevas versiones en segundo plano (`skipWaiting: true`, `clientsClaim: true`) y recarga la interfaz una sola vez de forma limpia sin requerir confirmación del usuario ni mostrar carteles flotantes molestos. Comprueba actualizaciones cada 60 segundos y cada vez que el usuario regresa a la pestaña (`visibilitychange`).

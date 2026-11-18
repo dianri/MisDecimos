@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { Wifi, WifiOff, RefreshCw, X, ShieldCheck, Terminal, Clock } from 'lucide-react'
 
 interface VersionBadgeProps {
@@ -8,6 +9,7 @@ interface VersionBadgeProps {
 
 export const VersionBadge: React.FC<VersionBadgeProps> = ({ className }) => {
   const [isOpen, setIsOpen] = useState(false)
+  useModalBackHandler({ isOpen, onClose: () => setIsOpen(false), modalKey: 'version_diag_modal' })
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isPurging, setIsPurging] = useState(false)
 
