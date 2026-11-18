@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.10] - 2026-11-19
+
+### Fixed
+- **Jerarquía `z-index` Global sobre `BottomNav` (`AppShell.tsx`):**
+  - Ajustado el nivel de capa de la barra de navegación inferior (`BottomNav`) a `z-30` (igualado a la cabecera superior), asegurando que todos los modales y bottom sheets con `z-50` o superior cubran por completo toda la interfaz sin solapamientos.
+- **Estructura Flex con Scroll Interno y Botón Fijo en `CreateParticipationSheet.tsx`:**
+  - Rediseñada la tarjeta modal con altura dinámica `max-h-[88dvh] flex flex-col overflow-hidden` respetando las barras dinámicas del navegador móvil (Chrome/Safari).
+  - Cabecera fija (`shrink-0`) con título, porcentaje disponible y botón de cierre.
+  - Cuerpo central con scroll vertical interno suave (`flex-1 overflow-y-auto overscroll-contain px-5 py-4`).
+  - Pie fijo de acción (`shrink-0 border-t border-gray-100 bg-white px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]`) garantizando que el botón de confirmación permanezca visible y accesible en cualquier resolución y dispositivo.
+- **Auditoría y Blindaje de Modales en Móvil:**
+  - Aplicado el patrón `flex flex-col max-h-[90dvh]` con cuerpo `overflow-y-auto` y pie `shrink-0` con `env(safe-area-inset-bottom)` en `TicketFormModal.tsx`, `ShareInviteModal.tsx`, `InviteClaimModal.tsx` y `BarcodeScannerModal.tsx`.
+- **Documentación de Pantallas (`docs/SCREENS_GUIDE.md`):** Actualizada la especificación de `BottomNav` y `<CreateParticipationSheet />`.
+
 ## [1.0.9] - 2026-11-16
 
 ### Added

@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.9` (Producción Estable · Botón Rápido de Cámara en Dashboard)  
-**Última Actualización:** 2026-11-16  
-**Rama de Producción:** `main` (Tag `v1.0.9`)  
+**Versión Actual:** `1.0.10` (Producción Estable · Blindaje Móvil de Modales y Jerarquía Z-Index)  
+**Última Actualización:** 2026-11-19  
+**Rama de Producción:** `main` (Tag `v1.0.10`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -79,7 +79,7 @@
 
 ---
 
-### 🚀 Release de Producción (v1.0.0 a v1.0.9)
+### 🚀 Release de Producción (v1.0.0 a v1.0.10)
 - [x] Configuración de enrutado SPA y cabeceras anti-caché en `vercel.json`.
 - [x] Metaetiquetas móviles PWA completas en `index.html`.
 - [x] v1.0.1: Chunks manuales de Rollup, versión dinámica y retry de OTP email/signup.
@@ -91,3 +91,4 @@
 - [x] v1.0.7: Pestaña "Partes iguales" como primera opción por defecto (100% libre) y valor inicial 20% manual.
 - [x] v1.0.8: Ciclo de vida PWA en modo `autoUpdate` silencioso sin banner flotante ni clics manuales.
 - [x] v1.0.9: Botón cuadrado de acceso directo a la cámara para escanear décimos en el Dashboard.
+- [x] v1.0.10: Jerarquía `z-index` de `BottomNav` (`z-30`) y modales con `max-h-[88dvh]`, scroll interno y pie fijo `env(safe-area-inset-bottom)`.

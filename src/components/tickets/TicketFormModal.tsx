@@ -195,14 +195,14 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
         <div
-          className="w-full max-w-md rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150"
+          className="w-full max-w-md rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
           role="dialog"
           aria-modal="true"
         >
-          {/* Cabecera del modal */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
+          {/* Cabecera del modal (shrink-0) */}
+          <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-lottery text-white shadow-sm shadow-lottery/20">
                 <Ticket className="h-4 w-4" />
@@ -220,8 +220,8 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
             </button>
           </div>
 
-          {/* Selector de modo: Escáner vs Manual */}
-          <div className="p-4 pb-2">
+          {/* Selector de modo: Escáner vs Manual (shrink-0) */}
+          <div className="p-4 pb-2 shrink-0 border-b border-gray-50 bg-white">
             <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-gray-100 text-xs font-semibold">
               <button
                 type="button"
@@ -254,14 +254,15 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
             </div>
           </div>
 
-          {/* Formulario */}
-          <form onSubmit={handleSubmit} className="p-5 pt-3 space-y-4">
-            {errorMsg && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
-                <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
+          {/* Formulario con scroll en campos y botón fijo abajo */}
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-5 pt-3 space-y-4">
+              {errorMsg && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
             {/* Número del Décimo (5 cifras) */}
             <div className="space-y-1.5">
@@ -368,9 +369,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
                 />
               </div>
             </div>
+          </div>
 
-            {/* Botón de acción */}
-            <div className="pt-2">
+          {/* Botón de acción fijo abajo (shrink-0) */}
+          <div className="shrink-0 border-t border-gray-100 bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
               <button
                 type="submit"
                 disabled={isLoading || number.length !== 5}

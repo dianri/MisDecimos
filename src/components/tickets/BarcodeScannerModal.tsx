@@ -148,7 +148,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
       <div
-        className="w-full max-w-sm rounded-3xl bg-gray-900 border border-gray-800 text-white shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-sm rounded-3xl bg-gray-900 border border-gray-800 text-white shadow-2xl overflow-hidden flex flex-col max-h-[92dvh]"
         role="dialog"
         aria-modal="true"
       >
@@ -217,8 +217,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           )}
         </div>
 
-        {/* Barra de opciones inferior */}
-        <div className="p-4 bg-gray-900/90 border-t border-gray-800 flex items-center justify-between gap-2">
+        {/* Barra de opciones inferior (shrink-0) */}
+        <div className="p-4 bg-gray-900/90 border-t border-gray-800 flex items-center justify-between gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <input
             ref={fileInputRef}
             type="file"

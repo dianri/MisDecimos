@@ -72,8 +72,8 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
   if (!isOpen) return null
 
   // 1. Manejador: Crear participación con porcentaje manual
-  const handleCreateManual = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleCreateManual = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     if (manualPercentage <= 0 || manualPercentage > availablePercentage) {
       setErrorMsg(`El porcentaje debe ser entre 1% y ${availablePercentage}%.`)
       return
@@ -163,12 +163,12 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200"
+        className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] animate-in slide-in-from-bottom duration-200"
         role="dialog"
         aria-modal="true"
       >
-        {/* Cabecera Bottom Sheet */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
+        {/* Cabecera Bottom Sheet (shrink-0 siempre visible arriba) */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
           <div>
             <h3 className="text-sm font-bold text-gray-900">Nueva Participación</h3>
             <p className="text-[11px] text-gray-500">
@@ -184,8 +184,9 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
           </button>
         </div>
 
-        {/* Selector de modo estilo píldora: 1. Partes iguales | 2. Porcentaje manual */}
-        <div className="p-4 pb-2">
+        {/* Cuerpo central con scroll interno overscroll-contain */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
+          {/* Selector de modo estilo píldora: 1. Partes iguales | 2. Porcentaje manual */}
           <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-gray-100 text-xs font-semibold">
             {/* 1. Primera pestaña (izquierda): Partes iguales */}
             <button
@@ -215,9 +216,7 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
               <span>Porcentaje manual</span>
             </button>
           </div>
-        </div>
 
-        <div className="p-5 pt-2 space-y-4">
           {errorMsg && (
             <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
@@ -322,28 +321,10 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
                   </span>
                 </p>
               </div>
-
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handleCreateEqualSplit}
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Generando {partsCount} partes...</span>
-                    </>
-                  ) : (
-                    <span>Crear participaciones a partes iguales</span>
-                  )}
-                </button>
-              </div>
             </div>
           ) : (
             /* MODO B: Porcentaje Manual */
-            <form onSubmit={handleCreateManual} className="space-y-4">
+            <form id="manual-participation-form" onSubmit={handleCreateManual} className="space-y-4">
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-gray-700">
                   Nombre base <span className="text-gray-400 font-normal">(opcional)</span>
@@ -399,24 +380,45 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
                   })}
                 </div>
               </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading || manualPercentage <= 0 || manualPercentage > availablePercentage}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Generando invitación...</span>
-                    </>
-                  ) : (
-                    <span>Crear participación de {manualPercentage}%</span>
-                  )}
-                </button>
-              </div>
             </form>
+          )}
+        </div>
+
+        {/* Pie fijo con botón de acción (shrink-0 con env(safe-area-inset-bottom)) */}
+        <div className="shrink-0 border-t border-gray-100 bg-white px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          {mode === 'equal' ? (
+            <button
+              type="button"
+              onClick={handleCreateEqualSplit}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Generando {partsCount} partes...</span>
+                </>
+              ) : (
+                <span>Crear participaciones a partes iguales</span>
+              )}
+            </button>
+          ) : (
+            <button
+              type="submit"
+              form="manual-participation-form"
+              onClick={() => handleCreateManual()}
+              disabled={isLoading || manualPercentage <= 0 || manualPercentage > availablePercentage}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Generando invitación...</span>
+                </>
+              ) : (
+                <span>Crear participación de {manualPercentage}%</span>
+              )}
+            </button>
           )}
         </div>
       </div>
