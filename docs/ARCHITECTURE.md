@@ -209,11 +209,21 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 ## 4. Captura GS1-128 y Motor de Plantillas de Boletos
 
 ### Parser de Códigos de Barras SELAE (`src/lib/selaeBarcodeParser.ts`)
-- **Estructura Decodificada:** Normaliza secuencias numéricas canónicas de 20 a 24 dígitos (Code-128, GS1-128, ITF) presentes en los décimos físicos de Lotería Nacional:
-  - Extracción de número de 5 dígitos (`^\d{5}$`).
-  - Detección de Serie (3 dígitos) y Fracción (2 dígitos).
-  - Normalización ante errores comunes de caracteres alfabéticos (`O->0`, `I/L->1`, `S->5`, `B->8`, `Z->2`).
-  - Detección de tipo de sorteo (`NAVIDAD`, `EL_NINO`, `JUEVES`, `SABADO`, `ESPECIAL`) y precio oficial por defecto.
+- **Estructura Estándar Oficial (20 Dígitos):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica de 20 dígitos presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
+  - `Prefijo de juego (2 dígitos):` `51` (Navidad / El Niño) o `01` (Lotería Nacional estándar).
+  - `Código interno de sorteo (5 dígitos):` posiciones 2..7 (ej. `02010`).
+  - `Fracción (2 dígitos):` posiciones 7..9 (ej. `11`).
+  - `Serie (3 dígitos):` posiciones 9..12 (ej. `008`).
+  - `Número del décimo (5 dígitos):` posiciones 12..17 (ej. `76719`).
+  - `Dígitos de control (3 dígitos):` posiciones 17..20 (ej. `833`).
+- **Expresión Regular Canónica:** `/(?:51|01)(\d{5})(\d{2})(\d{3})(\d{5})(\d{3})/` extrayendo de forma inequívoca el número del décimo (grupo 4), fracción (grupo 2) y serie (grupo 3).
+- **Normalización y Resiliencia OCR:** Eliminación de prefijos de simbología GS1 (ej. `]C1`), espacios, guiones y sustitución de confusiones de caracteres comunes (`O->0`, `I/L->1`, `Z->2`, `S->5`, `B->8`).
+- **Compatibilidad de Nombres:** Retorna aliases duales (`number`/`ticketNumber`, `serie`/`series`, `fraccion`/`fraction`).
+- **Seguridad e Integridad:** Ante códigos ajenos a SELAE o no reconocidos, devuelve `isValid: false` y mensaje explicativo en `errorMessage`, sin inventar números ni recurrir a valores hardcoded ficticios.
+- **Deducción de Sorteo Próximo:**
+  - 1 a 6 de Enero: El Niño del año en curso.
+  - 7 de Enero a 22 de Diciembre: Navidad del año en curso.
+  - A partir del 23 de Diciembre: El Niño del año siguiente.
 
 ### Motor de Renderizado Híbrido (`<RealisticTicketCard />`)
 - **Modo Plantilla Oficial (`draw_templates`):** Cuando existe una plantilla oficial registrada en la base de datos con `template_image_url`, superpone dinámicamente el número registrado, serie, fracción, fecha e importe según las coordenadas porcentuales de `overlay_config`.
