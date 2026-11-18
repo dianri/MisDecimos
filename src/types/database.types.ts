@@ -534,6 +534,10 @@ export type Database = {
         Args: { p_code_or_token: string }
         Returns: boolean
       }
+      renounce_own_participation: {
+        Args: { p_share_id: string }
+        Returns: boolean
+      }
       request_payout_confirmation_reminder: {
         Args: { p_ticket_id: string }
         Returns: boolean
