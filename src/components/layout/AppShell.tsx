@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { safeImageUrl } from '../../lib/sanitize'
+import { useAndroidBackNavigation } from '../../hooks/useAndroidBackNavigation'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
 import { VersionBadge } from '../common/VersionBadge'
 import { TicketsPage } from '../../pages/TicketsPage'
@@ -15,8 +16,13 @@ export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 
 export const AppShell: React.FC = () => {
   const { user, profile, signOut } = useAuth()
-  const [activeTab, setActiveTab] = useState<TabType>('billetes')
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
+  const {
+    activeTab,
+    selectedTicketId,
+    showExitToast,
+    navigateTo,
+    goBack,
+  } = useAndroidBackNavigation()
   const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(0)
 
   // Consultar notificaciones no leídas y suscribirse a Realtime
@@ -112,33 +118,24 @@ export const AppShell: React.FC = () => {
           selectedTicketId ? (
             <TicketDetailPage
               ticketId={selectedTicketId}
-              onBack={() => setSelectedTicketId(null)}
+              onBack={goBack}
             />
           ) : (
             <TicketsPage
-              onSelectTicket={(id) => setSelectedTicketId(id)}
-              onNavigateToAlerts={() => {
-                setSelectedTicketId(null)
-                setActiveTab('alertas')
-              }}
+              onSelectTicket={(id) => navigateTo({ tab: 'billetes', ticketId: id })}
+              onNavigateToAlerts={() => navigateTo({ tab: 'alertas', ticketId: null })}
             />
           )
         )}
         {activeTab === 'alertas' && (
           <AlertsPage
-            onBack={() => setActiveTab('billetes')}
-            onSelectTicket={(ticketId) => {
-              setSelectedTicketId(ticketId)
-              setActiveTab('billetes')
-            }}
+            onBack={goBack}
+            onSelectTicket={(ticketId) => navigateTo({ tab: 'billetes', ticketId })}
           />
         )}
         {activeTab === 'auditoria' && (
           <AuditPage
-            onSelectTicket={(ticketId) => {
-              setSelectedTicketId(ticketId)
-              setActiveTab('billetes')
-            }}
+            onSelectTicket={(ticketId) => navigateTo({ tab: 'billetes', ticketId })}
           />
         )}
         {activeTab === 'perfil' && <ProfilePage />}
@@ -147,7 +144,19 @@ export const AppShell: React.FC = () => {
       {/* 4. Badge Anti-Caché flotante (por encima de la barra inferior) */}
       <VersionBadge className="bottom-20 right-3" />
 
-      {/* 5. Barra de Navegación Inferior Fija (BottomNav) */}
+      {/* 5. Toast flotante de confirmación de salida en Android (z-50 sobre BottomNav) */}
+      {showExitToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 inset-x-0 mx-auto max-w-xs z-50 px-4 py-2.5 bg-gray-900/95 text-white text-xs font-medium rounded-full shadow-2xl backdrop-blur-md border border-white/10 flex items-center justify-center gap-2 pointer-events-none select-none animate-in fade-in slide-in-from-bottom-3 duration-200"
+        >
+          <LogOut className="h-4 w-4 text-amber-400 shrink-0" />
+          <span>Pulsa atrás de nuevo para cerrar la aplicación</span>
+        </div>
+      )}
+
+      {/* 6. Barra de Navegación Inferior Fija (BottomNav) */}
       <nav
         aria-label="Navegación principal"
         className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
@@ -156,12 +165,7 @@ export const AppShell: React.FC = () => {
           {/* Pestaña: Billetes */}
           <button
             type="button"
-            onClick={() => {
-              if (activeTab === 'billetes') {
-                setSelectedTicketId(null)
-              }
-              setActiveTab('billetes')
-            }}
+            onClick={() => navigateTo({ tab: 'billetes', ticketId: null })}
             className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
               activeTab === 'billetes'
                 ? 'text-lottery font-bold'
@@ -181,7 +185,7 @@ export const AppShell: React.FC = () => {
           {/* Pestaña: Alertas */}
           <button
             type="button"
-            onClick={() => setActiveTab('alertas')}
+            onClick={() => navigateTo({ tab: 'alertas', ticketId: null })}
             className={`relative flex flex-col items-center justify-center w-16 py-1 transition-all ${
               activeTab === 'alertas'
                 ? 'text-lottery font-bold'
@@ -207,7 +211,7 @@ export const AppShell: React.FC = () => {
           {/* Pestaña: Auditoría */}
           <button
             type="button"
-            onClick={() => setActiveTab('auditoria')}
+            onClick={() => navigateTo({ tab: 'auditoria', ticketId: null })}
             className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
               activeTab === 'auditoria'
                 ? 'text-lottery font-bold'
@@ -227,7 +231,7 @@ export const AppShell: React.FC = () => {
           {/* Pestaña: Perfil */}
           <button
             type="button"
-            onClick={() => setActiveTab('perfil')}
+            onClick={() => navigateTo({ tab: 'perfil', ticketId: null })}
             className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
               activeTab === 'perfil'
                 ? 'text-lottery font-bold'

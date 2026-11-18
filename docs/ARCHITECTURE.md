@@ -178,6 +178,17 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 - **Android:** Notificaciones Web Push estándar mediante el Service Worker vía Chrome/Edge/Firefox.
 - **iOS (16.4+):** Requiere que la aplicación sea instalada en la pantalla de inicio ("Añadir a pantalla de inicio" / PWA standalone) para conceder permisos y suscribirse al Notification API mediante el Service Worker.
 
+### Navegación Nativa Android y Gestión de Historial (PWA Anti-Cierre)
+- **Gestor Global (`src/hooks/useAndroidBackNavigation.ts`):**
+  - Controla el evento `window.onpopstate` para sincronizar las vistas internas (`/`, `/billetes/:id`, `/alertas`, `/auditoria`, `/perfil`) con el botón o gesto físico de retroceso de Android sin depender de librerías externas pesadas.
+  - **Mecanismo Centinela (`exitGuard: true`):** En la ruta raíz (`/`), se inserta una entrada centinela en la pila de `window.history`. Al pulsar Atrás por primera vez, el evento es interceptado, se muestra un toast flotante en `z-50` (*"Pulsa atrás de nuevo para cerrar la aplicación"*) y se activa una ventana temporal de 2,5 segundos. Si se produce un segundo toque dentro de ese lapso, se permite la salida de la PWA; de lo contrario, el aviso se oculta y la guardia centinela se re-arma de manera automática.
+  - **Navegación Interior y Resiliencia Deep-Link:** En pantallas secundarias con historial previo (`idx > 0`), el botón Atrás retrocede de forma natural. Si el usuario ingresó directamente por notificación push o enlace profundo sin historial (`idx === 0`), se redirige de forma transparente a la vista principal `/` en lugar de cerrar la aplicación.
+  - **Historial Completo en `BottomNav`:** La navegación entre pestañas no sobrescribe la pila (`replace: true`), permitiendo al usuario volver sobre sus pasos de forma intuitiva.
+- **Manejador de Modales y Sheets (`src/hooks/useModalBackHandler.ts`):**
+  - Al abrirse cualquier modal (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal`, `VersionBadge`), empuja un estado `{ modalOpen: true, modalKey }` en el historial.
+  - Al recibir `popstate`, cierra el modal de forma limpia sin retroceder de pantalla.
+  - Si el modal se cierra mediante la interfaz de usuario (botón `X`, backdrop o confirmación), invoca `window.history.back()` de forma programática para retirar la entrada de la pila sin disparar eventos residuales.
+
 ### Flujo de Suscripción y Envío
 1. El cliente genera una suscripción mediante `PushManager.subscribe()` usando la clave pública VAPID expuesta (`VITE_VAPID_PUBLIC_KEY`).
 2. La suscripción (`endpoint`, `p256dh`, `auth`) se persiste en `public.web_push_subscriptions` asociada al usuario autenticado.

@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.13] - 2026-11-19
+
+### Added
+- **Gestión Nativa del Botón Atrás en Android y PWA (`useAndroidBackNavigation.ts`):**
+  - Implementado gestor global del evento `window.onpopstate` que evita el cierre abrupto de la aplicación al pulsar el botón o gesto físico de retroceso en dispositivos móviles.
+  - **Mecanismo Centinela en Ruta Raíz (`exitGuard`):** En la pantalla principal (`/`), se mantiene un estado centinela en `window.history`. Al pulsar "Atrás" por primera vez, se intercepta la salida, se muestra un aviso flotante y se abre una ventana de seguridad de 2,5 segundos.
+  - **Toast Flotante de Confirmación de Cierre:** Notificación flotante elegante situada por encima de `BottomNav` (`z-50`) con el texto *"Pulsa atrás de nuevo para cerrar la aplicación"*. Si el usuario pulsa atrás por segunda vez dentro de los 2,5s, se permite la salida de la PWA; si no, el aviso se oculta y la guardia centinela se re-arma automáticamente.
+  - **Retorno Natural en Rutas Secundarias:** En pantallas internas (`/alertas`, `/auditoria`, `/perfil`, `/billetes/:id`), pulsar Atrás regresa de manera fluida a la pantalla anterior mediante el historial (`idx > 0`). Si el usuario accedió por enlace profundo o notificación sin historial (`idx === 0`), redirige limpiamente a la raíz `/` en lugar de cerrar la aplicación.
+- **Soporte de Botón Atrás para Diálogos Modales y Bottom Sheets (`useModalBackHandler.ts`):**
+  - Cierre automático e individualizado al pulsar Atrás para todos los modales de la app: `TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal` y el modal de diagnóstico de `<VersionBadge />`.
+  - Empuja un estado `{ modalOpen: true, modalKey }` al abrirse y lo retira limpiamente con `window.history.back()` si el usuario lo cierra mediante la interfaz (`X`, backdrop o botón cancelar), evitando desincronizaciones en la pila de historial.
+- **Conservación de Historial en Navegación por Pestañas (`AppShell.tsx`):**
+  - Eliminado el comportamiento `replace: true` en la barra inferior (`BottomNav`); cada cambio de sección genera una entrada en el historial de navegación para permitir una vuelta atrás consistente.
+
 ## [1.0.12] - 2026-11-19
 
 ### Fixed

@@ -1,6 +1,7 @@
 import React from 'react'
 import { supabase } from '../../lib/supabase'
 import { sanitizeText } from '../../lib/sanitize'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import {
   X,
   Sliders,
@@ -42,6 +43,8 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
   onInviteCreated,
   onEqualSplitComplete,
 }) => {
+  useModalBackHandler({ isOpen, onClose, modalKey: 'create_participation_sheet' })
+
   // Inicializa en 'equal' (Partes iguales) si el propietario conserva el 100%, o 'manual' si ya existen cuotas previas
   const [mode, setMode] = React.useState<'equal' | 'manual'>(() => {
     return availablePercentage >= 100 ? 'equal' : 'manual'

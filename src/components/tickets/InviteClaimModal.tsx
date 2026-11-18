@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { X, KeyRound, Ticket, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 interface TicketPreview {
@@ -29,6 +30,8 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   onClose,
   onClaimed,
 }) => {
+  useModalBackHandler({ isOpen, onClose, modalKey: 'invite_claim_modal' })
+
   const [code, setCode] = useState(initialCode || '')
   const [preview, setPreview] = useState<TicketPreview | null>(null)
   const [isLoading, setIsLoading] = useState(false)
