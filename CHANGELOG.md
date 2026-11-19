@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.37] - 2026-11-19
+
+### Fixed
+- **Gráfico Donut SVG Sólido con Arcos Continuos sin Solapamiento (`OwnershipBreakdownCard.tsx`, `ownershipSegments.ts`):**
+  - **Sustitución de Trazos Discontinuos por Arcos Sólidos:** Reemplazados los 50 segmentos radiales ("rayitas") por un anillo Donut continuo y estilizado dibujado mediante elementos `<circle>` SVG (`viewBox="0 0 160 160"`, centro `(80, 80)`, radio `r = 62` y grosor `strokeWidth="15"`).
+  - **Cálculo Exacto con `strokeDasharray` y `strokeDashoffset`:**
+    - Círculo base completo (`100%`) en gris suave (`#E5E7EB`) representando cuotas no asignadas o disponibles.
+    - Arcos sólidos continuos (`strokeLinecap="butt"`, rotados `-90°` para iniciar a las 12 en punto) por cada categoría con porcentaje `> 0`, acumulando el desplazamiento exacto sin solapamiento:
+      - **Propietario** (`#2E6146`): longitud `(ownerPercent / 100) * circumference`, `strokeDashoffset={0}`.
+      - **Cotitulares** (`#2563EB`): longitud `(coOwnersPercent / 100) * circumference`, `strokeDashoffset={-ownerLength}`.
+      - **Pendientes** (`#D97706`): longitud `(pendingPercent / 100) * circumference`, `strokeDashoffset={-(ownerLength + coOwnersLength)}`.
+  - **Animación Fluida:** Añadida clase `transition-all duration-500 ease-out` a los arcos para transiciones suaves al actualizar cuotas o canjear participaciones.
+  - **Preservación Integral:** Mantenidos intactos el texto central (`X% DISTRIBUIDO`), la leyenda inferior y la privacidad de invitaciones pendientes cuando `!isOwner`.
+  - **Cobertura de Pruebas Unitarias (`ownershipDonutSegments.test.ts`):** Verificación de cálculos de arcos, offsets continuos, circunferencias y omisión de categorías con 0%.
+
 ## [1.0.36] - 2026-11-19
 
 ### Fixed
