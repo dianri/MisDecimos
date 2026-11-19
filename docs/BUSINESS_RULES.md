@@ -44,8 +44,12 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 ---
 
-## 3. Cancelación y Rechazo de Invitaciones Pendientes (Cero Porcentaje Huérfano)
+## 3. Cancelación y Rechazo de Invitaciones Pendientes (Cero Porcentaje Huérfano y Privacidad Estricta)
 
+- **Privacidad Estricta de Invitaciones Pendientes (Cero Fuga de Códigos y PINs):**
+  - Las invitaciones en estado `PENDIENTE` (`public.pending_invites`), sus códigos PIN de 6 dígitos (`short_code`), enlaces y códigos QR son **estrictamente confidenciales y de uso exclusivo del propietario del décimo**.
+  - **Aislamiento en Base de Datos (RLS):** La política `SELECT` de `public.pending_invites` restringe la lectura únicamente al propietario del décimo (`created_by = auth.uid() OR is_ticket_owner(ticket_id)`) y al participante que ya la haya aceptado formalmente (`accepted_by_user_id = auth.uid()`). Ningún otro participante del décimo (`ownership_shares`) puede consultar ni listar invitaciones en estado `PENDIENTE` ni obtener códigos PIN o tokens por API.
+  - **Aislamiento en Interfaz:** En `TicketDetailPage.tsx` y `OwnershipBreakdownCard.tsx`, las tarjetas amarillas de invitaciones pendientes, los botones para ver QR/compartir y las acciones de cancelación se renderizan únicamente cuando `isOwner === true`. Para cotitulares terceros, cualquier cuota pendiente o no asignada se refleja exclusivamente en el gráfico Donut y su leyenda como porcentaje agregado neutro (*"Sin asignar / Pendiente (X%)"*).
 - **Cancelación por el Propietario (Individual o Masiva):** El propietario puede cancelar cualquier invitación en estado `PENDIENTE` en cualquier momento antes de su aceptación, tanto individualmente como en bloque mediante `cancel_all_pending_invites`, sin importar si el décimo se encuentra en estado `PENDIENTE`, `VALIDADO` o `ARCHIVADO` (salvo que ya esté `LIQUIDADO`). La función RPC marca la invitación como `CANCELADA` y **suma inmediatamente el porcentaje cancelado a la participación del propietario**.
 - **Rechazo por el Invitado:** Si el destinatario decide rechazar la invitación, esta pasa al estado `RECHAZADA` y **su porcentaje se restituye automáticamente al propietario**.
 - **Invariante:** Bajo ninguna circunstancia puede existir porcentaje huérfano ni la suma total de participaciones activas + invitaciones pendientes puede ser distinta del 100.00%.

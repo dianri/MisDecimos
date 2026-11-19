@@ -276,13 +276,17 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   // Cálculo para el Donut Chart SVG
   const ownerShare = shares.find((s) => s.role === 'PROPIETARIO' && s.status === 'ACEPTADA')
   const participantShares = shares.filter((s) => s.role === 'PARTICIPANTE' && s.status === 'ACEPTADA')
-  const activePendingInvites = pendingInvites.filter((i) => i.status === 'PENDIENTE')
+  const activePendingInvites = isOwner ? pendingInvites.filter((i) => i.status === 'PENDIENTE') : []
   const totalPendingPct = activePendingInvites.reduce((acc, i) => acc + Number(i.percentage), 0)
 
   const ownerPct = ownerShare ? Number(ownerShare.percentage) : 0
-  const totalAllocated =
-    shares.reduce((acc, s) => acc + (s.status === 'ACEPTADA' ? Number(s.percentage) : 0), 0) +
-    activePendingInvites.reduce((acc, i) => acc + Number(i.percentage), 0)
+  const totalAcceptedSharesPct =
+    shares.reduce((acc, s) => acc + (s.status === 'ACEPTADA' ? Number(s.percentage) : 0), 0)
+  const unassignedPct = Math.max(0, Math.round((100 - totalAcceptedSharesPct) * 100) / 100)
+
+  const totalAllocated = isOwner
+    ? totalAcceptedSharesPct + totalPendingPct
+    : totalAcceptedSharesPct + unassignedPct
 
   // Geometría del Donut SVG
   const radius = 38
@@ -330,22 +334,37 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
     }
   })
 
-  // 3. Invitaciones pendientes (Ámbar discontinuo)
-  activePendingInvites.forEach((invite) => {
-    const pct = Number(invite.percentage)
-    if (pct > 0) {
-      const length = (pct / 100) * circumference
-      segments.push({
-        id: `invite-${invite.id}`,
-        color: '#D97706',
-        percentage: pct,
-        strokeDasharray: `${length} ${circumference - length}`,
-        strokeDashoffset: -((cumulativePct / 100) * circumference),
-        isDashed: true,
-      })
-      cumulativePct += pct
-    }
-  })
+  // 3. Cuotas pendientes:
+  // - Para el Propietario: desglose individual de cada invitación pendiente (Ámbar discontinuo)
+  // - Para un Participante: porcentaje neutro agregado sin asignar / pendiente (Ámbar discontinuo)
+  if (isOwner) {
+    activePendingInvites.forEach((invite) => {
+      const pct = Number(invite.percentage)
+      if (pct > 0) {
+        const length = (pct / 100) * circumference
+        segments.push({
+          id: `invite-${invite.id}`,
+          color: '#D97706',
+          percentage: pct,
+          strokeDasharray: `${length} ${circumference - length}`,
+          strokeDashoffset: -((cumulativePct / 100) * circumference),
+          isDashed: true,
+        })
+        cumulativePct += pct
+      }
+    })
+  } else if (unassignedPct > 0) {
+    const length = (unassignedPct / 100) * circumference
+    segments.push({
+      id: 'unassigned-pending',
+      color: '#D97706',
+      percentage: unassignedPct,
+      strokeDasharray: `${length} ${circumference - length}`,
+      strokeDashoffset: -((cumulativePct / 100) * circumference),
+      isDashed: true,
+    })
+    cumulativePct += unassignedPct
+  }
 
   return (
     <div className="space-y-5">
@@ -454,14 +473,24 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
             </div>
           )}
 
-          {activePendingInvites.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300" />
-              <span>
-                Pendientes (
-                {activePendingInvites.reduce((a, b) => a + Number(b.percentage), 0)}%)
-              </span>
-            </div>
+          {isOwner ? (
+            activePendingInvites.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300" />
+                <span>
+                  Pendientes ({totalPendingPct}%)
+                </span>
+              </div>
+            )
+          ) : (
+            unassignedPct > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300" />
+                <span>
+                  Sin asignar / Pendiente ({unassignedPct}%)
+                </span>
+              </div>
+            )
           )}
         </div>
       </div>
@@ -720,8 +749,8 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           )
         })}
 
-        {/* 4. Invitaciones Pendientes */}
-        {activePendingInvites.map((invite) => (
+        {/* 4. Invitaciones Pendientes (Exclusivo para el Propietario) */}
+        {isOwner && activePendingInvites.map((invite) => (
           <div
             key={invite.id}
             className="bg-amber-50/60 border border-dashed border-amber-300 rounded-2xl p-3.5 relative overflow-hidden shadow-xs space-y-2.5"

@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.22] - 2026-11-19
+
+### Security
+- **Privacidad Estricta de Invitaciones Pendientes en Base de Datos y UI (`pending_invites`):**
+  - **Endurecimiento de RLS (`20261119000003_restrict_pending_invites_to_owner.sql`):** Reemplazada la política `pending_invites_select` en PostgreSQL para que únicamente puedan consultar filas el propietario del décimo (`created_by = auth.uid() OR is_ticket_owner(ticket_id)`) y el usuario que ya aceptó dicha invitación (`accepted_by_user_id = auth.uid()`).
+  - **Aislamiento en `TicketDetailPage.tsx`:** Si el usuario no es el propietario del décimo (`ticket.owner_id !== user.id`), no se solicitan ni transmiten invitaciones pendientes (`pendingInvites = []`).
+  - **Aislamiento en `OwnershipBreakdownCard.tsx`:** Las tarjetas amarillas de invitaciones pendientes, los códigos PIN de 6 dígitos, y los botones *"Ver QR / Compartir"*, *"Eliminar"* y *"Cancelar todas las pendientes"* solo se renderizan si `isOwner === true`.
+  - **Vista Neutra Agregada en Donut y Leyenda:** Para cotitulares terceros (`!isOwner`), las cuotas no asignadas o pendientes se visualizan como un segmento agregado neutro (*"Sin asignar / Pendiente (X%)"*), sin exponer ningún detalle, nombre, PIN ni código QR de invitaciones pendientes.
+
 ## [1.0.21] - 2026-11-19
 
 ### Fixed
