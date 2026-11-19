@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
-import { X, Copy, Check, Share2, MessageCircle, Sparkles } from 'lucide-react'
+import { X, Copy, Check, Share2, MessageCircle, Sparkles, ClipboardCheck } from 'lucide-react'
+import { buildWhatsAppShareMessage, buildWhatsAppShareUrl } from '../../lib/shareHelper'
 
 export interface ShareInviteModalProps {
   isOpen: boolean
@@ -25,17 +26,20 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
   useModalBackHandler({ isOpen: isOpen && !!invite, onClose, modalKey: 'share_invite_modal' })
 
   const [copied, setCopied] = useState(false)
+  const [whatsappCopiedNotice, setWhatsappCopiedNotice] = useState(false)
 
   if (!isOpen || !invite) return null
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://misdecimos.dianrie.com'
   const shareUrl = `${origin}/invite/${invite.invite_token}`
 
-  const messageText = `🎟️ ¡Te he compartido una participación del ${invite.percentage}% para el décimo Nº ${
-    invite.ticketNumber || ''
-  } de ${invite.drawName || 'Lotería'} en MisDecimos!\n\n🔑 Código de 6 dígitos: ${
-    invite.short_code
-  }\n📲 Reclama tu cuota al instante aquí: ${shareUrl}`
+  const messageText = buildWhatsAppShareMessage({
+    percentage: invite.percentage,
+    ticketNumber: invite.ticketNumber,
+    drawName: invite.drawName,
+    shortCode: invite.short_code,
+    shareUrl,
+  })
 
   const handleCopyCode = async () => {
     try {
@@ -45,6 +49,24 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
     } catch {
       // Fallback
     }
+  }
+
+  const handleShareWhatsApp = async () => {
+    // 1. Copiar preventivamente el mensaje completo al portapapeles
+    // para evitar que WhatsApp Desktop en macOS/Windows descarte el cuerpo del mensaje
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(messageText)
+        setWhatsappCopiedNotice(true)
+        setTimeout(() => setWhatsappCopiedNotice(false), 6000)
+      }
+    } catch {
+      // Si el portapapeles no está disponible, continuar con la apertura
+    }
+
+    // 2. Abrir WhatsApp con codificación URI limpia
+    const whatsappUrl = buildWhatsAppShareUrl(messageText)
+    window.open(whatsappUrl, '_blank')
   }
 
   const handleShareSystem = async () => {
@@ -60,13 +82,7 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
         // Fallback a WhatsApp
       }
     }
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`
-    window.open(whatsappUrl, '_blank')
-  }
-
-  const handleShareWhatsApp = () => {
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`
-    window.open(whatsappUrl, '_blank')
+    await handleShareWhatsApp()
   }
 
   return (
@@ -157,8 +173,25 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
           </div>
         </div>
 
-        {/* Botones de Compartir fijos abajo (shrink-0) */}
+        {/* Botones de Compartir y feedback fijos abajo (shrink-0) */}
         <div className="shrink-0 border-t border-gray-100 bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2">
+          {/* Banner de feedback si se abrió WhatsApp y se copió al portapapeles */}
+          {whatsappCopiedNotice && (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200/90 p-2.5 text-left animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="flex items-start gap-2">
+                <ClipboardCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold text-emerald-800">
+                    Abriendo WhatsApp… Mensaje copiado
+                  </p>
+                  <p className="text-[10px] text-emerald-700 leading-snug">
+                    Mensaje completo copiado al portapapeles. Si WhatsApp Escritorio solo pega el enlace, usa <strong>Pegar (Ctrl+V / ⌘V)</strong> para incluir los detalles y el código de 6 dígitos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={handleShareWhatsApp}

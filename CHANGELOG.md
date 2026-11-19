@@ -5,6 +5,24 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.48] - 2026-11-19
+
+### Fixed
+- **Compartición por WhatsApp con Unicode Seguro y Respaldo Desktop (`src/lib/shareHelper.ts`, `ShareInviteModal.tsx`):**
+  - **Erradicación de Caracteres Corruptos (`\uFFFD`):**
+    - Sustitución de emojis literales susceptibles de alteración por escapes Unicode directos y robustos:
+      - `\u{1F3AB}` para décimo/billete (🎟️).
+      - `\u{1F511}` para código/llave PIN de 6 dígitos (🔑).
+      - `\u{1F449}` para llamada a la acción / enlace (👉).
+    - Centralizada la generación del texto oficial en `buildWhatsAppShareMessage()` y la URL en `buildWhatsAppShareUrl()`.
+  - **Respaldo para WhatsApp Escritorio en macOS y Windows:**
+    - Al pulsar *"Enviar por WhatsApp"*, el contenido íntegro del mensaje (con porcentaje, número de billete, sorteo, código de 6 dígitos y URL) se copia automáticamente al portapapeles (`navigator.clipboard?.writeText`).
+    - Se despliega un banner de aviso contextual y tranquilizador en el modal informando al usuario: *"Abriendo WhatsApp… Mensaje completo copiado al portapapeles. Si WhatsApp Escritorio solo pega el enlace, usa Pegar (Ctrl+V / ⌘V) para incluir los detalles y el código de 6 dígitos."*
+  - **Fallback Robusto en Web Share API:**
+    - En caso de no soporte o cancelación en `navigator.share()`, el flujo deriva limpiamente al mismo manejador con apertura de WhatsApp y copia al portapapeles.
+  - **Batería de Pruebas Unitarias (`src/lib/__tests__/whatsappShare.test.ts`):**
+    - 3 nuevos tests unitarios certificando la ausencia de `\uFFFD`, presencia de todos los campos obligatorios, manejo de nulos y fidelidad en la codificación y decodificación URI con preservación de emojis (87 tests unitarios en total con 100% de éxito).
+
 ## [1.0.47] - 2026-11-19
 
 ### Fixed
