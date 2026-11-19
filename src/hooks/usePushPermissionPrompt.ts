@@ -39,6 +39,7 @@ interface UsePushPermissionPromptProps {
   profile?: Profile | null
   unreadCount?: number
   refreshProfile?: () => Promise<void>
+  isBlocked?: boolean
 }
 
 export function usePushPermissionPrompt({
@@ -46,6 +47,7 @@ export function usePushPermissionPrompt({
   profile,
   unreadCount = 0,
   refreshProfile,
+  isBlocked = false,
 }: UsePushPermissionPromptProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [promptContext, setPromptContext] = useState<PushPromptContext>('onboarding')
@@ -57,6 +59,7 @@ export function usePushPermissionPrompt({
   // Disparadores automáticos: primera entrada y notificaciones no leídas
   useEffect(() => {
     if (!userId || typeof window === 'undefined') return
+    if (isBlocked) return
 
     // Si no está soportado en el navegador, abortar
     if (!isPushSupported()) return
@@ -98,7 +101,7 @@ export function usePushPermissionPrompt({
       setIsOpen(true)
       sessionStorage.setItem(getSessionKey(userId), 'true')
     }
-  }, [userId, profile?.push_enabled, unreadCount])
+  }, [userId, profile?.push_enabled, unreadCount, isBlocked])
 
   // Manejo de cancelación ("Ahora no" o botón "X")
   const handleDismiss = useCallback(() => {

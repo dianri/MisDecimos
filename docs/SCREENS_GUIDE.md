@@ -225,9 +225,13 @@ flowchart TD
    - Interruptor (*Toggle*) para activar/desactivar notificaciones nativas en el dispositivo. Al activarlo manualmente, se resetea automáticamente a 0 el contador de descartes del onboarding push.
    - Registra el endpoint, clave `p256dh` y `auth` en `public.web_push_subscriptions` vinculados al usuario.
    - Botón *"Enviar notificación de prueba"*: Dispara la Edge Function `send-push` en modo test para verificar que el Service Worker y el sistema operativo muestran la alerta correctamente con sonido y vibración.
-4. **Instalación de la PWA:**
-   - Componente [`PwaInstallBanner.tsx`](../src/components/pwa/PwaInstallBanner.tsx).
-   - En Android / Chrome: Dispara el evento nativo `beforeinstallprompt` en un solo clic.
-   - En iOS Safari: Guía visual explicativa paso a paso (*"Compartir" -> "Añadir a pantalla de inicio"*).
+4. **Instalación de la PWA Multiplataforma (`PwaInstallBanner.tsx` y `usePwaInstallPrompt.ts`):**
+   - Modal flotante en `z-50` coordinado con `PushPermissionModal` y respetuoso con la navegación táctil y el botón Atrás.
+   - **Regla de 3 Intentos:** Si el usuario no tiene la aplicación instalada, se muestra de forma automática tras 2,5 segundos, con un límite máximo de 1 vez por sesión y un tope absoluto de 3 apariciones. Al descartar 3 veces, deja de mostrarse automáticamente.
+   - **En Android / Chromium:** Ofrece el botón verde principal *"Instalar aplicación"* que lanza directamente el diálogo nativo del sistema (`deferredPrompt.prompt()`), o las instrucciones para instalar desde el menú (⋮) si no está disponible.
+   - **En iOS / iPadOS:** Muestra una guía gráfica con badges numerados e iconos (`Share` y `PlusSquare`) para añadir el décimo a la pantalla de inicio desde Safari.
+   - **En macOS Safari:** Explica cómo anclar la aplicación al Dock mediante *Archivo → Añadir al Dock*.
+   - **En Otros Navegadores de Escritorio:** Guía para instalar desde la barra de direcciones o el menú de opciones del navegador.
+   - **Acceso Manual Siempre Disponible:** El botón *"Instalar aplicación en tu dispositivo"* en la pantalla de Perfil permanece siempre activo e ignora el límite de 3 avisos automáticos para permitir la instalación en cualquier momento.
 5. **Cierre de Sesión:**
    - Botón *"Cerrar Sesión"* que ejecuta `supabase.auth.signOut()`, limpia el estado global y devuelve al usuario a la pantalla de Login.
