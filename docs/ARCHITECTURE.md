@@ -252,6 +252,15 @@ Para solventar la confusión habitual de los usuarios al utilizar el botón ráp
 - Visor con guía unificada rectangular (`270 x 160 px`) y láser de barrido animado para capturar con igual comodidad códigos de barras horizontales o códigos QR.
 - Banner de aviso flotante (`warningMsg`) temporal (3,5 segundos) ante códigos no reconocidos, manteniendo el visor activo sin cerrar el modal.
 - Enrutamiento automático: si se lee un QR de invitación desde el botón rápido de cámara, se redirige de inmediato a `InviteClaimModal` con previsualización reactiva; si se lee un código de barras de décimo desde el escáner de invitaciones, se conmuta limpiamente a `TicketFormModal` precargando los datos del décimo.
+- **Ciclo de Vida Resiliente y Recuperación en Segundo Plano:**
+  - Estabilización estricta mediante `useRef` de los callbacks externos (`onScanSuccessRef`, `onCloseRef`) para que el ciclo de vida del hardware dependa exclusivamente de `isOpen`, eliminando reinicios espurios al mover el dispositivo, reorientar la pantalla o recibir re-renders del padre.
+  - Control de concurrencia mediante `sessionGenerationRef` e `isTransitioningRef` para evitar colisiones ante peticiones simultáneas de montaje/desmontaje.
+  - **Limpieza Profunda del Sensor (`forceReleaseCamera`):** Parada y limpieza de la instancia `Html5Qrcode` combinada con la iteración exhaustiva sobre los elementos `<video>` en el DOM para detener forzosamente todas las pistas `MediaStreamTrack` (`track.stop()`) y desacoplar `srcObject`, liberando el sensor de cámara en Android al 100%.
+  - **Gestión de `visibilitychange`:**
+    - Al pasar a segundo plano (`document.visibilityState === 'hidden'`), se ejecuta `forceReleaseCamera()` de forma silenciosa para ceder el sensor al sistema operativo.
+    - Al regresar a primer plano (`document.visibilityState === 'visible'`), se espera 350 ms para permitir la reasignación de hardware y se relanza una sesión limpia de escaneo de forma transparente.
+  - **Supervisión de Pistas de Hardware (`track.onended` / `track.onmute`):** Suscripción a eventos de interrupción en las pistas de vídeo activas para detectar si el sistema operativo cortó el flujo, relanzando la cámara automáticamente.
+  - **Reintentos Inteligentes y Diagnóstico Visual:** Hasta 2 reintentos con intervalo de 450 ms ante errores transitorios de hardware (`NotReadableError`, `AbortError`). Ocultación del visor de vídeo congelado ante errores y botón *"Reintentar cámara"* con liberación previa garantizada.
 
 - **Estructura Estándar Oficial Definitiva (20 Dígitos: `2 + 3 + 2 + 3 + 6 + 4`):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
 
