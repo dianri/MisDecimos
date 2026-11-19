@@ -2,7 +2,47 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { parseSelaeBarcode, getUpcomingDraw } from '../selaeBarcodeParser.ts'
 
-test('parseSelaeBarcode - production code 1: 5102607065>0023205830 with separator >', () => {
+test('parseSelaeBarcode - production code 1 (Navidad 2025): 5102502115>0493073567', () => {
+  const barcode = '5102502115>0493073567'
+  const result = parseSelaeBarcode(barcode)
+
+  assert.equal(result.isValid, true)
+  assert.equal(result.number, '49307')
+  assert.equal(result.ticketNumber, '49307')
+  assert.equal(result.serie, '115')
+  assert.equal(result.series, '115')
+  assert.equal(result.fraccion, '02')
+  assert.equal(result.fraction, '02')
+  assert.equal(result.drawCode, '102')
+  assert.equal(result.year, 2025)
+  assert.equal(result.drawType, 'NAVIDAD')
+  assert.equal(result.drawDate, '2025-12-22')
+  assert.equal(result.checkDigits, '3567')
+  assert.equal(result.confidence, 'HIGH')
+  assert.equal(result.barcodeRaw, barcode)
+})
+
+test('parseSelaeBarcode - production code 2 (El Niño 2020): 5002001002>0880082456', () => {
+  const barcode = '5002001002>0880082456'
+  const result = parseSelaeBarcode(barcode)
+
+  assert.equal(result.isValid, true)
+  assert.equal(result.number, '88008')
+  assert.equal(result.ticketNumber, '88008')
+  assert.equal(result.serie, '002')
+  assert.equal(result.series, '002')
+  assert.equal(result.fraccion, '01')
+  assert.equal(result.fraction, '01')
+  assert.equal(result.drawCode, '002')
+  assert.equal(result.year, 2020)
+  assert.equal(result.drawType, 'EL_NINO')
+  assert.equal(result.drawDate, '2020-01-06')
+  assert.equal(result.checkDigits, '2456')
+  assert.equal(result.confidence, 'HIGH')
+  assert.equal(result.barcodeRaw, barcode)
+})
+
+test('parseSelaeBarcode - production code 3 (Navidad 2026): 5102607065>0023205830 with separator >', () => {
   const barcode = '5102607065>0023205830'
   const result = parseSelaeBarcode(barcode)
 
@@ -13,14 +53,16 @@ test('parseSelaeBarcode - production code 1: 5102607065>0023205830 with separato
   assert.equal(result.series, '065')
   assert.equal(result.fraccion, '07')
   assert.equal(result.fraction, '07')
-  assert.equal(result.drawCode, '026')
-  assert.equal(result.drawYearCode, '026')
+  assert.equal(result.drawCode, '102')
+  assert.equal(result.year, 2026)
+  assert.equal(result.drawType, 'NAVIDAD')
+  assert.equal(result.drawDate, '2026-12-22')
   assert.equal(result.checkDigits, '5830')
   assert.equal(result.confidence, 'HIGH')
   assert.equal(result.barcodeRaw, barcode)
 })
 
-test('parseSelaeBarcode - production code 2: 51020101100876719833', () => {
+test('parseSelaeBarcode - production code 4 (Navidad 2020): 51020101100876719833', () => {
   const barcode = '51020101100876719833'
   const result = parseSelaeBarcode(barcode)
 
@@ -31,8 +73,10 @@ test('parseSelaeBarcode - production code 2: 51020101100876719833', () => {
   assert.equal(result.series, '110')
   assert.equal(result.fraccion, '10')
   assert.equal(result.fraction, '10')
-  assert.equal(result.drawCode, '020')
-  assert.equal(result.drawYearCode, '020')
+  assert.equal(result.drawCode, '102')
+  assert.equal(result.year, 2020)
+  assert.equal(result.drawType, 'NAVIDAD')
+  assert.equal(result.drawDate, '2020-12-22')
   assert.equal(result.checkDigits, '9833')
   assert.equal(result.confidence, 'HIGH')
   assert.equal(result.barcodeRaw, barcode)
@@ -46,7 +90,10 @@ test('parseSelaeBarcode - GS1 AIM identifier prefix and spaces', () => {
   assert.equal(result.number, '02320')
   assert.equal(result.fraction, '07')
   assert.equal(result.series, '065')
-  assert.equal(result.drawYearCode, '026')
+  assert.equal(result.drawCode, '102')
+  assert.equal(result.year, 2026)
+  assert.equal(result.drawType, 'NAVIDAD')
+  assert.equal(result.drawDate, '2026-12-22')
   assert.equal(result.checkDigits, '5830')
   assert.equal(result.confidence, 'HIGH')
 })
@@ -59,7 +106,10 @@ test('parseSelaeBarcode - standard 20-digit SELAE barcode with prefix 01', () =>
   assert.equal(result.number, '02320')
   assert.equal(result.series, '065')
   assert.equal(result.fraction, '07')
-  assert.equal(result.drawYearCode, '026')
+  assert.equal(result.drawCode, '102')
+  assert.equal(result.year, 2026)
+  assert.equal(result.drawType, 'NAVIDAD')
+  assert.equal(result.drawDate, '2026-12-22')
   assert.equal(result.confidence, 'HIGH')
 })
 

@@ -61,9 +61,18 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
           if (ticketSerie) setSerie(ticketSerie)
           const ticketFraccion = initialScannedData.fraccion || initialScannedData.fraction
           if (ticketFraccion) setFraccion(ticketFraccion)
-          if (initialScannedData.drawType) handleDrawTypeChange(initialScannedData.drawType)
-          if (initialScannedData.drawDate) setDrawDate(initialScannedData.drawDate)
-          if (initialScannedData.ticketPrice) setTicketPrice(initialScannedData.ticketPrice.toFixed(2))
+          if (initialScannedData.drawType) {
+            handleDrawTypeChange(
+              initialScannedData.drawType,
+              initialScannedData.drawDate,
+              initialScannedData.drawName
+            )
+          } else if (initialScannedData.drawDate) {
+            setDrawDate(initialScannedData.drawDate)
+          }
+          if (initialScannedData.ticketPrice) {
+            setTicketPrice(initialScannedData.ticketPrice.toFixed(2))
+          }
         } else {
           setScanSuccessBanner(null)
           setErrorMsg(
@@ -132,23 +141,34 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   }, [])
 
   // Al cambiar drawType, actualizar valores por defecto
-  const handleDrawTypeChange = (type: 'NAVIDAD' | 'EL_NINO') => {
+  const handleDrawTypeChange = (
+    type: 'NAVIDAD' | 'EL_NINO',
+    explicitDate?: string,
+    explicitName?: string
+  ) => {
     setDrawType(type)
     const now = new Date()
     const currentYear = now.getFullYear()
 
-    if (type === 'NAVIDAD') {
+    if (explicitDate) {
+      setDrawDate(explicitDate)
+      setDrawName(
+        explicitName ||
+          (type === 'NAVIDAD'
+            ? 'Sorteo Extraordinario de Navidad'
+            : 'Sorteo Extraordinario de El Niño')
+      )
+    } else if (type === 'NAVIDAD') {
       const year = now > new Date(currentYear, 11, 22) ? currentYear + 1 : currentYear
       setDrawName('Sorteo Extraordinario de Navidad')
       setDrawDate(`${year}-12-22`)
-      setTicketPrice('20.00')
     } else {
       // El Niño es el 6 de enero
-      const year = (now.getMonth() > 0 || now.getDate() > 6) ? currentYear + 1 : currentYear
+      const year = now.getMonth() > 0 || now.getDate() > 6 ? currentYear + 1 : currentYear
       setDrawName('Sorteo Extraordinario de El Niño')
       setDrawDate(`${year}-01-06`)
-      setTicketPrice('20.00')
     }
+    setTicketPrice('20.00')
 
     // Vincular plantilla correspondiente si existe
     const matched = templates.find((t) => t.draw_type === type)
@@ -186,8 +206,11 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
       if (ticketSerie) setSerie(ticketSerie)
       const ticketFraccion = parsed.fraccion || parsed.fraction
       if (ticketFraccion) setFraccion(ticketFraccion)
-      if (parsed.drawType) handleDrawTypeChange(parsed.drawType)
-      if (parsed.drawDate) setDrawDate(parsed.drawDate)
+      if (parsed.drawType) {
+        handleDrawTypeChange(parsed.drawType, parsed.drawDate, parsed.drawName)
+      } else if (parsed.drawDate) {
+        setDrawDate(parsed.drawDate)
+      }
       if (parsed.ticketPrice) setTicketPrice(parsed.ticketPrice.toFixed(2))
     } else {
       setScanSuccessBanner(null)
