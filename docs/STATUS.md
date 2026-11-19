@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.21` (Producción Estable · Exclusión de Participaciones Renunciadas en Activos)  
+**Versión Actual:** `1.0.22` (Producción Estable · Privacidad Estricta de Invitaciones Pendientes)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.21`)  
+**Rama de Producción:** `main` (Tag `v1.0.22`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -103,3 +103,4 @@
 - [x] v1.0.19: Corrección de padding vertical superior y `safe-area` en la cabecera (`AppShell.tsx`), garantizando 14 px de aire vertical en escritorio y móviles sin notch.
 - [x] v1.0.20: Desglose canónico oficial de 20 dígitos en código de barras SELAE (`2 + 3 + 2 + 3 + 6 + 4`) con soporte para separadores y prefijos GS1.
 - [x] v1.0.21: Exclusión de participaciones renunciadas (`status = 'RENUNCIADA'` o `percentage <= 0`) en el conteo de billetes activos, sumatorio de premios y pestañas de la interfaz (`ticketMetrics.ts`).
+- [x] v1.0.22: Privacidad estricta de invitaciones pendientes (`pending_invites`): restricción de RLS a propietario y receptor aceptado, ocultación completa en UI para cotitulares y porcentaje agregado neutro en Donut/leyenda.
