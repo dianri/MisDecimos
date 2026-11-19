@@ -5,6 +5,19 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.47] - 2026-11-19
+
+### Fixed
+- **Armonización Visual del Banner de Histórico No Disponible (`src/components/tickets/PrizeCheckCard.tsx`):**
+  - **Sustitución de la Paleta Gris Neutro por Ámbar/Naranja:**
+    - Reemplazadas las clases neutras en gris pizarra (`bg-slate-50 border-slate-200/90 text-slate-800`) por la paleta de aviso ámbar/naranja coherente con el sistema de alertas de la aplicación:
+      - Contenedor principal: `bg-amber-50/90 border border-amber-300/80 rounded-2xl p-4 shadow-xs flex items-start gap-3`.
+      - Icono temático `CalendarOff`: Enmarcado en una caja suave `w-8 h-8 rounded-xl bg-amber-100 border border-amber-200/80 text-amber-600 shadow-xs`.
+      - Título jerárquico (**"Histórico no disponible"**): `text-sm font-semibold text-amber-950`.
+      - Texto descriptivo explicativo: `text-xs leading-relaxed text-amber-900/90`.
+  - **Consistencia Visual en Comprobaciones de Premios:**
+    - Garantizada la cohesión cromática entre todos los avisos informativos (sorteo futuro, sorteo en curso e histórico archivado no disponible en proveedor oficial).
+
 ## [1.0.46] - 2026-11-19
 
 ### Fixed

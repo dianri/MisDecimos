@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.46` (Producción Estable · Instalación PWA Fiable y Captura Global de Prompt)  
+**Versión Actual:** `1.0.47` (Producción Estable · Estilo de Aviso Ámbar para Históricos No Disponibles)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.46`)  
+**Rama de Producción:** `main` (Tag `v1.0.47`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -128,3 +128,4 @@
 - [x] v1.0.44: Unificación estética de la cabecera superior en móvil y escritorio (`AppShell.tsx`): logotipo e isotipo corporativo de **MisDecimos** en la esquina superior izquierda como enlace interactivo directo al inicio (`/`), y acceso al perfil de usuario reubicado en la esquina superior derecha en formato compacto (avatar de 32 px + nombre hasta 110 px sin email para evitar colisiones en pantallas estrechas), manteniendo la navegación por pestañas móvil en la barra inferior.
 - [x] v1.0.45: Modernización integral de la identidad visual y assets de marca (`pwa-192x192.png`, `pwa-512x512.png`, `apple-touch-icon.png`, `favicon.ico`, `favicon.svg`, `masked-icon.svg`, `badge-mono.png`): adopción del nuevo emblema de orfebrería con medallón dorado, boleto troquelado en 'D' y estrella náutica en relieve 3D sobre squircle verde esmeralda superelíptico (`n = 4.70`), integración directa en la cabecera (`AppShell.tsx`) y pantalla de login (`LoginPage.tsx`), precaché Service Worker enriquecida a 24 elementos y soporte multiplataforma garantizado sin artefactos en iOS ni Android.
 - [x] v1.0.46: Captura global de `beforeinstallprompt` y fiabilidad del instalador PWA (`src/main.tsx`, `usePwaInstall.ts`, `ProfilePage.tsx`): captura inmediata desde el arranque en `window.__deferredPwaPrompt`, erradicación del falso positivo standalone por flags obsoletos en `localStorage`, visualización permanente del botón de instalación en la tarjeta de perfil cuando la app no esté en modo nativo con lanzamiento nativo a un toque (`prompt()`) o fallback a modal guiado adaptado (Android, iOS y Escritorio), y estandarización de `purpose: 'any'` y `purpose: 'maskable'` en el manifiesto PWA.
+- [x] v1.0.47: Armonización visual del aviso de histórico no disponible (`PrizeCheckCard.tsx`): sustitución del recuadro neutro en gris pizarra por el estilo de aviso corporativo en degradado ámbar/naranja (`bg-amber-50/90 border-amber-300/80`), icono `CalendarOff` dentro de caja suave `bg-amber-100 text-amber-600` y tipografía jerárquica (`text-amber-950` y `text-amber-900/90`), alineando estéticamente todos los banners informativos de la aplicación.
