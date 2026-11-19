@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.25] - 2026-11-19
+
+### Fixed
+- **Ciclo de Vida de Cámara y Recuperación Automática de Segundo Plano (`BarcodeScannerModal.tsx`):**
+  - **Estabilización de Dependencias:** Guardados callbacks externos (`onScanSuccess`, `onClose`) en `useRef` para que el efecto de activación dependa exclusivamente de `isOpen`, eliminando reinicios no deseados o fallos espurios al mover el dispositivo, reorientar la pantalla o recibir re-renders del componente padre.
+  - **Limpieza Profunda de Hardware (`forceReleaseCamera`):** Detención y limpieza de `Html5Qrcode` con parada explícita e iteración sobre todos los elementos `<video>` del DOM para detener todas sus pistas `MediaStreamTrack` (`track.stop()`) y desacoplar `srcObject`, garantizando la liberación total del sensor físico en Android.
+  - **Gestión Automática de Segundo Plano (`visibilitychange`):** Suspensión silenciosa de la cámara al minimizar la PWA o apagar la pantalla (`hidden`), y reactivación automática transparente al regresar (`visible`) tras 350 ms de estabilización de hardware.
+  - **Supervisión de Interrupciones de SO (`track.onended` / `track.onmute`):** Detección proactiva de cortes del flujo por parte del sistema operativo para relanzar la sesión limpia sin dejar fotogramas congelados.
+  - **Reintento Inteligente y Diagnóstico Visual:** Hasta 2 reintentos automáticos separados por 450 ms ante errores transitorios (`NotReadableError`, `AbortError`). Ocultación del visor congelado en caso de error y ejecución garantizada de `forceReleaseCamera` al pulsar *"Reintentar cámara"*.
+
 ## [1.0.24] - 2026-11-19
 
 ### Added
