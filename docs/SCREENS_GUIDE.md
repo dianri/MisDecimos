@@ -241,8 +241,8 @@ flowchart TD
    - Campos de *Nombre a mostrar* y *Teléfono de contacto*, protegidos contra inyecciones XSS mediante `sanitizeText`.
 3. **Gestión de Notificaciones Web Push (VAPID):**
    - Interruptor (*Toggle*) para activar/desactivar notificaciones nativas en el dispositivo. Al activarlo manualmente, se resetea automáticamente a 0 el contador de descartes del onboarding push.
-   - Registra el endpoint, clave `p256dh` y `auth` en `public.web_push_subscriptions` vinculados al usuario.
-   - Botón *"Enviar notificación de prueba"*: Dispara la Edge Function `send-push` en modo test para verificar que el Service Worker y el sistema operativo muestran la alerta correctamente con sonido y vibración.
+   - Sincronización automática de suscripción en `public.web_push_subscriptions` y actualización reactiva de permisos.
+   - Botón *"Enviar notificación de prueba"*: Verifica primero la concesión real de permisos en el sistema operativo (`Notification.permission === 'granted'`), resincroniza silenciosamente la suscripción actual antes del envío (`syncPushSubscription`), invoca la Edge Function `send-push` en modo test y muestra feedback preciso y transparente: confirma el número de dispositivos alcanzados (`sent > 0`) o reporta el error técnico exacto sin emitir falsos positivos.
 4. **Instalación de la PWA Multiplataforma (`PwaInstallBanner.tsx` y `usePwaInstallPrompt.ts`):**
    - Modal flotante en `z-50` coordinado con `PushPermissionModal` y respetuoso con la navegación táctil y el botón Atrás.
    - **Regla de 3 Intentos:** Si el usuario no tiene la aplicación instalada, se muestra de forma automática tras 2,5 segundos, con un límite máximo de 1 vez por sesión y un tope absoluto de 3 apariciones. Al descartar 3 veces, deja de mostrarse automáticamente.

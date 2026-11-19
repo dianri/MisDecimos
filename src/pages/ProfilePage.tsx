@@ -8,6 +8,8 @@ import {
   getNotificationPermissionState,
   isStandaloneMode,
   detectPlatform,
+  syncPushSubscription,
+  isPushSupported,
 } from '../services/push/pushSubscription'
 import { resetPushPromptDismissals } from '../hooks/usePushPermissionPrompt'
 import { useModalBackHandler } from '../hooks/useModalBackHandler'
@@ -298,20 +300,65 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
 
   // Enviar notificación Web Push de prueba
   const handleSendTestPush = async () => {
+    if (!user?.id) return
     setIsSendingTestPush(true)
     setStatusMsg(null)
+
+    // 1. Verificar soporte y permisos
+    if (!isPushSupported()) {
+      setStatusMsg({
+        type: 'error',
+        text: 'Este navegador o dispositivo no soporta notificaciones Web Push nativas.',
+      })
+      setIsSendingTestPush(false)
+      return
+    }
+
+    if (Notification.permission !== 'granted') {
+      setStatusMsg({
+        type: 'error',
+        text: 'El permiso de notificaciones no está concedido en el navegador o sistema operativo.',
+      })
+      setIsSendingTestPush(false)
+      return
+    }
+
     try {
+      // 2. Resincronizar la suscripción push antes de enviar la prueba
+      const syncResult = await syncPushSubscription(user.id)
+      if (!syncResult.success) {
+        setStatusMsg({
+          type: 'error',
+          text: `No se pudo sincronizar la suscripción push: ${syncResult.error || 'Sin suscripción activa'}.`,
+        })
+        return
+      }
+
+      // 3. Invocar la Edge Function send-push
       const { data, error } = await supabase.functions.invoke('send-push', {
         body: { testPush: true },
       })
       if (error) throw error
-      setStatusMsg({
-        type: 'success',
-        text:
-          data?.sentCount > 0
-            ? '¡Notificación de prueba enviada con éxito! Comprueba la barra del sistema.'
-            : 'Prueba registrada. Comprueba que el permiso esté concedido y el navegador activo.',
-      })
+
+      const sent = data?.sent ?? data?.sentCount ?? 0
+      const errors = data?.errors || []
+
+      // 4. Mostrar feedback real sin falsos positivos
+      if (sent > 0) {
+        setStatusMsg({
+          type: 'success',
+          text: `¡Notificación push enviada a ${sent} dispositivo(s)! Comprueba la barra del sistema.`,
+        })
+      } else {
+        const errorDetail =
+          errors.length > 0
+            ? errors.join('; ')
+            : data?.message || 'Sin suscripción push activa en este navegador'
+        setStatusMsg({
+          type: 'error',
+          text: `No se pudo enviar la notificación push (${errorDetail}).`,
+        })
+      }
     } catch (err: unknown) {
       console.error('Error enviando notificación de prueba:', err)
       setStatusMsg({
