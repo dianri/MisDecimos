@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.42` (Producción Estable · Tarjetas de Décimos Premiados Destacadas)  
+**Versión Actual:** `1.0.43` (Producción Estable · Solicitud y Confirmación de Cobro de Premios)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.42`)  
+**Rama de Producción:** `main` (Tag `v1.0.43`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

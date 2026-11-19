@@ -166,6 +166,8 @@ export type Database = {
           percentage: number
           prize_paid_confirmed: boolean
           prize_paid_confirmed_at: string | null
+          prize_payout_requested_at: string | null
+          prize_payout_requested_by: string | null
           role: string
           status: string
           ticket_id: string
@@ -180,6 +182,8 @@ export type Database = {
           percentage: number
           prize_paid_confirmed?: boolean
           prize_paid_confirmed_at?: string | null
+          prize_payout_requested_at?: string | null
+          prize_payout_requested_by?: string | null
           role: string
           status?: string
           ticket_id: string
@@ -194,6 +198,8 @@ export type Database = {
           percentage?: number
           prize_paid_confirmed?: boolean
           prize_paid_confirmed_at?: string | null
+          prize_payout_requested_at?: string | null
+          prize_payout_requested_by?: string | null
           role?: string
           status?: string
           ticket_id?: string
@@ -537,6 +543,10 @@ export type Database = {
         Returns: number
       }
       cancel_pending_invite: { Args: { p_invite_id: string }; Returns: boolean }
+      confirm_prize_payout_received: {
+        Args: { p_share_id: string }
+        Returns: Json
+      }
       confirm_prize_received: { Args: { p_ticket_id: string }; Returns: Json }
       create_equal_split_participations: {
         Args: {
@@ -587,6 +597,10 @@ export type Database = {
       request_payout_confirmation_reminder: {
         Args: { p_ticket_id: string }
         Returns: boolean
+      }
+      request_prize_payout_confirmation: {
+        Args: { p_share_id: string }
+        Returns: Json
       }
       request_share_waiver: { Args: { p_share_id: string }; Returns: boolean }
       reset_ticket_prize_simulation: {
