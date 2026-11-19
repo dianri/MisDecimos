@@ -149,7 +149,13 @@ flowchart TD
 - **Bloqueo Previo al Sorteo y Tarjeta Informativa:** Si la fecha y hora oficial de inicio del sorteo aún no ha llegado en horario peninsular español (`Europe/Madrid` CET: 22 de diciembre a las 09:00 para Navidad, 6 de enero a las 12:00 para El Niño):
   - El botón principal aparece deshabilitado mostrando el icono `CalendarClock` y el texto *"Disponible el DD/MM/YYYY"*, previniendo peticiones prematuras a la Edge Function.
   - Se sustituye el recuadro de resultados por una tarjeta informativa ámbar con icono `CalendarClock`: *"El sorteo aún no se ha realizado. Se celebrará el [fecha] (faltan X días). Podrás comprobar si tiene premio a partir de ese día."*
-- **Consulta Oficial Post-Sorteo:** Una vez iniciado el sorteo, el botón *"Comprobar premio"* (o *"Comprobar de nuevo"*) invoca la Supabase Edge Function `check-prizes`, conectada a endpoints oficiales de alta disponibilidad de El País / SELAE.
+- **Consulta Oficial y Validación Estricta por Año:**
+  - El botón *"Comprobar premio"* (o *"Comprobar de nuevo"*) invoca la Supabase Edge Function `check-prizes` transmitiendo `ticketId`, `number`, `drawType` y la fecha canónica `drawDate`.
+  - **Diferenciación Visual de Estados:**
+    - **Sorteo Futuro / En Curso:** Aviso informativo en tono ámbar suave indicando la fecha futura de celebración o que el sorteo del día de hoy se encuentra en escrutinio.
+    - **Histórico No Disponible:** Ante décimos de años pasados para los cuales el proveedor oficial no dispone de histórico archivado, muestra un banner informativo neutro en gris pizarra (`bg-slate-50 border-slate-200`) indicando *"Histórico no disponible: No hay resultados históricos disponibles en el proveedor oficial para el sorteo del DD/MM/AAAA"*, permitiendo archivar y gestionar el décimo con total normalidad sin inducir a error ni simular fallos de red.
+    - **Comprobado Sin Premio (`0 €`):** Tarjeta clara *"Sin premio en el sorteo oficial del DD/MM/AAAA"* con mención a la fuente oficial.
+    - **Comprobado Con Premio (`> 0 €`):** Tarjeta destacada en verde esmeralda con el trofeo oficial, el importe total del décimo y el desglose exacto de la cuota y premio personal del usuario.
 - **Desglose Fiscal (Ley 16/2012):** Calcula automáticamente el premio total, la exención de los primeros 40.000 € y la retención del 20% de IRPF para obtener el importe neto a liquidar.
 - **Cuota Individual:** Muestra a cada participante el importe exacto bruto y neto que le corresponde en base a su porcentaje aceptado.
 - **Confirmación de Cobro:** Botón *"He recibido mi premio"*, disponible para cotitulares cuando el estado es `VALIDADO`. Ejecuta `confirm_prize_paid` registrando fecha, hora e IP para la liquidación formal unánime.

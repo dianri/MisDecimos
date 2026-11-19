@@ -18,6 +18,19 @@ interface CacheEntry {
 // Caché en memoria de la Edge Function
 const cache = new Map<string, CacheEntry>()
 
+function formatDrawDateShort(dateStr: string): string {
+  if (!dateStr || !dateStr.includes('-')) return dateStr || ''
+  const [y, m, d] = dateStr.split('-')
+  return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`
+}
+
+function getDrawStartTimestamp(drawDate: string, drawType?: string): Date {
+  const isElNino = drawType === 'EL_NINO' || drawDate.includes('-01-06')
+  const hour = isElNino ? 12 : drawType === 'NAVIDAD' || drawDate.includes('-12-22') ? 9 : 13
+  const hourStr = String(hour).padStart(2, '0')
+  return new Date(`${drawDate}T${hourStr}:00:00+01:00`)
+}
+
 Deno.serve(async (req: Request) => {
   // Manejo de preflight CORS
   if (req.method === 'OPTIONS') {
@@ -66,34 +79,50 @@ Deno.serve(async (req: Request) => {
       effectiveDrawType = ticketRow.draw_type || effectiveDrawType
     }
 
-    // 2. Validación Defensiva de Inicio del Sorteo (Europe/Madrid)
-    if (effectiveDrawDate) {
-      // Hora oficial según sorteo: Navidad a las 09:00 CET, El Niño a las 12:00 CET (UTC+1 en Dic/Ene)
-      const hour = effectiveDrawType === 'EL_NINO' ? 12 : 9
-      const hourStr = String(hour).padStart(2, '0')
-      const drawStart = new Date(`${effectiveDrawDate}T${hourStr}:00:00+01:00`)
-      const now = new Date()
+    if (!effectiveDrawDate) {
+      effectiveDrawDate = new Date().toISOString().split('T')[0]
+    }
 
-      if (now.getTime() < drawStart.getTime()) {
-        console.log(`[check-prizes] Intento de comprobación prematuro bloqueado para billete ${ticketId}. Inicio: ${drawStart.toISOString()}, Ahora: ${now.toISOString()}`)
-        return new Response(
-          JSON.stringify({
-            ok: false,
-            code: 'DRAW_NOT_HELD_YET',
-            message: 'El sorteo aún no se ha realizado.',
-            drawDate: effectiveDrawDate,
-            drawStart: drawStart.toISOString(),
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
+    const [yStr, mStr, dStr] = effectiveDrawDate.split('-')
+    const drawYear = parseInt(yStr, 10)
+    const formattedDrawDate = formatDrawDateShort(effectiveDrawDate)
+    const drawStart = getDrawStartTimestamp(effectiveDrawDate, effectiveDrawType)
+
+    // Obtener fecha actual en Madrid (Europe/Madrid)
+    const now = new Date()
+    const madridParts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Madrid',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(now)
+
+    const curY = parseInt(madridParts.find((p) => p.type === 'year')?.value || String(now.getFullYear()), 10)
+    const curM = madridParts.find((p) => p.type === 'month')?.value || String(now.getMonth() + 1).padStart(2, '0')
+    const curD = madridParts.find((p) => p.type === 'day')?.value || String(now.getDate()).padStart(2, '0')
+    const todayStr = `${curY}-${curM}-${curD}`
+
+    // 2. Validación Defensiva de Inicio del Sorteo
+    const isFuture = effectiveDrawDate > todayStr || (effectiveDrawDate === todayStr && now.getTime() < drawStart.getTime())
+    if (isFuture) {
+      console.log(`[check-prizes] Intento de comprobación prematuro bloqueado para billete ${ticketId}. Inicio: ${drawStart.toISOString()}, Ahora: ${now.toISOString()}`)
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          code: 'DRAW_NOT_HELD_YET',
+          message: `Este sorteo se celebrará el ${formattedDrawDate}. Aún no hay resultados oficiales.`,
+          drawDate: effectiveDrawDate,
+          drawStart: drawStart.toISOString(),
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const cleanNumber = String(number).padStart(5, '0')
-    const cacheKey = `${effectiveDrawType || 'NAVIDAD'}:${cleanNumber}`
+    const cacheKey = `${effectiveDrawDate}:${effectiveDrawType || 'NAVIDAD'}:${cleanNumber}`
 
     let prizeAmountCents = 0
-    let checkSource = 'elpais'
+    let checkSource = 'oficial'
     let listStatus = 'provisional'
 
     // 3. Comprobar caché si no se fuerza refresco
@@ -103,155 +132,130 @@ Deno.serve(async (req: Request) => {
       checkSource = cached.checkSource
       listStatus = cached.listStatus
     } else {
-      // 4. Consulta oficial según sorteo
-      const numInt = parseInt(cleanNumber, 10)
+      const isPastDraw = effectiveDrawDate < todayStr
+      const isCurrentEdition = drawYear === curY
+      const loteriasApiKey = Deno.env.get('LOTERIAS_API_KEY')
+      let providerResolved = false
 
-      if (effectiveDrawType === 'NAVIDAD') {
+      // 4. Intentar Loterías API con fecha explícita si la clave está disponible
+      if (loteriasApiKey) {
         try {
-          const res = await fetch(`https://api.elpais.com/ws/LoteriaNavidadPremiados?n=${numInt}`, {
-            headers: { 'User-Agent': 'MisDecimos/1.0.12' },
-          })
-          if (res.ok) {
-            const rawText = await res.text()
-            const jsonText = rawText.replace(/^busqueda=/, '').replace(/;$/, '').trim()
-            const data = JSON.parse(jsonText)
-
-            // Si el sorteo aún no tiene escrutinio oficial o devuelve error / status === 0
-            if (data.error === 1 || data.status === 0 || data.status === '0') {
-              console.log(`[check-prizes] Navidad en curso o sin escrutinio para ${cleanNumber}:`, data)
-              return new Response(
-                JSON.stringify({
-                  ok: false,
-                  code: 'DRAW_IN_PROGRESS',
-                  message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
-                }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              )
-            }
-
-            const premioEuros = Number(data.premio || 0)
-            prizeAmountCents = Math.round(premioEuros * 100)
-            checkSource = 'elpais'
-            listStatus = (data.status === 4 || data.status === '4') ? 'final' : 'provisional'
-          } else {
-            return new Response(
-              JSON.stringify({
-                ok: false,
-                code: 'DRAW_IN_PROGRESS',
-                message: 'No se pudo obtener resultados oficiales en este momento. Inténtalo más tarde.',
-              }),
-              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-          }
-        } catch (err) {
-          console.error('Error consultando El País Navidad:', err)
-          return new Response(
-            JSON.stringify({
-              ok: false,
-              code: 'DRAW_IN_PROGRESS',
-              message: 'Error al contactar con la fuente oficial de resultados.',
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-      } else if (effectiveDrawType === 'EL_NINO') {
-        try {
-          const res = await fetch(`https://api.elpais.com/ws/LoteriaNinoPremiados?n=${numInt}`, {
-            headers: { 'User-Agent': 'MisDecimos/1.0.12' },
-          })
-          if (res.ok) {
-            const rawText = await res.text()
-            const jsonText = rawText.replace(/^busqueda=/, '').replace(/;$/, '').trim()
-            const data = JSON.parse(jsonText)
-
-            if (data.error === 1 || data.status === 0 || data.status === '0') {
-              console.log(`[check-prizes] El Niño en curso o sin escrutinio para ${cleanNumber}:`, data)
-              return new Response(
-                JSON.stringify({
-                  ok: false,
-                  code: 'DRAW_IN_PROGRESS',
-                  message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
-                }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              )
-            }
-
-            const premioEuros = Number(data.premio || 0)
-            prizeAmountCents = Math.round(premioEuros * 100)
-            checkSource = 'elpais'
-            listStatus = (data.status === 4 || data.status === '4') ? 'final' : 'provisional'
-          } else {
-            return new Response(
-              JSON.stringify({
-                ok: false,
-                code: 'DRAW_IN_PROGRESS',
-                message: 'No se pudo obtener resultados oficiales en este momento. Inténtalo más tarde.',
-              }),
-              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-          }
-        } catch (err) {
-          console.error('Error consultando El País El Niño:', err)
-          return new Response(
-            JSON.stringify({
-              ok: false,
-              code: 'DRAW_IN_PROGRESS',
-              message: 'Error al contactar con la fuente oficial de resultados.',
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-      } else {
-        // Fallback para sorteos ordinarios o Loterias API si estuviese configurado
-        const loteriasApiKey = Deno.env.get('LOTERIAS_API_KEY')
-        if (loteriasApiKey) {
-          try {
-            const res = await fetch(`https://api.loteriasapi.com/api/v1/results/nacional/check?numbers=${cleanNumber}`, {
+          const res = await fetch(
+            `https://api.loteriasapi.com/api/v1/results/nacional/check?numbers=${cleanNumber}&date=${effectiveDrawDate}`,
+            {
               headers: {
                 'x-api-key': loteriasApiKey,
-                'User-Agent': 'MisDecimos/1.0.12',
+                'User-Agent': 'MisDecimos/1.0.39',
               },
-            })
-            if (res.ok) {
-              const data = await res.json()
-              const decimoPrize = data?.additionalData?.decimos?.[0]?.prize ?? 0
-              prizeAmountCents = Math.round(Number(decimoPrize))
+            }
+          )
+          if (res.ok) {
+            const data = await res.json()
+            if (data?.additionalData?.decimos && data.additionalData.decimos.length > 0) {
+              const decimoPrize = data.additionalData.decimos[0].prize ?? 0
+              prizeAmountCents = Math.round(Number(decimoPrize) * 100)
               checkSource = 'loteriasapi'
               listStatus = data?.listStatus || 'final'
-            } else {
-              return new Response(
-                JSON.stringify({
-                  ok: false,
-                  code: 'DRAW_IN_PROGRESS',
-                  message: 'Resultados no disponibles en este momento.',
-                }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              )
+              providerResolved = true
+            }
+          }
+        } catch (err) {
+          console.warn('[check-prizes] Error consultando Loterias API con fecha:', err)
+        }
+      }
+
+      // 5. Consulta a El País (solo aplicable a la temporada actual)
+      if (!providerResolved) {
+        if (isCurrentEdition) {
+          const numInt = parseInt(cleanNumber, 10)
+          const endpointUrl =
+            effectiveDrawType === 'EL_NINO' || effectiveDrawDate.includes('-01-06')
+              ? `https://api.elpais.com/ws/LoteriaNinoPremiados?n=${numInt}`
+              : `https://api.elpais.com/ws/LoteriaNavidadPremiados?n=${numInt}`
+
+          try {
+            const res = await fetch(endpointUrl, {
+              headers: { 'User-Agent': 'MisDecimos/1.0.39' },
+            })
+            if (res.ok) {
+              const rawText = await res.text()
+              const jsonText = rawText.replace(/^busqueda=/, '').replace(/;$/, '').trim()
+              const data = JSON.parse(jsonText)
+
+              if (data.error === 1 || data.status === 0 || data.status === '0') {
+                if (effectiveDrawDate === todayStr) {
+                  return new Response(
+                    JSON.stringify({
+                      ok: false,
+                      code: 'DRAW_IN_PROGRESS',
+                      message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
+                      drawDate: effectiveDrawDate,
+                    }),
+                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  )
+                } else {
+                  return new Response(
+                    JSON.stringify({
+                      ok: false,
+                      code: 'HISTORICAL_UNAVAILABLE',
+                      message: `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
+                      drawDate: effectiveDrawDate,
+                    }),
+                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  )
+                }
+              }
+
+              const premioEuros = Number(data.premio || 0)
+              prizeAmountCents = Math.round(premioEuros * 100)
+              checkSource = 'elpais'
+              listStatus = data.status === 4 || data.status === '4' ? 'final' : 'provisional'
+              providerResolved = true
             }
           } catch (err) {
-            console.error('Error consultando Loterias API:', err)
-            return new Response(
-              JSON.stringify({
-                ok: false,
-                code: 'DRAW_IN_PROGRESS',
-                message: 'Error al consultar Loterias API.',
-              }),
-              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
+            console.error('[check-prizes] Error consultando El País:', err)
           }
         } else {
+          // El sorteo es de un año anterior (drawYear !== curY) y El País no dispone de archivo histórico por año
+          console.log(`[check-prizes] Sorteo histórico ${effectiveDrawDate} (año ${drawYear} != ${curY}) sin proveedor de archivo`)
           return new Response(
             JSON.stringify({
               ok: false,
-              code: 'DRAW_IN_PROGRESS',
-              message: 'Resultados oficiales aún no disponibles para este sorteo.',
+              code: 'HISTORICAL_UNAVAILABLE',
+              message: `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
+              drawDate: effectiveDrawDate,
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
       }
 
-      // 5. Guardar en caché en memoria si hay resultado legítimo
+      // Si ningún proveedor pudo resolver el escrutinio
+      if (!providerResolved) {
+        if (isPastDraw) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              code: 'HISTORICAL_UNAVAILABLE',
+              message: `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
+              drawDate: effectiveDrawDate,
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        } else {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              code: 'DRAW_IN_PROGRESS',
+              message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
+              drawDate: effectiveDrawDate,
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+
+      // 6. Guardar en caché en memoria si hay resultado legítimo
       const ttl = listStatus === 'final' ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000
       cache.set(cacheKey, {
         prizeAmountCents,
@@ -261,7 +265,7 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    // 6. Persistencia Atómica vía Supabase RPC record_ticket_prize_check
+    // 7. Persistencia Atómica vía Supabase RPC record_ticket_prize_check
     const { data: recordData, error: rpcError } = await supabase.rpc(
       'record_ticket_prize_check',
       {
@@ -294,6 +298,7 @@ Deno.serve(async (req: Request) => {
         checkSource,
         listStatus,
         checkedAt: new Date().toISOString(),
+        drawDate: effectiveDrawDate,
         recordData,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

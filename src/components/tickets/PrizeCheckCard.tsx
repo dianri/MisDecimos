@@ -35,7 +35,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
   const [isChecking, setIsChecking] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<{
-    type: 'success' | 'error'
+    type: 'success' | 'error' | 'historical_unavailable' | 'future' | 'in_progress'
     text: string
   } | null>(null)
 
@@ -74,7 +74,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
   const handleCheckPrize = async () => {
     if (!isDrawHeld) {
       setFeedbackMsg({
-        type: 'error',
+        type: 'future',
         text: `El sorteo aún no se ha realizado. Podrás comprobar tu décimo el ${formattedDrawDate}.`,
       })
       return
@@ -88,15 +88,34 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
         ticketId: ticket.id,
         number: ticket.number,
         drawType: ticket.draw_type,
+        drawDate: ticket.draw_date,
         ticketPrice: Number(ticket.ticket_price),
         forceRefresh: !!ticket.last_checked_at,
       })
 
       if (res.ok === false) {
-        setFeedbackMsg({
-          type: 'error',
-          text: res.message || 'El sorteo aún no se ha celebrado o está en curso.',
-        })
+        if (res.code === 'HISTORICAL_UNAVAILABLE') {
+          setFeedbackMsg({
+            type: 'historical_unavailable',
+            text:
+              res.message ||
+              `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${shortDrawDate}.`,
+          })
+        } else if (res.code === 'DRAW_NOT_HELD_YET') {
+          setFeedbackMsg({
+            type: 'future',
+            text:
+              res.message ||
+              `Este sorteo se celebrará el ${formattedDrawDate}. Aún no hay resultados oficiales.`,
+          })
+        } else {
+          setFeedbackMsg({
+            type: 'in_progress',
+            text:
+              res.message ||
+              'El sorteo está en curso o aún no hay resultados oficiales publicados.',
+          })
+        }
         return
       }
 
@@ -108,7 +127,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
       } else {
         setFeedbackMsg({
           type: 'success',
-          text: 'Comprobación finalizada. El décimo no tiene premio registrado en este sorteo.',
+          text: `Comprobación finalizada. El décimo no tiene premio registrado en el sorteo del ${shortDrawDate}.`,
         })
       }
 
@@ -267,18 +286,45 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
       {/* Mensaje de feedback temporal */}
       {feedbackMsg && (
         <div
-          className={`p-3 rounded-2xl text-xs font-medium flex items-center gap-2 ${
+          className={`p-3.5 rounded-2xl text-xs shadow-xs transition-all ${
             feedbackMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border border-rose-200 text-rose-800'
+              ? 'bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-2.5 font-semibold'
+              : feedbackMsg.type === 'historical_unavailable'
+              ? 'bg-slate-50 border border-slate-200/90 text-slate-800 flex items-start gap-2.5 font-medium'
+              : feedbackMsg.type === 'future' || feedbackMsg.type === 'in_progress'
+              ? 'bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2.5 font-medium'
+              : 'bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2 font-medium'
           }`}
         >
           {feedbackMsg.type === 'success' ? (
-            <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+            <>
+              <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span>{feedbackMsg.text}</span>
+            </>
+          ) : feedbackMsg.type === 'historical_unavailable' ? (
+            <>
+              <CalendarClock className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-bold text-slate-900">Histórico no disponible</p>
+                <p className="text-[11px] leading-relaxed text-slate-600">{feedbackMsg.text}</p>
+              </div>
+            </>
+          ) : feedbackMsg.type === 'future' || feedbackMsg.type === 'in_progress' ? (
+            <>
+              <CalendarClock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-bold text-amber-900">
+                  {feedbackMsg.type === 'future' ? 'Sorteo no celebrado' : 'Sorteo en curso'}
+                </p>
+                <p className="text-[11px] leading-relaxed text-amber-800">{feedbackMsg.text}</p>
+              </div>
+            </>
           ) : (
-            <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+            <>
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{feedbackMsg.text}</span>
+            </>
           )}
-          <span>{feedbackMsg.text}</span>
         </div>
       )}
 
@@ -304,9 +350,11 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
           {!isPrized ? (
             /* CASO A: Sin Premio */
             <div className="bg-[#F3F4F6] border border-gray-200/80 p-4 text-center space-y-1.5">
-              <p className="text-sm font-extrabold text-gray-900 tracking-tight">Sin premio</p>
+              <p className="text-sm font-extrabold text-gray-900 tracking-tight">
+                Sin premio en el sorteo oficial del {shortDrawDate}
+              </p>
               <p className="text-[10px] text-gray-500 font-medium">
-                Fuente: {ticket.check_source || 'elpais'} · Datos orientativos, verifica en{' '}
+                Fuente: {ticket.check_source || 'oficial'} · Datos orientativos, verifica en{' '}
                 <a
                   href="https://www.loteriasyapuestas.es"
                   target="_blank"
