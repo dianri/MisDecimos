@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.29] - 2026-11-19
+
+### Changed
+- **Centralización de Cierre de Sesión y Optimización de Cabecera (`AppShell.tsx` y `ProfilePage.tsx`):**
+  - Eliminado el botón «Salir» de la cabecera superior fija para evitar pulsaciones accidentales en pantallas táctiles móviles.
+  - Expandido el botón táctil del usuario en la cabecera para ocupar todo el ancho disponible (`w-full`), mejorando la legibilidad del nombre, correo y avatar.
+  - Centralizada la acción de cierre de sesión en la pantalla de **Perfil** (`ProfilePage.tsx`) con botón dedicado con icono `LogOut`, estilo de advertencia diferenciado en rojo suave, confirmación previa y estado de carga durante el proceso de salida.
+
 ## [1.0.28] - 2026-11-19
 
 ### Added
