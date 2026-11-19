@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.33` (Producción Estable · Reparación Integral de Web Push en Android)  
+**Versión Actual:** `1.0.34` (Producción Estable · Gráfico Donut Segmentado de Alta Precisión)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.33`)  
+**Rama de Producción:** `main` (Tag `v1.0.34`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -115,3 +115,4 @@
 - [x] v1.0.31: Navegación adaptativa híbrida en escritorio (`md:flex` en `<header>`) y móvil (`md:hidden` en barra inferior).
 - [x] v1.0.32: Simplificación de la navegación principal a dos secciones (**Billetes** y **Alertas**), indicador activo en el avatar de cabecera y reubicación de **Auditoría** dentro de la pantalla de **Perfil** con retorno directo.
 - [x] v1.0.33: Reparación integral del pipeline de entrega Web Push en Android: autenticación en trigger `pg_net` para evitar HTTP 401 en Supabase Kong, sincronización silenciosa de suscripciones al iniciar sesión en `AppShell.tsx`, blindaje de `push-sw.js`, feedback verídico sin falsos positivos en `ProfilePage.tsx` y despliegue de `send-push` v2.
+- [x] v1.0.34: Gráfico circular segmentado de alta precisión (`OwnershipBreakdownCard.tsx` y `ownershipSegments.ts`): anillo de 50 segmentos radiales discretos distribuidos uniformemente cada 7,2° sin solapamiento de trazos naranjas, con asignación continua y excluyente por cuotas (verde Propietario, azul Cotitulares, naranja Pendientes y gris Disponible).

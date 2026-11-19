@@ -5,6 +5,19 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.34] - 2026-11-19
+
+### Fixed
+- **Gráfico Donut Segmentado de Alta Precisión sin Solapamiento (`OwnershipBreakdownCard.tsx`, `ownershipSegments.ts`):**
+  - **Eliminación del Solapamiento de Trazos Naranjas:** Sustituidos los arcos continuos y discontinuos `<circle>` superpuestos por un anillo de 50 segmentos radiales discretos (`<line>`) distribuidos uniformemente cada 7,2° alrededor del centro, comenzando a las 12 en punto (-90°).
+  - **Asignación Determinista y Exclusiva de Color:** Cada segmento radial se evalúa en función de su cuota proporcional:
+    - Verde corporativo (`#2E6146`) para el Propietario.
+    - Azul (`#2563EB`) para Cotitulares aceptados.
+    - Naranja / Ámbar (`#D97706`) para Invitaciones pendientes (o segmento neutro en vista de cotitular).
+    - Gris suave (`#E5E7EB`) para el remanente disponible / sin asignar.
+  - **Garantía de Visibilidad de Cuotas Mínimas:** Implementado algoritmo proporcional con suelo de 1 segmento para cualquier tramo `> 0`, evitando mezclas cromáticas entre secciones y garantizando trazos limpios, estables y continuos.
+  - **Módulo y Cobertura de Pruebas (`ownershipSegments.ts`):** Extraída la lógica pura de cálculo geométrico con pruebas unitarias exhaustivas en `ownershipDonutSegments.test.ts`.
+
 ## [1.0.33] - 2026-11-19
 
 ### Fixed
