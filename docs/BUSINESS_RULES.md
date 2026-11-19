@@ -70,6 +70,12 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   - Cualquier cotitular con cuota aceptada (`status = 'ACEPTADA'`, `role = 'PARTICIPANTE'`) puede renunciar de forma directa y voluntaria a su participación sin requerir solicitud previa del propietario.
   - **Condiciones:** El décimo no debe encontrarse en estado `LIQUIDADO` ni en estado `VALIDADO` con premio pendiente de cobro (`prize_amount_cents > 0`).
   - **Efectos Atómicos:** El porcentaje íntegro del participante se reintegra de inmediato a la cuota del propietario (`role = 'PROPIETARIO'`), la participación pasa al estado `RENUNCIADA` con 0,00%, se limpia cualquier solicitud de renuncia pendiente y se inserta un evento inmutable en `public.audit_events` (`RENUNCIA_VOLUNTARIA_PARTICIPANTE`), notificando al custodio mediante alerta interna y Web Push nativo.
+- **Salida Automática y Redirección tras Renunciar:**
+  - Al confirmarse cualquier renuncia (voluntaria o aceptando la solicitud del custodio), el participante es redirigido de forma automática e inmediata a la pestaña **Participaciones** (`/?tab=participaciones`) con `replace: true`, eliminando `/billete/:id` del historial del navegador.
+  - Se muestra un toast informativo: *"Has renunciado a la participación. El décimo se ha retirado de tus participaciones."*
+  - Si el usuario pulsa Atrás en Android o en el navegador, no podrá volver al décimo renunciado.
+- **Protección de Acceso a Décimos con Participación Renunciada:**
+  - Si un usuario no propietario intenta acceder directamente a `/billetes/:id` de un billete cuya cuota fue renunciada (o no activa), la ficha bloquea la carga, muestra el toast *"Ya no tienes acceso a este décimo porque renunciaste a tu participación."* y redirige de inmediato a `/?tab=participaciones` (`replace: true`).
 
 ---
 

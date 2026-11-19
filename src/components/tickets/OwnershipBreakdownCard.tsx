@@ -48,6 +48,7 @@ interface OwnershipBreakdownCardProps {
   shares: OwnershipShare[]
   pendingInvites: PendingInvite[]
   onRefresh: () => Promise<void>
+  onRenounced?: () => void
 }
 
 import {
@@ -66,6 +67,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   shares,
   pendingInvites,
   onRefresh,
+  onRenounced,
 }) => {
   const { user } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -234,6 +236,11 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       })
       if (error) throw error
 
+      if (accept && onRenounced) {
+        onRenounced()
+        return
+      }
+
       setActionMsg({
         type: 'success',
         text: accept
@@ -266,11 +273,17 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
       if (error) throw error
 
+      setRenouncingShare(null)
+
+      if (onRenounced) {
+        onRenounced()
+        return
+      }
+
       setActionMsg({
         type: 'success',
         text: `Has renunciado voluntariamente a tu participación del ${renouncingShare.percentage}%. La cuota ha vuelto a la custodia del propietario.`,
       })
-      setRenouncingShare(null)
       await onRefresh()
     } catch (err: unknown) {
       console.error('Error al renunciar voluntariamente:', err)

@@ -324,41 +324,54 @@ export function useAndroidBackNavigation() {
   )
 
   // Navegar a la raíz de billetes preservando o actualizando parámetros de búsqueda (?tab=...)
-  const navigateToRootWithSearch = useCallback((search: string = '') => {
-    const cleanSearch = search ? (search.startsWith('?') ? search : `?${search}`) : ''
-    const rootPath = `/${cleanSearch}`
+  const navigateToRootWithSearch = useCallback(
+    (search: string = '', options?: { toastMsg?: string }) => {
+      const cleanSearch = search ? (search.startsWith('?') ? search : `?${search}`) : ''
+      const rootPath = `/${cleanSearch}`
 
-    window.history.replaceState(
-      { tab: 'billetes', ticketId: null, idx: 0, isBase: true },
-      '',
-      rootPath
-    )
-    window.history.pushState(
-      { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
-      '',
-      rootPath
-    )
-    historyIdxRef.current = 0
-    setActiveTab('billetes')
-    setSelectedTicketId(null)
-
-    if (showExitToastRef.current) {
-      setShowExitToast(false)
-      showExitToastRef.current = false
-      if (exitTimerRef.current) {
-        clearTimeout(exitTimerRef.current)
-        exitTimerRef.current = null
+      const baseState = {
+        tab: 'billetes' as TabType,
+        ticketId: null,
+        idx: 0,
+        isBase: true,
+        ...(options?.toastMsg
+          ? { toastMsg: options.toastMsg, claimToastMsg: options.toastMsg }
+          : {}),
       }
-    }
 
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new PopStateEvent('popstate', {
-          state: { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
-        })
+      window.history.replaceState(
+        baseState,
+        '',
+        rootPath
       )
-    }
-  }, [])
+      window.history.pushState(
+        { ...baseState, exitGuard: true },
+        '',
+        rootPath
+      )
+      historyIdxRef.current = 0
+      setActiveTab('billetes')
+      setSelectedTicketId(null)
+
+      if (showExitToastRef.current) {
+        setShowExitToast(false)
+        showExitToastRef.current = false
+        if (exitTimerRef.current) {
+          clearTimeout(exitTimerRef.current)
+          exitTimerRef.current = null
+        }
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new PopStateEvent('popstate', {
+            state: { ...baseState, exitGuard: true },
+          })
+        )
+      }
+    },
+    []
+  )
 
   // Retroceder en el historial
   const goBack = useCallback(() => {

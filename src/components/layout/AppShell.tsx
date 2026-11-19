@@ -325,9 +325,9 @@ export const AppShell: React.FC = () => {
             <TicketDetailPage
               ticketId={selectedTicketId}
               onBack={goBack}
-              onNavigateToRoot={(subTab) => {
+              onNavigateToRoot={(subTab, options) => {
                 const search = subTab && subTab !== 'decimos' ? `?tab=${subTab}` : ''
-                navigateToRootWithSearch(search)
+                navigateToRootWithSearch(search, options)
               }}
             />
           ) : (

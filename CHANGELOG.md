@@ -5,6 +5,19 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.50] - 2026-11-19
+
+### Fixed
+- **Redirección Automática y Protección de Acceso tras Renuncia de Participación (`TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `TicketsPage.tsx`):**
+  - **Salida Automática Inmediata a Participaciones tras Renunciar:**
+    - Tanto en renuncias voluntarias del participante (`renounce_own_participation`) como al aceptar una solicitud de renuncia del custodio (`respond_share_waiver` con `accept = true`), la aplicación ya no permanece en la ficha del décimo.
+    - Se redirige de forma inmediata a `/?tab=participaciones` con `replace: true`, eliminando `/billetes/:id` del historial del navegador para evitar reentradas accidentales al pulsar el botón Atrás en Android o el navegador.
+    - Se muestra el toast informativo de confirmación: *"Has renunciado a la participación. El décimo se ha retirado de tus participaciones."*.
+  - **Protección de Entrada Directa a Billetes Renunciados (`TicketDetailPage.tsx`):**
+    - Si un usuario que ya no es propietario ni cuenta con participación activa (`ACEPTADA` o `PENDIENTE`) intenta abrir directamente `/billetes/:id` (por ejemplo, desde una notificación previa o enlace antiguo), la ficha bloquea la visualización, muestra el aviso *"Ya no tienes acceso a este décimo porque renunciaste a tu participación."* y redirige de inmediato a `/?tab=participaciones` con `replace: true`.
+  - **Batería de Pruebas Unitarias (`src/lib/__tests__/renounceNavigation.test.ts`):**
+    - 6 nuevos tests unitarios verificando la evaluación de acceso (propietario, cotitular activo, cuota renunciada, usuario ajeno), la construcción de acciones de redirección con `replace: true` y la confirmación de exclusión total de participaciones renunciadas en listados y métricas (99 tests unitarios en total con 100% de éxito).
+
 ## [1.0.49] - 2026-11-19
 
 ### Fixed
