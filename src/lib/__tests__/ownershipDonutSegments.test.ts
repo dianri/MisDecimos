@@ -2,9 +2,66 @@ import { test } from 'node:test'
 import assert from 'node:assert'
 import {
   computeRadialOwnershipSegments,
+  computeSolidDonutArcs,
   SEGMENT_COLORS,
   TOTAL_RADIAL_SEGMENTS,
+  DONUT_RADIUS,
 } from '../ownershipSegments.ts'
+
+test('computeSolidDonutArcs - 100% propietario asigna un único arco continuo con offset 0', () => {
+  const { circumference, arcs, totalAllocated, availablePercent } = computeSolidDonutArcs(100, 0, 0, DONUT_RADIUS)
+  assert.strictEqual(totalAllocated, 100)
+  assert.strictEqual(availablePercent, 0)
+  assert.strictEqual(arcs.length, 1)
+
+  const ownerArc = arcs[0]
+  assert.strictEqual(ownerArc.category, 'propietario')
+  assert.strictEqual(ownerArc.color, SEGMENT_COLORS.propietario)
+  assert.strictEqual(ownerArc.offset, 0)
+  assert.strictEqual(ownerArc.length, circumference)
+})
+
+test('computeSolidDonutArcs - 55% / 25% / 20% distribuye 3 arcos contiguos sin solapamiento', () => {
+  const { circumference, arcs, totalAllocated, availablePercent } = computeSolidDonutArcs(55, 25, 20, 62)
+  assert.strictEqual(totalAllocated, 100)
+  assert.strictEqual(availablePercent, 0)
+  assert.strictEqual(arcs.length, 3)
+
+  const [owner, coOwners, pending] = arcs
+
+  assert.strictEqual(owner.category, 'propietario')
+  assert.strictEqual(owner.offset, 0)
+  assert.strictEqual(owner.length, 0.55 * circumference)
+
+  assert.strictEqual(coOwners.category, 'cotitulares')
+  assert.strictEqual(coOwners.offset, -(0.55 * circumference))
+  assert.strictEqual(coOwners.length, 0.25 * circumference)
+
+  assert.strictEqual(pending.category, 'pendientes')
+  assert.strictEqual(pending.offset, -((0.55 + 0.25) * circumference))
+  assert.strictEqual(pending.length, 0.20 * circumference)
+
+  const totalLength = owner.length + coOwners.length + pending.length
+  assert.ok(Math.abs(totalLength - circumference) < 0.0001, 'La suma de arcos debe igualar la circunferencia total')
+})
+
+test('computeSolidDonutArcs - suma < 100% preserva availablePercent para el círculo base gris', () => {
+  const { circumference, arcs, totalAllocated, availablePercent } = computeSolidDonutArcs(50, 20, 10, 62)
+  assert.strictEqual(totalAllocated, 80)
+  assert.strictEqual(availablePercent, 20)
+  assert.strictEqual(arcs.length, 3)
+
+  const totalLength = arcs.reduce((acc, a) => acc + a.length, 0)
+  assert.ok(Math.abs(totalLength - 0.8 * circumference) < 0.0001)
+})
+
+test('computeSolidDonutArcs - omite categorías con 0% evitando círculos vacíos', () => {
+  const { arcs } = computeSolidDonutArcs(80, 0, 20, 62)
+  assert.strictEqual(arcs.length, 2)
+  assert.strictEqual(arcs[0].category, 'propietario')
+  assert.strictEqual(arcs[1].category, 'pendientes')
+  assert.strictEqual(arcs[1].offset, -(0.8 * 2 * Math.PI * 62))
+})
 
 test('computeRadialOwnershipSegments - 100% propietario asigna todos los 50 segmentos a verde', () => {
   const segments = computeRadialOwnershipSegments(100, 0, 0)

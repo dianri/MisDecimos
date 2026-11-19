@@ -44,7 +44,11 @@ interface OwnershipBreakdownCardProps {
   onRefresh: () => Promise<void>
 }
 
-import { computeRadialOwnershipSegments } from '../../lib/ownershipSegments'
+import {
+  computeSolidDonutArcs,
+  DONUT_RADIUS,
+  DONUT_STROKE_WIDTH,
+} from '../../lib/ownershipSegments'
 
 export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   ticketId,
@@ -291,8 +295,14 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   const coOwnersPct = participantShares.reduce((acc, s) => acc + Number(s.percentage), 0)
   const pendingPct = isOwner ? totalPendingPct : unassignedPct
 
-  // Anillo de 50 segmentos radiales discretos sin solapamiento
-  const radialSegments = computeRadialOwnershipSegments(ownerPct, coOwnersPct, pendingPct)
+  // Parámetros geométricos y arcos continuos para el anillo Donut sólido SVG
+  const r = DONUT_RADIUS // 62
+  const { circumference, arcs } = computeSolidDonutArcs(
+    ownerPct,
+    coOwnersPct,
+    pendingPct,
+    r
+  )
 
   return (
     <div className="space-y-5">
@@ -331,26 +341,40 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         </div>
       )}
 
-      {/* 2. Gráfico Donut SVG Segmentado */}
+      {/* 2. Gráfico Donut SVG Sólido */}
       <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
         <div className="relative w-44 h-44 flex items-center justify-center">
           <svg
             className="w-full h-full"
-            viewBox="0 0 100 100"
+            viewBox="0 0 160 160"
             role="img"
             aria-label="Gráfico de distribución de propiedad"
           >
-            {radialSegments.map((seg) => (
-              <line
-                key={seg.index}
-                x1={seg.x1}
-                y1={seg.y1}
-                x2={seg.x2}
-                y2={seg.y2}
-                stroke={seg.color}
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                className="transition-colors duration-300"
+            {/* Círculo base completo (100 %) para representar cualquier porcentaje sin asignar */}
+            <circle
+              cx="80"
+              cy="80"
+              r={r}
+              fill="none"
+              stroke="#E5E7EB"
+              strokeWidth={DONUT_STROKE_WIDTH}
+            />
+
+            {/* Arcos continuos y sólidos por categoría (> 0%) acumulando desplazamiento */}
+            {arcs.map((arc) => (
+              <circle
+                key={arc.category}
+                cx="80"
+                cy="80"
+                r={r}
+                fill="none"
+                stroke={arc.color}
+                strokeWidth={DONUT_STROKE_WIDTH}
+                strokeLinecap="butt"
+                strokeDasharray={`${arc.length} ${circumference}`}
+                strokeDashoffset={arc.offset}
+                transform="rotate(-90 80 80)"
+                className="transition-all duration-500 ease-out"
               />
             ))}
           </svg>
