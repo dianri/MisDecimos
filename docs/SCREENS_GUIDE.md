@@ -58,10 +58,10 @@ flowchart TD
 - **Badge Anti-Caché:** [`src/components/common/VersionBadge.tsx`](../src/components/common/VersionBadge.tsx)
 
 ### Elementos de la Interfaz:
-1. **Cabecera Superior Fija:**
-   - **Logo y Título:** Logotipo oficial de Loterías y marca MisDecimos.
-   - **Botón de Campana de Alertas:** Acceso directo a la pestaña de notificaciones con insignia numérica roja en tiempo real si existen alertas no leídas.
-   - **Avatar de Usuario:** Enlace rápido al perfil del usuario autenticado.
+1. **Cabecera Superior Fija con Safe-Area Dinámica:**
+   - **Padding y Área Segura:** Padding superior dinámico `pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6` que garantiza 14 px de aire vertical en escritorio y dispositivos sin notch, y absorbe fluidamente la zona del notch/isla dinámica en iOS y Android sin encajonar el contenido.
+   - **Identidad del Usuario:** Avatar circular amplio (`w-10 h-10 rounded-full shrink-0`) con separación ergonómica de 14 px (`gap-3.5`) respecto al nombre y correo del usuario.
+   - **Botón Salir:** Centrado verticalmente (`shrink-0 px-3 py-2 rounded-xl flex items-center gap-1.5`) para una interacción cómoda y limpia.
 6. **Barra Inferior Móvil (`BottomNav`):**
    - 4 accesos fijos adaptados a pantallas táctiles (con capa base `z-30` para permanecer siempre por debajo de cualquier modal o bottom sheet `z-50`):
      - 🎟️ **Billetes:** Dashboard de décimos en custodia y participaciones.
