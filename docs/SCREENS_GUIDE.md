@@ -198,7 +198,10 @@ flowchart TD
      - ✅ **Aceptar Renuncia:** Ejecuta `respond_waiver(..., p_accept = true)`.
      - ❌ **Rechazar:** Ejecuta `respond_waiver(..., p_accept = false)`.
    - Clicar en cualquier alerta redirige automáticamente a la ficha del décimo correspondiente.
-4. **Botón "Leídas todas":** Invoca la RPC `mark_all_notifications_read`, actualizando el estado de lectura y poniendo a 0 el badge de la campana.
+4. **Deep-Linking Directo desde Notificaciones Web Push (Android PWA):**
+   - Al pulsar una notificación Web Push en Android, la aplicación se abre y navega directamente al detalle del billete (`/billetes/:id`) tanto en arranque en frío como con la app en segundo plano.
+   - La notificación pulsada se marca automáticamente como leída en segundo plano en Supabase (`is_read = true`).
+5. **Botón "Leídas todas":** Invoca la RPC `mark_all_notifications_read`, actualizando el estado de lectura y poniendo a 0 el badge de la campana.
 
 ---
 

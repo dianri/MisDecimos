@@ -11,27 +11,53 @@ interface HistoryItemState {
   modalOpen?: boolean
 }
 
-function parseInitialRoute(): { tab: TabType; ticketId: string | null } {
-  if (typeof window === 'undefined') {
-    return { tab: 'billetes', ticketId: null }
+export function parseRouteFromPath(rawPath: string): { tab: TabType; ticketId: string | null } {
+  let pathname = rawPath || '/'
+  try {
+    if (pathname.includes('://')) {
+      pathname = new URL(pathname).pathname
+    }
+  } catch {
+    // fallback si no es URL absoluta válida
   }
 
-  const path = window.location.pathname.toLowerCase()
-  if (path.startsWith('/billetes/')) {
-    const id = window.location.pathname.substring('/billetes/'.length).trim()
-    return { tab: 'billetes', ticketId: id || null }
+  const cleanPath = pathname.split('?')[0].split('#')[0].trim()
+  const lower = cleanPath.toLowerCase()
+
+  const ticketPrefixes = [
+    '/billetes/',
+    '/billete/',
+    '/decimos/',
+    '/decimo/',
+    '/tickets/',
+    '/ticket/',
+  ]
+
+  for (const prefix of ticketPrefixes) {
+    if (lower.startsWith(prefix)) {
+      const id = cleanPath.substring(prefix.length).replace(/\/+$/, '').trim()
+      return { tab: 'billetes', ticketId: id || null }
+    }
   }
-  if (path === '/alertas') {
+
+  if (lower === '/alertas' || lower === '/alertas/') {
     return { tab: 'alertas', ticketId: null }
   }
-  if (path === '/auditoria') {
+  if (lower === '/auditoria' || lower === '/auditoria/') {
     return { tab: 'auditoria', ticketId: null }
   }
-  if (path === '/perfil') {
+  if (lower === '/perfil' || lower === '/perfil/') {
     return { tab: 'perfil', ticketId: null }
   }
 
   return { tab: 'billetes', ticketId: null }
+}
+
+function parseInitialRoute(): { tab: TabType; ticketId: string | null } {
+  if (typeof window === 'undefined') {
+    return { tab: 'billetes', ticketId: null }
+  }
+  return parseRouteFromPath(window.location.pathname)
 }
 
 function getPathForRoute(tab: TabType, ticketId: string | null): string {

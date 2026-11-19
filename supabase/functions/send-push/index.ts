@@ -34,9 +34,44 @@ Deno.serve(async (req: Request) => {
     let targetUserId = payload.userId
     let title = payload.title || 'MisDecimos'
     let body = payload.body || ''
-    let actionUrl = payload.actionUrl || payload.url || '/alertas'
-    const tag = payload.tag || 'misdecimos-alert'
-    const metadata = payload.metadata || {}
+    let ticketId =
+      payload.ticketId ||
+      payload.ticket_id ||
+      payload.metadata?.ticket_id ||
+      payload.metadata?.ticketId ||
+      null
+    let notificationId =
+      payload.notificationId ||
+      payload.notification_id ||
+      payload.metadata?.notification_id ||
+      payload.metadata?.notificationId ||
+      null
+
+    let actionUrl = payload.actionUrl || payload.url
+    if (!actionUrl) {
+      actionUrl = ticketId ? `/billetes/${ticketId}` : '/alertas'
+    } else if (ticketId && actionUrl === '/alertas') {
+      // Si se incluye ticketId pero la acción por defecto era /alertas, priorizar el décimo
+      actionUrl = `/billetes/${ticketId}`
+    }
+
+    // Extraer ticketId de la URL si no venía en los parámetros
+    if (!ticketId && actionUrl) {
+      const match = actionUrl.match(
+        /\/(?:billetes|billete|decimos|decimo|tickets|ticket)\/([a-zA-Z0-9_-]+)/i
+      )
+      if (match && match[1]) {
+        ticketId = match[1]
+      }
+    }
+
+    const tag =
+      payload.tag || (ticketId ? `misdecimos-ticket-${ticketId}` : 'misdecimos-alert')
+    const metadata = {
+      ...(payload.metadata || {}),
+      ...(ticketId ? { ticket_id: ticketId } : {}),
+      ...(notificationId ? { notification_id: notificationId } : {}),
+    }
 
     // Modo B: Notificación de prueba
     if (payload.testPush) {
@@ -75,17 +110,26 @@ Deno.serve(async (req: Request) => {
       title = '🔔 Notificación de Prueba — MisDecimos'
       body = '¡Excelente! Las notificaciones Web Push están activadas y funcionando en este dispositivo.'
       actionUrl = '/perfil'
+      ticketId = null
 
       // Registrar notificación en la base de datos (con type PUSH_TEST para que el trigger no duplique el envío)
-      await supabase.from('notifications').insert({
-        user_id: targetUserId,
-        type: 'PUSH_TEST',
-        title,
-        body,
-        action_url: actionUrl,
-        is_read: false,
-        metadata: { is_test: true, sent_at: new Date().toISOString() },
-      })
+      const { data: testNotif } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: targetUserId,
+          type: 'PUSH_TEST',
+          title,
+          body,
+          action_url: actionUrl,
+          is_read: false,
+          metadata: { is_test: true, sent_at: new Date().toISOString() },
+        })
+        .select('id')
+        .single()
+
+      if (testNotif?.id) {
+        notificationId = testNotif.id
+      }
     }
 
     if (!targetUserId) {
@@ -176,11 +220,20 @@ Deno.serve(async (req: Request) => {
         title,
         body,
         url: actionUrl,
+        actionUrl,
+        ticketId,
+        ticket_id: ticketId,
+        notificationId,
+        notification_id: notificationId,
         icon: '/pwa-192x192.png',
         badge: '/pwa-192x192.png',
         tag,
         data: {
           url: actionUrl,
+          ticketId,
+          ticket_id: ticketId,
+          notificationId,
+          notification_id: notificationId,
           metadata,
         },
       })
