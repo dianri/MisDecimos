@@ -1,8 +1,7 @@
 /**
  * Utilidades para compartir participaciones e invitaciones en MisDecimos.
- * Se utilizan símbolos seguros del Plano Básico Multilingüe (BMP, <= 0xFFFF)
- * para evitar caracteres corruptos (\uFFFD) producidos por clientes o pasarelas web
- * como api.whatsapp.com/send al recibir secuencias de 4 bytes (pares subrogados).
+ * Se utilizan secuencias de escape Unicode explícitas (\u{...}) para garantizar
+ * que los emojis se codifiquen adecuadamente en UTF-8 en todas las plataformas.
  */
 
 export interface WhatsAppShareParams {
@@ -15,25 +14,23 @@ export interface WhatsAppShareParams {
 
 /**
  * Construye el mensaje oficial formateado para compartir por WhatsApp u otras apps.
- * Utiliza símbolos Unicode seguros del plano BMP (<= 0xFFFF) para garantizar compatibilidad
- * universal en api.whatsapp.com/send sin degradación a \uFFFD.
+ * Utiliza los emojis oficiales de la aplicación mediante escapes Unicode UTF-8 seguros:
+ * \u{1F3AB} -> 🎟️ (Boleto/Décimo)
+ * \u{1F511} -> 🔑 (Llave/Código de 6 dígitos)
+ * \u{1F449} -> 👉 (Dedo indicador/Enlace de reclamación)
  */
 export function buildWhatsAppShareMessage(params: WhatsAppShareParams): string {
   const ticketDisplay = params.ticketNumber ? ` Nº ${params.ticketNumber}` : ''
   const drawDisplay = params.drawName || 'Lotería'
 
-  // Símbolos Unicode BMP seguros (<= 0xFFFF):
-  // \u2605 -> ★ (Estrella / Décimo destacado)
-  // \u2022 -> • (Viñeta / Código de 6 dígitos)
-  // \u2192 -> → (Flecha derecha / Enlace de reclamación)
-  const starSymbol = '\u2605'
-  const bulletSymbol = '\u2022'
-  const arrowSymbol = '\u2192'
+  const ticketEmoji = '\u{1F3AB}'
+  const keyEmoji = '\u{1F511}'
+  const pointEmoji = '\u{1F449}'
 
   return [
-    `${starSymbol} ¡Te he compartido una participación del ${params.percentage}% para el décimo${ticketDisplay} de ${drawDisplay} en MisDecimos!`,
-    `${bulletSymbol} Código de 6 dígitos: ${params.shortCode}`,
-    `${arrowSymbol} Reclama tu cuota al instante aquí: ${params.shareUrl}`,
+    `${ticketEmoji} ¡Te he compartido una participación del ${params.percentage}% para el décimo${ticketDisplay} de ${drawDisplay} en MisDecimos!`,
+    `${keyEmoji} Código de 6 dígitos: ${params.shortCode}`,
+    `${pointEmoji} Reclama tu cuota al instante aquí: ${params.shareUrl}`,
   ].join('\n\n')
 }
 
