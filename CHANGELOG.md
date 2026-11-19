@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.26] - 2026-11-19
+
+### Added
+- **Acceso Rápido a Perfil desde el Avatar de Cabecera (`AppShell.tsx`):**
+  - Convertido el bloque de usuario de la cabecera superior (avatar circular de 40 px, nombre y correo) en un control táctil accesible (`button[type="button"]`) con feedback de interacción (`hover:bg-black/[0.03]`, `active:scale-[0.98]`).
+  - Navegación directa a la pantalla de **Perfil** (`/perfil`) preservando el historial para el botón Atrás nativo de Android y navegadores.
+  - Comportamiento de desplazamiento suave (*smooth scroll to top*) cuando el usuario ya se encuentra en `/perfil`.
+  - Aislamiento completo del botón lateral *"Salir"* para evitar eventos anidados o clics accidentales.
+
 ## [1.0.25] - 2026-11-19
 
 ### Fixed

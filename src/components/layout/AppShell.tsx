@@ -108,7 +108,19 @@ export const AppShell: React.FC = () => {
       {/* 1. Cabecera Superior Fija */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => {
+              if (activeTab === 'perfil' && !selectedTicketId) {
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              } else {
+                navigateTo({ tab: 'perfil', ticketId: null })
+              }
+            }}
+            aria-label="Abrir mi perfil"
+            title="Ir a mi perfil"
+            className="flex items-center gap-3.5 min-w-0 flex-1 text-left rounded-xl p-1 -ml-1 transition-all hover:bg-black/[0.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer"
+          >
             <div className="w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs">
               {userAvatar ? (
                 <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -122,7 +134,7 @@ export const AppShell: React.FC = () => {
               </p>
               <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
             </div>
-          </div>
+          </button>
 
           <button
             type="button"
