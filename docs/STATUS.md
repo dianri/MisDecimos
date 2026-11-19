@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.17` (Producción Estable · Instalador PWA Multiplataforma Inteligente)  
+**Versión Actual:** `1.0.18` (Producción Estable · Handoff Cámara-Formulario y Pila de Modales)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.17`)  
+**Rama de Producción:** `main` (Tag `v1.0.18`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

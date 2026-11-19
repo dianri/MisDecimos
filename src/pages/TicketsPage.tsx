@@ -5,6 +5,7 @@ import { TicketListItemCard } from '../components/tickets/TicketListItemCard'
 import { TicketFormModal } from '../components/tickets/TicketFormModal'
 import { InviteClaimModal } from '../components/tickets/InviteClaimModal'
 import { BarcodeScannerModal } from '../components/tickets/BarcodeScannerModal'
+import { parseSelaeBarcode, type SelaeParsedTicket } from '../lib/selaeBarcodeParser'
 import type { Database } from '../types/database.types'
 import {
   Ticket,
@@ -46,9 +47,20 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   // Modales
   const [isAddTicketOpen, setIsAddTicketOpen] = useState(false)
   const [addTicketInitialTab, setAddTicketInitialTab] = useState<'scanner' | 'manual'>('manual')
+  const [isTicketScannerOpen, setIsTicketScannerOpen] = useState(false)
+  const [scannedTicketData, setScannedTicketData] = useState<SelaeParsedTicket | null>(null)
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
   const [claimInitialCode, setClaimInitialCode] = useState<string | null>(null)
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
+
+  // Manejar escaneo directo de décimo desde el botón rápido de cámara
+  const handleTicketBarcodeScanned = (rawCode: string) => {
+    setIsTicketScannerOpen(false)
+    const parsed = parseSelaeBarcode(rawCode)
+    setScannedTicketData(parsed)
+    setAddTicketInitialTab('manual')
+    setIsAddTicketOpen(true)
+  }
 
   // 1. Comprobar deep-link pendiente al montar
   useEffect(() => {
@@ -256,8 +268,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
             <button
               type="button"
               onClick={() => {
-                setAddTicketInitialTab('scanner')
-                setIsAddTicketOpen(true)
+                setScannedTicketData(null)
+                setIsTicketScannerOpen(true)
               }}
               aria-label="Escanear décimo con cámara"
               title="Escanear décimo con cámara"
@@ -425,11 +437,23 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       <TicketFormModal
         isOpen={isAddTicketOpen}
         initialTab={addTicketInitialTab}
-        onClose={() => setIsAddTicketOpen(false)}
+        initialScannedData={scannedTicketData}
+        onClose={() => {
+          setIsAddTicketOpen(false)
+          setScannedTicketData(null)
+        }}
         onCreated={(newTicketId) => {
           loadTickets()
           if (onSelectTicket) onSelectTicket(newTicketId)
         }}
+      />
+
+      {/* Escáner de décimo abierto desde el botón rápido verde */}
+      <BarcodeScannerModal
+        isOpen={isTicketScannerOpen}
+        mode="TICKET_BARCODE"
+        onClose={() => setIsTicketScannerOpen(false)}
+        onScanSuccess={handleTicketBarcodeScanned}
       />
 
       <InviteClaimModal
