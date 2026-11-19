@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.21] - 2026-11-19
+
+### Fixed
+- **Exclusión Estricta de Participaciones Renunciadas en Billetes Activos y Totales (`ticketMetrics.ts` y `TicketsPage.tsx`):**
+  - Creado el módulo puro `ticketMetrics.ts` con la función `classifyUserTickets` para asegurar que las participaciones donde el usuario no es propietario y su cuota está en `status === 'RENUNCIADA'` (o `percentage <= 0`) queden estrictamente excluidas de:
+    - El contador superior **BILLETES ACTIVOS** (`totalActivosCount`).
+    - El sumatorio de premios **TOTAL PREMIOS** (`totalPremiosGanados`).
+    - La pestaña de listado **Mis Participaciones** (`misParticipaciones`).
+    - La pestaña de listado **Archivados** (`misArchivados`).
+  - Mantenida la inmutabilidad y persistencia de eventos en el registro de auditoría (`audit_events`) y la visibilidad de la cuota reintegrada al 100% en el panel del custodio propietario.
+  - Añadida suite completa de pruebas unitarias (`ticketMetrics.test.ts`) validando los escenarios de cálculo, renuncia voluntaria y filtrado reactivo.
+
 ## [1.0.20] - 2026-11-19
 
 ### Fixed

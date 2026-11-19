@@ -6,7 +6,10 @@ import { TicketFormModal } from '../components/tickets/TicketFormModal'
 import { InviteClaimModal } from '../components/tickets/InviteClaimModal'
 import { BarcodeScannerModal } from '../components/tickets/BarcodeScannerModal'
 import { parseSelaeBarcode, type SelaeParsedTicket } from '../lib/selaeBarcodeParser'
-import type { Database } from '../types/database.types'
+import {
+  classifyUserTickets,
+  type UserTicketListsAndMetrics,
+} from '../lib/ticketMetrics'
 import {
   Ticket,
   Bell,
@@ -17,16 +20,6 @@ import {
   Loader2,
   Camera,
 } from 'lucide-react'
-
-type TicketRow = Database['public']['Tables']['tickets']['Row']
-
-interface TicketItemWithMeta {
-  ticket: TicketRow
-  userPercentage: number
-  participantsCount: number
-  isOwner: boolean
-  isArchived: boolean
-}
 
 export interface TicketsPageProps {
   onSelectTicket?: (ticketId: string) => void
@@ -40,7 +33,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const { user } = useAuth()
 
   const [activeTab, setActiveTab] = useState<'decimos' | 'participaciones' | 'archivados'>('decimos')
-  const [ticketsWithMeta, setTicketsWithMeta] = useState<TicketItemWithMeta[]>([])
+  const [ticketLists, setTicketLists] = useState<UserTicketListsAndMetrics>(() =>
+    classifyUserTickets([], [], new Set(), '')
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -102,25 +97,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
       const archivedTicketIds = new Set((hidesData || []).map((h) => h.ticket_id))
 
-      // Ensamblar metadatos por billete
-      const assembled: TicketItemWithMeta[] = (ticketsData || []).map((ticket) => {
-        const ticketShares = (sharesData || []).filter((s) => s.ticket_id === ticket.id)
-        const myShare = ticketShares.find((s) => s.user_id === user.id)
-        const isOwner = ticket.owner_id === user.id
-        const userPercentage = myShare ? Number(myShare.percentage) : isOwner ? 100 : 0
-        const activeShares = ticketShares.filter((s) => s.status === 'ACEPTADA')
-        const isArchived = archivedTicketIds.has(ticket.id) || ticket.status === 'ARCHIVADO'
+      const metrics = classifyUserTickets(
+        ticketsData || [],
+        sharesData || [],
+        archivedTicketIds,
+        user.id
+      )
 
-        return {
-          ticket,
-          userPercentage,
-          participantsCount: activeShares.length || 1,
-          isOwner,
-          isArchived,
-        }
-      })
-
-      setTicketsWithMeta(assembled)
+      setTicketLists(metrics)
     } catch (err) {
       console.error('Error cargando billetes:', err)
     } finally {
@@ -167,21 +151,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }, [loadTickets, checkAlerts])
 
-  // Filtrado de listas
-  const activeTickets = ticketsWithMeta.filter((t) => !t.isArchived)
-  const misDecimos = activeTickets.filter((t) => t.isOwner)
-  const misParticipaciones = activeTickets.filter((t) => !t.isOwner && t.userPercentage > 0)
-  const misArchivados = ticketsWithMeta.filter((t) => t.isArchived)
-
-  // Cálculo de totales para el cuadro de mando
-  const totalActivosCount = activeTickets.length
-  const totalPremiosGanados = activeTickets.reduce((acc, curr) => {
-    if (curr.ticket.prize_amount_cents > 0) {
-      const userPrizeCents = (curr.ticket.prize_amount_cents * curr.userPercentage) / 100
-      return acc + userPrizeCents / 100
-    }
-    return acc
-  }, 0)
+  // Listas y métricas extraídas del clasificador reactivo
+  const {
+    misDecimos,
+    misParticipaciones,
+    misArchivados,
+    totalActivosCount,
+    totalPremiosGanados,
+  } = ticketLists
 
   const handleTicketClick = (ticketId: string) => {
     if (onSelectTicket) {

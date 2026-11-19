@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.20` (Producción Estable · Desglose Canónico 20 Dígitos SELAE)  
+**Versión Actual:** `1.0.21` (Producción Estable · Exclusión de Participaciones Renunciadas en Activos)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.20`)  
+**Rama de Producción:** `main` (Tag `v1.0.21`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -97,3 +97,9 @@
 - [x] v1.0.13: Navegación Atrás nativa Android en PWA, centinela `exitGuard`, toast de confirmación (2,5s), hook `useModalBackHandler` y conservación de historial en `BottomNav`.
 - [x] v1.0.14: Renuncia voluntaria de participaciones por el cotitular (`renounce_own_participation`), modal de confirmación `z-50`, reintegro íntegro al propietario y auditoría `RENUNCIA_VOLUNTARIA_PARTICIPANTE`.
 - [x] v1.0.15: Onboarding inteligente de notificaciones push (`usePushPermissionPrompt`), disparadores (onboarding y alertas sin leer), límite de 3 cancelaciones, modal accesible `PushPermissionModal` y aviso de gestión en Perfil.
+- [x] v1.0.16: Prompter e instalador PWA multiplataforma guiado (`usePwaInstallPrompt`, `PwaInstallBannerModal`), compatibilidad Chromium, iOS/iPadOS y macOS Safari con límite de 3 avisos.
+- [x] v1.0.17: Corrección de offset en extracción de número del código de barras SELAE (`selaeBarcodeParser.ts`).
+- [x] v1.0.18: Prevención de cierre en cascada por `popstate` (`useModalBackHandler`) y handoff inmediato del escáner al formulario con datos precargados.
+- [x] v1.0.19: Corrección de padding vertical superior y `safe-area` en la cabecera (`AppShell.tsx`), garantizando 14 px de aire vertical en escritorio y móviles sin notch.
+- [x] v1.0.20: Desglose canónico oficial de 20 dígitos en código de barras SELAE (`2 + 3 + 2 + 3 + 6 + 4`) con soporte para separadores y prefijos GS1.
+- [x] v1.0.21: Exclusión de participaciones renunciadas (`status = 'RENUNCIADA'` o `percentage <= 0`) en el conteo de billetes activos, sumatorio de premios y pestañas de la interfaz (`ticketMetrics.ts`).
