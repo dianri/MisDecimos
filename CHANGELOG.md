@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.35] - 2026-11-19
+
+### Added
+- **Deep-Linking Directo al Décimo desde Notificaciones Web Push en Android (`send-push` v3, `push-sw.js`, `AppShell.tsx`, `useAndroidBackNavigation.ts`):**
+  - **Inclusión de `ticket_id` y `notification_id` en el Payload:** Actualizada la Edge Function `send-push` (v3) y el trigger de base de datos `trigger_send_push_notification` para resolver el identificador de décimo (desde `NEW.ticket_id` o `metadata->>'ticket_id'`) y construir la URL canónica directa `/billetes/:id` (con fallback a `/alertas`), empaquetando `ticketId`, `ticket_id`, `notificationId` y `notification_id` en las opciones de notificación Web Push.
+  - **Soporte de Navegación en Service Worker (`public/push-sw.js`):** Gestionado tanto el arranque en frío (`clients.openWindow(fullUrl)`) como la app activa o en segundo plano (`matchingClient.focus()` + `matchingClient.postMessage` + `matchingClient.navigate(fullUrl)`).
+  - **Recepción React y Marcado Silencioso en `AppShell.tsx`:** Añadido listener de `navigator.serviceWorker` para el mensaje `PUSH_NOTIFICATION_CLICK`. Permite navegación instantánea mediante `navigateTo` y marcado de lectura automático y silencioso en Supabase (`is_read = true`) para la notificación pulsada.
+  - **Resolución Universal de Rutas y Alias (`parseRouteFromPath` en `useAndroidBackNavigation.ts`):** Soporte en el arranque de la PWA para rutas de décimos en plural, singular e inglés (`/billetes/:id`, `/billete/:id`, `/decimos/:id`, `/decimo/:id`, `/tickets/:id`, `/ticket/:id`), extrayendo el ID limpio y abriendo `TicketDetailPage` directamente con compatibilidad total con el botón Atrás de Android.
+  - **Cobertura de Pruebas Unitarias (`pushDeeplinkRouting.test.ts`):** Verificación automatizada de resolución de URLs absolutas, relativas, alias, query params y hashes.
+
 ## [1.0.34] - 2026-11-19
 
 ### Fixed
