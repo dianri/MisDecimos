@@ -118,4 +118,17 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   1. **Deja de computar como billete activo** en la tarjeta superior **"BILLETES ACTIVOS"** (`totalActivosCount`) para dicho usuario en `TicketsPage`.
   2. **Queda excluido del total métrico "TOTAL PREMIOS"** (`totalPremiosGanados`) del usuario.
   3. **Desaparece de la pestaña "Participaciones"** del usuario y de la pestaña **"Archivados"** del usuario.
-  4. **Trazabilidad intacta:** Permanece inmutable en el registro de auditoría (`audit_events`) y visible en el panel del custodio propietario del décimo.
+  4. **Trazabilidad intacta:** Permanece inmutable en el registro de auditoría (`audit_events`) y visible en el panel del custodio propietario del décimo con 0,00 € y mención expresa de renuncia formal.
+
+---
+
+## 9. Simulación Controlada de Premios y Diagnóstico de Custodio
+
+- **Objetivo y Seguridad:** Para permitir pruebas de integración y verificación del flujo completo de liquidación, cobro y notificaciones Web Push sin esperar a la celebración oficial del sorteo, la Edge Function `check-prizes` y la base de datos proporcionan una tubería de simulación controlada:
+  1. **Simulación de Premio:** El custodio propietario (`ticket.owner_id === auth.uid()`) puede simular un premio oficial (ej. 1.000 €). La Edge Function invoca la RPC transaccional `record_ticket_prize_check`, que:
+     - Asigna el importe en céntimos a `tickets.prize_amount_cents` y el estado a `VALIDADO`.
+     - Calcula el desglose proporcional en euros y céntimos exclusivamente entre las cuotas en estado `ACEPTADA` (`shares_breakdown`).
+     - Inserta el evento inmutable `PREMIO_REGISTRADO` en `public.audit_events` con el desglose en sus metadatos.
+     - Dispara notificaciones en `public.notifications` con `action_url` para todos los cotitulares aceptados, activando el trigger de envío Web Push nativo.
+  2. **Restablecimiento de Décimo:** El propietario puede invocar `reset_ticket_prize_simulation(p_ticket_id)` vía la Edge Function `check-prizes` (`resetSimulation: true`), que devuelve atómicamente el décimo a `prize_amount_cents = 0`, estado `PENDIENTE`, anula las confirmaciones de cobro de participaciones y registra el evento de auditoría `SIMULACION_PREMIO_RESTABLECIDA`.
+  3. **Activación en Interfaz (`TicketDetailPage.tsx`):** El panel **"Modo Prueba de Premio"** se activa automáticamente en entornos de desarrollo (`import.meta.env.DEV`) o pulsando 5 veces consecutivas sobre el componente `"MISDECIMOS SELLO DIGITAL"` en el décimo realista, manteniéndose restringido exclusivamente al custodio propietario del billete.

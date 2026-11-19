@@ -12,6 +12,8 @@ export interface CheckPrizeResult {
   message?: string
   error?: string
   drawDate?: string
+  simulated?: boolean
+  reset?: boolean
 }
 
 export async function checkTicketPrize(params: {
@@ -21,6 +23,8 @@ export async function checkTicketPrize(params: {
   drawDate?: string
   ticketPrice?: number
   forceRefresh?: boolean
+  simulatedPrizePerDecimo?: number
+  resetSimulation?: boolean
 }): Promise<CheckPrizeResult> {
   const { data, error } = await supabase.functions.invoke('check-prizes', {
     body: params,
@@ -51,4 +55,25 @@ export async function checkTicketPrize(params: {
   }
 
   return data as CheckPrizeResult
+}
+
+export async function simulateTicketPrize(
+  ticketId: string,
+  simulatedPrizePerDecimo: number
+): Promise<CheckPrizeResult> {
+  return checkTicketPrize({
+    ticketId,
+    number: '',
+    drawType: '',
+    simulatedPrizePerDecimo,
+  })
+}
+
+export async function resetTicketPrizeSimulation(ticketId: string): Promise<CheckPrizeResult> {
+  return checkTicketPrize({
+    ticketId,
+    number: '',
+    drawType: '',
+    resetSimulation: true,
+  })
 }

@@ -46,11 +46,19 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { ticketId, number, drawType, drawDate, forceRefresh } = await req.json()
+    const {
+      ticketId,
+      number,
+      drawType,
+      drawDate,
+      forceRefresh,
+      simulatedPrizePerDecimo,
+      resetSimulation,
+    } = await req.json()
 
-    if (!ticketId || !number) {
+    if (!ticketId) {
       return new Response(
-        JSON.stringify({ error: 'ticketId y number son requeridos' }),
+        JSON.stringify({ error: 'ticketId es requerido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -64,26 +72,148 @@ Deno.serve(async (req: Request) => {
       },
     })
 
-    // 1. Obtener la verdad canónica del décimo en PostgreSQL
-    let effectiveDrawDate = drawDate
-    let effectiveDrawType = drawType
+    // Validar usuario autenticado
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser()
 
+    if (userErr || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Usuario no autenticado o sesión expirada' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // 1. Obtener la verdad canónica del décimo en PostgreSQL
     const { data: ticketRow, error: ticketFetchErr } = await supabase
       .from('tickets')
-      .select('draw_date, draw_type, status')
+      .select('id, number, draw_date, draw_type, status, owner_id')
       .eq('id', ticketId)
       .single()
 
-    if (!ticketFetchErr && ticketRow) {
-      effectiveDrawDate = ticketRow.draw_date || effectiveDrawDate
-      effectiveDrawType = ticketRow.draw_type || effectiveDrawType
+    if (ticketFetchErr || !ticketRow) {
+      return new Response(
+        JSON.stringify({ error: 'Décimo no encontrado en la base de datos' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    if (!effectiveDrawDate) {
-      effectiveDrawDate = new Date().toISOString().split('T')[0]
+    const effectiveDrawDate = ticketRow.draw_date || drawDate || new Date().toISOString().split('T')[0]
+    const effectiveDrawType = ticketRow.draw_type || drawType || 'NAVIDAD'
+    const ticketNumber = ticketRow.number || number
+    const cleanNumber = String(ticketNumber || '00000').padStart(5, '0')
+    const cacheKey = `${effectiveDrawDate}:${effectiveDrawType}:${cleanNumber}`
+
+    // -------------------------------------------------------------------------
+    // FLUJO ESPECIAL: Restablecer simulación de premio
+    // -------------------------------------------------------------------------
+    if (resetSimulation === true) {
+      if (ticketRow.owner_id !== user.id) {
+        return new Response(
+          JSON.stringify({ error: 'Solo el propietario del décimo puede restablecer la simulación' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { data: resetData, error: resetErr } = await supabase.rpc(
+        'reset_ticket_prize_simulation',
+        { p_ticket_id: ticketId }
+      )
+
+      if (resetErr) {
+        console.error('[check-prizes] Error en reset_ticket_prize_simulation:', resetErr)
+        return new Response(
+          JSON.stringify({ error: resetErr.message || 'Error al restablecer simulación en base de datos' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      cache.delete(cacheKey)
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          success: true,
+          simulated: true,
+          reset: true,
+          prizeAmountCents: 0,
+          formattedPrize: '0,00 €',
+          message: 'Simulación de premio restablecida correctamente',
+          drawDate: effectiveDrawDate,
+          recordData: resetData,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const [yStr, mStr, dStr] = effectiveDrawDate.split('-')
+    // -------------------------------------------------------------------------
+    // FLUJO ESPECIAL: Simulación de premio para el propietario
+    // -------------------------------------------------------------------------
+    if (typeof simulatedPrizePerDecimo === 'number' && simulatedPrizePerDecimo > 0) {
+      if (ticketRow.owner_id !== user.id) {
+        return new Response(
+          JSON.stringify({ error: 'Solo el propietario del décimo puede simular premios' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const prizeAmountCents = Math.round(simulatedPrizePerDecimo * 100)
+
+      // Ejecuta exactamente la misma tubería oficial mediante record_ticket_prize_check
+      const { data: recordData, error: rpcError } = await supabase.rpc(
+        'record_ticket_prize_check',
+        {
+          p_ticket_id: ticketId,
+          p_prize_amount_cents: prizeAmountCents,
+          p_check_source: 'simulacion',
+          p_list_status: 'final',
+        }
+      )
+
+      if (rpcError) {
+        console.error('[check-prizes] Error registrando premio simulado en RPC:', rpcError)
+        return new Response(
+          JSON.stringify({ error: rpcError.message || 'Error registrando simulación en BD' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const formattedPrize = (prizeAmountCents / 100).toLocaleString('es-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + ' €'
+
+      cache.delete(cacheKey)
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          success: true,
+          simulated: true,
+          prizeAmountCents,
+          formattedPrize,
+          checkSource: 'simulacion',
+          listStatus: 'final',
+          checkedAt: new Date().toISOString(),
+          drawDate: effectiveDrawDate,
+          recordData,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // -------------------------------------------------------------------------
+    // FLUJO ESTÁNDAR: Consulta oficial de resultados
+    // -------------------------------------------------------------------------
+    if (!ticketNumber) {
+      return new Response(
+        JSON.stringify({ error: 'number es requerido para comprobación oficial' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const [yStr] = effectiveDrawDate.split('-')
     const drawYear = parseInt(yStr, 10)
     const formattedDrawDate = formatDrawDateShort(effectiveDrawDate)
     const drawStart = getDrawStartTimestamp(effectiveDrawDate, effectiveDrawType)
@@ -102,7 +232,7 @@ Deno.serve(async (req: Request) => {
     const curD = madridParts.find((p) => p.type === 'day')?.value || String(now.getDate()).padStart(2, '0')
     const todayStr = `${curY}-${curM}-${curD}`
 
-    // 2. Validación Defensiva de Inicio del Sorteo
+    // Validación Defensiva de Inicio del Sorteo
     const isFuture = effectiveDrawDate > todayStr || (effectiveDrawDate === todayStr && now.getTime() < drawStart.getTime())
     if (isFuture) {
       console.log(`[check-prizes] Intento de comprobación prematuro bloqueado para billete ${ticketId}. Inicio: ${drawStart.toISOString()}, Ahora: ${now.toISOString()}`)
@@ -118,14 +248,11 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const cleanNumber = String(number).padStart(5, '0')
-    const cacheKey = `${effectiveDrawDate}:${effectiveDrawType || 'NAVIDAD'}:${cleanNumber}`
-
     let prizeAmountCents = 0
     let checkSource = 'oficial'
     let listStatus = 'provisional'
 
-    // 3. Comprobar caché si no se fuerza refresco
+    // Comprobar caché si no se fuerza refresco
     const cached = cache.get(cacheKey)
     if (!forceRefresh && cached && Date.now() < cached.expiresAt) {
       prizeAmountCents = cached.prizeAmountCents
@@ -137,7 +264,7 @@ Deno.serve(async (req: Request) => {
       const loteriasApiKey = Deno.env.get('LOTERIAS_API_KEY')
       let providerResolved = false
 
-      // 4. Intentar Loterías API con fecha explícita si la clave está disponible
+      // Intentar Loterías API con fecha explícita si la clave está disponible
       if (loteriasApiKey) {
         try {
           const res = await fetch(
@@ -145,7 +272,7 @@ Deno.serve(async (req: Request) => {
             {
               headers: {
                 'x-api-key': loteriasApiKey,
-                'User-Agent': 'MisDecimos/1.0.39',
+                'User-Agent': 'MisDecimos/1.0.40',
               },
             }
           )
@@ -164,7 +291,7 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // 5. Consulta a El País (solo aplicable a la temporada actual)
+      // Consulta a El País (solo aplicable a la temporada actual)
       if (!providerResolved) {
         if (isCurrentEdition) {
           const numInt = parseInt(cleanNumber, 10)
@@ -175,7 +302,7 @@ Deno.serve(async (req: Request) => {
 
           try {
             const res = await fetch(endpointUrl, {
-              headers: { 'User-Agent': 'MisDecimos/1.0.39' },
+              headers: { 'User-Agent': 'MisDecimos/1.0.40' },
             })
             if (res.ok) {
               const rawText = await res.text()
@@ -216,7 +343,6 @@ Deno.serve(async (req: Request) => {
             console.error('[check-prizes] Error consultando El País:', err)
           }
         } else {
-          // El sorteo es de un año anterior (drawYear !== curY) y El País no dispone de archivo histórico por año
           console.log(`[check-prizes] Sorteo histórico ${effectiveDrawDate} (año ${drawYear} != ${curY}) sin proveedor de archivo`)
           return new Response(
             JSON.stringify({
@@ -255,7 +381,7 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // 6. Guardar en caché en memoria si hay resultado legítimo
+      // Guardar en caché en memoria si hay resultado legítimo
       const ttl = listStatus === 'final' ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000
       cache.set(cacheKey, {
         prizeAmountCents,
@@ -265,7 +391,7 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    // 7. Persistencia Atómica vía Supabase RPC record_ticket_prize_check
+    // Persistencia Atómica vía Supabase RPC record_ticket_prize_check
     const { data: recordData, error: rpcError } = await supabase.rpc(
       'record_ticket_prize_check',
       {
