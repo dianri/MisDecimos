@@ -5,6 +5,28 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.45] - 2026-11-19
+
+### Added
+- **Modernización Integral de la Identidad Visual de Marca y Recursos de Aplicación (`public/*`, `AppShell.tsx`, `LoginPage.tsx`, `vite.config.ts`, `index.html`):**
+  - **Nuevo Emblema de Alta Seguridad y Orfebrería:**
+    - Isotipo basado en un squircle superelíptico continuo (`n = 4.70`) con gradiente esmeralda (`#2E6146` a `#183E2C`), bisel lumínico y medallón perimetral de orfebrería dorada con cenefas de seguridad y eslabones concéntricos.
+    - Boleto troquelado en forma de 'D' con perforaciones de matriz en su margen izquierdo y dientes de engranaje en su curvatura, custodiando una rosa de los vientos / estrella náutica de 4 puntas facetada en relieve 3D.
+  - **Generación y Optimización de Assets Multi-Plataforma en `public/`:**
+    - `public/pwa-192x192.png`: Renderizado antialiased a 192x192 px con transparencia exterior del squircle y micro-máscara de enfoque, empleado en la cabecera de la aplicación, pantalla de inicio de sesión y notificaciones Web Push.
+    - `public/pwa-512x512.png`: Renderizado de alta resolución a 512x512 px para instalación PWA en Android, splash screens y lanzadores de escritorio.
+    - `public/apple-touch-icon.png`: Icono de 180x180 px con fondo verde esmeralda sólido (`#22573F`) en las esquinas, previniendo el renderizado de esquinas negras de iOS SpringBoard.
+    - `public/favicon.ico`: Fichero multi-resolución (16x16, 32x32, 48x48 y 64x64 px) con realce de contraste y nitidez adaptado a pestañas de escritorio en Windows/macOS.
+    - `public/favicon.svg`: Icono vectorial escalable de alta definición con el medallón dorado, el boleto troquelado y la estrella facetada.
+    - `public/masked-icon.svg`: Silueta vectorial en monocromo negro para Safari Pinned Tabs en macOS.
+    - `public/badge-mono.png`: Silueta monocroma con canal alfa para la barra de estado de notificaciones en Android 5+.
+  - **Actualización de la Interfaz de Usuario:**
+    - Cabecera fija en [`AppShell.tsx`](src/components/layout/AppShell.tsx): Sustituido el icono genérico de billete por la imagen oficial del nuevo isotipo `/pwa-192x192.png` (`w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-contain shadow-xs`).
+    - Pantalla de inicio de sesión en [`LoginPage.tsx`](src/pages/LoginPage.tsx): Sustituido el contenedor rosa genérico por el emblema oficial `/pwa-192x192.png` (`h-16 w-16 rounded-2xl shadow-md object-contain`).
+  - **Configuración de PWA y Pre-Caché:**
+    - Enriquecida la lista de `includeAssets` en [`vite.config.ts`](vite.config.ts) incorporando `favicon.svg` y `badge-mono.png`, elevando la precaché de Workbox a 24 elementos (1565,47 KiB).
+    - Añadido enlace directo a favicon `.ico` en [`index.html`](index.html) para compatibilidad universal en navegadores de escritorio.
+
 ## [1.0.44] - 2026-11-19
 
 ### Added

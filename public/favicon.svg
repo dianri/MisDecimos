@@ -1,8 +1,103 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <rect width="512" height="512" rx="128" fill="#2E6146"/>
-  <path d="M128 176C128 167.163 135.163 160 144 160H368C376.837 160 384 167.163 384 176V224C366.327 224 352 238.327 352 256C352 273.673 366.327 288 384 288V336C384 344.837 376.837 352 368 352H144C135.163 352 128 344.837 128 336V288C145.673 288 160 273.673 160 256C160 238.327 145.673 224 128 224V176Z" fill="#F7F9F7"/>
-  <circle cx="216" cy="256" r="24" fill="#D97706"/>
-  <rect x="264" y="224" width="80" height="16" rx="8" fill="#2E6146"/>
-  <rect x="264" y="252" width="60" height="12" rx="6" fill="#2E6146" opacity="0.6"/>
-  <rect x="264" y="274" width="40" height="10" rx="5" fill="#2E6146" opacity="0.4"/>
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2E6146"/>
+      <stop offset="100%" stop-color="#183E2C"/>
+    </linearGradient>
+    
+    <!-- Gold Medallion Gradient -->
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="30%" stop-color="#F59E0B"/>
+      <stop offset="70%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+    
+    <!-- Ticket D Orange Gradient -->
+    <linearGradient id="ticketGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+
+    <!-- Star Facets -->
+    <linearGradient id="starLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="starMid" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="starDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect width="512" height="512" rx="118" fill="url(#emeraldGrad)"/>
+  <rect x="4" y="4" width="504" height="504" rx="114" stroke="#3E7B5C" stroke-width="4" fill="none" opacity="0.4"/>
+
+  <!-- Outer Medallion Chain Ring -->
+  <circle cx="256" cy="256" r="206" stroke="url(#goldGrad)" stroke-width="16" filter="url(#shadow)"/>
+  <circle cx="256" cy="256" r="188" stroke="#FBBF24" stroke-width="4" opacity="0.6" fill="none"/>
+  <circle cx="256" cy="256" r="176" fill="#1B4632" opacity="0.9"/>
+
+  <!-- Ticket Body forming 'D' -->
+  <!-- Left edge with perforations (notches at y = 180, 220, 260, 300, 340) -->
+  <path d="M 175 140 
+           H 260 
+           C 335 140, 375 185, 375 256 
+           C 375 327, 335 372, 260 372 
+           H 175 
+           V 348 A 12 12 0 0 0 175 324 
+           V 298 A 12 12 0 0 0 175 274 
+           V 248 A 12 12 0 0 0 175 224 
+           V 198 A 12 12 0 0 0 175 174 
+           Z" 
+        fill="url(#ticketGrad)" 
+        stroke="#78350F" 
+        stroke-width="4" 
+        filter="url(#shadow)"/>
+
+  <!-- Inner cutout of 'D' -->
+  <path d="M 205 175 
+           H 255 
+           C 305 175, 335 210, 335 256 
+           C 335 302, 305 337, 255 337 
+           H 205 
+           Z" 
+        fill="#163827" 
+        stroke="#FDE68A" 
+        stroke-width="3" 
+        opacity="0.95"/>
+
+  <!-- 4-Pointed Compass Star in Center (cx = 256, cy = 256) -->
+  <!-- Star Points: Top (256, 170), Right (336, 256), Bottom (256, 342), Left (176, 256) -->
+  <!-- Outer Star Diamond -->
+  <!-- Facet: Top-Left (Light) -->
+  <polygon points="256,170 256,256 226,236" fill="url(#starLight)"/>
+  <!-- Facet: Top-Right (Mid) -->
+  <polygon points="256,170 256,256 286,236" fill="url(#starMid)"/>
+  <!-- Facet: Right-Top (Light) -->
+  <polygon points="336,256 256,256 286,236" fill="url(#starLight)"/>
+  <!-- Facet: Right-Bottom (Dark) -->
+  <polygon points="336,256 256,256 286,276" fill="url(#starDark)"/>
+  <!-- Facet: Bottom-Right (Dark) -->
+  <polygon points="256,342 256,256 286,276" fill="url(#starDark)"/>
+  <!-- Facet: Bottom-Left (Mid) -->
+  <polygon points="256,342 256,256 226,276" fill="url(#starMid)"/>
+  <!-- Facet: Left-Bottom (Dark) -->
+  <polygon points="176,256 256,256 226,276" fill="url(#starDark)"/>
+  <!-- Facet: Left-Top (Light) -->
+  <polygon points="176,256 256,256 226,236" fill="url(#starLight)"/>
+
+  <!-- Star Central Highlight -->
+  <circle cx="256" cy="256" r="4" fill="#FFFFFF"/>
 </svg>
