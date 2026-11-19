@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.31] - 2026-11-19
+
+### Added
+- **Navegación Adaptativa Híbrida Escritorio y Móvil (`AppShell.tsx` y `TicketsPage.tsx`):**
+  - Unificada la estructura de secciones (`NAV_ITEMS`) con las 4 rutas clave (`Billetes`, `Alertas`, `Auditoría` y `Perfil`).
+  - Implementada barra de navegación horizontal en la cabecera para pantallas de escritorio (`md:flex` en `<header>`), con iconos de 16 px, etiquetas en línea, estado activo en verde corporativo y contador dinámico de alertas no leídas.
+  - Ocultada la barra de navegación inferior en escritorio (`md:hidden`) preservando la barra flotante exclusivamente en dispositivos móviles (`< 768px`).
+  - Ajustado el relleno inferior general (`pb-24 md:pb-10`) y la posición flotante de avisos y toasts (`bottom-20 md:bottom-6`), eliminando el espacio inferior sobrante en navegadores de PC y Mac.
+
 ## [1.0.30] - 2026-11-19
 
 ### Removed
