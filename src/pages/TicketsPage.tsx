@@ -6,6 +6,7 @@ import { TicketFormModal } from '../components/tickets/TicketFormModal'
 import { InviteClaimModal } from '../components/tickets/InviteClaimModal'
 import { BarcodeScannerModal } from '../components/tickets/BarcodeScannerModal'
 import { parseSelaeBarcode, type SelaeParsedTicket } from '../lib/selaeBarcodeParser'
+import { classifyScannedPayload } from '../lib/scanPayloadClassifier'
 import {
   classifyUserTickets,
   type UserTicketListsAndMetrics,
@@ -60,13 +61,25 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     return () => clearTimeout(timer)
   }, [claimToastMsg])
 
-  // Manejar escaneo directo de décimo desde el botón rápido de cámara
-  const handleTicketBarcodeScanned = (rawCode: string) => {
+  // Manejar escaneo inteligente unificado (décimos 1D o invitaciones QR)
+  const handleUnifiedBarcodeScanned = (rawCode: string) => {
     setIsTicketScannerOpen(false)
-    const parsed = parseSelaeBarcode(rawCode)
-    setScannedTicketData(parsed)
-    setAddTicketInitialTab('manual')
-    setIsAddTicketOpen(true)
+    setIsQrScannerOpen(false)
+
+    const classified = classifyScannedPayload(rawCode)
+    if (classified.kind === 'INVITE') {
+      setClaimInitialCode(classified.inviteCodeOrToken)
+      setIsClaimModalOpen(true)
+    } else if (classified.kind === 'TICKET') {
+      setScannedTicketData(classified.parsed)
+      setAddTicketInitialTab('manual')
+      setIsAddTicketOpen(true)
+    } else {
+      const parsed = parseSelaeBarcode(rawCode)
+      setScannedTicketData(parsed)
+      setAddTicketInitialTab('manual')
+      setIsAddTicketOpen(true)
+    }
   }
 
   // 1. Comprobar deep-link pendiente al montar
@@ -435,6 +448,10 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           loadTickets()
           if (onSelectTicket) onSelectTicket(newTicketId)
         }}
+        onInviteScanned={(inviteCode) => {
+          setClaimInitialCode(inviteCode)
+          setIsClaimModalOpen(true)
+        }}
       />
 
       {/* Escáner de décimo abierto desde el botón rápido verde */}
@@ -442,12 +459,13 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         isOpen={isTicketScannerOpen}
         mode="TICKET_BARCODE"
         onClose={() => setIsTicketScannerOpen(false)}
-        onScanSuccess={handleTicketBarcodeScanned}
+        onScanSuccess={handleUnifiedBarcodeScanned}
       />
 
       <InviteClaimModal
         isOpen={isClaimModalOpen}
         initialCode={claimInitialCode}
+        initialInviteCode={claimInitialCode}
         onClose={() => {
           setIsClaimModalOpen(false)
           setClaimInitialCode(null)
@@ -467,14 +485,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         isOpen={isQrScannerOpen}
         mode="INVITE_QR"
         onClose={() => setIsQrScannerOpen(false)}
-        onScanSuccess={(decodedText) => {
-          setIsQrScannerOpen(false)
-          // Si es URL https://.../invite/TOKEN extraer TOKEN
-          const match = decodedText.match(/invite\/([a-zA-Z0-9_-]+)/)
-          const token = match ? match[1] : decodedText
-          setClaimInitialCode(token)
-          setIsClaimModalOpen(true)
-        }}
+        onScanSuccess={handleUnifiedBarcodeScanned}
       />
 
       {/* Toast informativo al reclamar o rechazar participación */}

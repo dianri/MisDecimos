@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.24] - 2026-11-19
+
+### Added
+- **Escáner de Cámara Inteligente y Polimórfico (`scanPayloadClassifier.ts` y `BarcodeScannerModal.tsx`):**
+  - Creado clasificador puro `classifyScannedPayload` capaz de identificar y enrutar polimórficamente:
+    - Códigos QR de invitaciones/participaciones: URLs completas (`/invite/`, `/claim/`, `/reclamar/`, parámetros de consulta `token`, `code`, `invite`), identificadores UUID, tokens directos y códigos PIN alfanuméricos de 6 caracteres.
+    - Códigos de barras 1D de décimos SELAE: desglose oficial de 20 dígitos (`51`/`01` + sorteo + fracción + serie + número) o números directos de 5 dígitos con alta confianza (`parseSelaeBarcode`).
+    - Cargas útiles JSON con claves de invitación (`inviteCode`, `token`, `pin`).
+  - Habilitados formatos 1D y 2D simultáneos (`CODE_128`, `ITF`, `EAN_13`, `CODE_39`, `QR_CODE`) en `BarcodeScannerModal` tanto para la cámara en vivo como para la subida de imágenes desde galería.
+  - Diseñada guía visual unificada con láser de escaneo que abarca cómodamente tanto códigos de barras horizontales como códigos QR cuadrados.
+  - Sistema de aviso inline no intrusivo (`warningMsg`) ante códigos no reconocidos: la cámara no se interrumpe ni se cierra, permitiendo al usuario reorientar la cámara hacia el décimo o QR sin fricción.
+- **Enrutamiento Automático Multimodal (`TicketsPage.tsx`, `TicketFormModal.tsx` y `InviteClaimModal.tsx`):**
+  - Si el usuario escanea un código QR desde el botón de añadir décimo, la aplicación detecta automáticamente la invitación y abre de inmediato `InviteClaimModal` precargando y verificando el código.
+  - Soporte recíproco: si se escanea un código de barras de décimo desde el escáner de invitaciones, la app lo detecta y redirige a `TicketFormModal` precargando número, serie, fracción y sorteo.
+  - Suite de pruebas unitarias exhaustiva (`scanPayloadClassifier.test.ts`) cubriendo 25 aserciones de detección y robustez.
+
 ## [1.0.23] - 2026-11-19
 
 ### Fixed
