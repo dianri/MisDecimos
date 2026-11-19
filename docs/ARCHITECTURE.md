@@ -225,16 +225,20 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 ## 4. Captura GS1-128 y Motor de Plantillas de Boletos
 
 ### Parser de Códigos de Barras SELAE (`src/lib/selaeBarcodeParser.ts`)
-- **Estructura Estándar Oficial (20 Dígitos):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica de 20 dígitos presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
-  - `Prefijo de juego (2 dígitos):` `51` (Navidad / El Niño) o `01` (Lotería Nacional estándar).
-  - `Código interno de sorteo (5 dígitos):` posiciones 2..7 (ej. `02010`).
-  - `Fracción (2 dígitos):` posiciones 7..9 (ej. `11`).
-  - `Serie (3 dígitos):` posiciones 9..12 (ej. `008`).
-  - `Número del décimo (5 dígitos):` posiciones 12..17 (ej. `76719`).
-  - `Dígitos de control (3 dígitos):` posiciones 17..20 (ej. `833`).
-- **Expresión Regular Canónica:** `/(?:51|01)(\d{5})(\d{2})(\d{3})(\d{5})(\d{3})/` extrayendo de forma inequívoca el número del décimo (grupo 4), fracción (grupo 2) y serie (grupo 3).
-- **Normalización y Resiliencia OCR:** Eliminación de prefijos de simbología GS1 (ej. `]C1`), espacios, guiones y sustitución de confusiones de caracteres comunes (`O->0`, `I/L->1`, `Z->2`, `S->5`, `B->8`).
-- **Compatibilidad de Nombres:** Retorna aliases duales (`number`/`ticketNumber`, `serie`/`series`, `fraccion`/`fraction`).
+- **Estructura Estándar Oficial Definitiva (20 Dígitos: `2 + 3 + 2 + 3 + 6 + 4`):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
+
+| Segmento | Longitud | Posiciones | Campo decodificado | Ejemplo 1 (`5102607065>0023205830`) | Ejemplo 2 (`51020101100876719833`) |
+| :--- | :---: | :---: | :--- | :--- | :--- |
+| **Prefijo de Juego** | 2 | 0..2 | Prefijo Lotería Nacional | `51` (Navidad/Niño) o `01` | `51` (Navidad/Niño) o `01` |
+| **Código Sorteo/Año** | 3 | 2..5 | `drawYearCode` / `drawCode` | `026` (Año 2026) | `020` |
+| **Fracción** | 2 | 5..7 | `fraction` / `fraccion` | `07` (Fracción 7ª) | `10` (Fracción 10ª) |
+| **Serie** | 3 | 7..10 | `series` / `serie` | `065` (Serie 65ª) | `110` (Serie 110ª) |
+| **Número (6 dígitos)** | 6 | 10..16 | `ticketNumber` (`match[4].slice(-5)`) | `002320` → **`02320`** | `087671` → **`87671`** |
+| **Control** | 4 | 16..20 | `checkDigits` | `5830` | `9833` |
+
+- **Expresión Regular Canónica:** `/(?:51|01)(\d{3})(\d{2})(\d{3})(\d{6})(\d{4})/` extrayendo el número del décimo como los 5 últimos dígitos del grupo 4 (`match[4].slice(-5)`), la fracción en el grupo 2 y la serie en el grupo 3.
+- **Normalización y Resiliencia OCR:** Eliminación previa de cualquier carácter no numérico (`raw.replace(/\D/g, '')`), incluyendo separadores como `>` y prefijos de simbología GS1 (ej. `]C1`), y sustitución de confusiones de caracteres comunes (`O->0`, `I/L->1`, `Z->2`, `S->5`, `B->8`).
+- **Compatibilidad de Nombres:** Retorna aliases duales (`number`/`ticketNumber`, `serie`/`series`, `fraccion`/`fraction`, `drawCode`/`drawYearCode`).
 - **Seguridad e Integridad:** Ante códigos ajenos a SELAE o no reconocidos, devuelve `isValid: false` y mensaje explicativo en `errorMessage`, sin inventar números ni recurrir a valores hardcoded ficticios.
 - **Deducción de Sorteo Próximo:**
   - 1 a 6 de Enero: El Niño del año en curso.
