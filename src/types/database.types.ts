@@ -479,7 +479,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      push_subscriptions: {
+        Row: {
+          auth: string | null
+          created_at: string | null
+          endpoint: string | null
+          id: string | null
+          is_active: boolean | null
+          p256dh: string | null
+          platform: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth?: string | null
+          created_at?: string | null
+          endpoint?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          p256dh?: string | null
+          platform?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string | null
+          created_at?: string | null
+          endpoint?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          p256dh?: string | null
+          platform?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "web_push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_pending_invite: {
@@ -543,6 +589,10 @@ export type Database = {
         Returns: boolean
       }
       request_share_waiver: { Args: { p_share_id: string }; Returns: boolean }
+      reset_ticket_prize_simulation: {
+        Args: { p_ticket_id: string }
+        Returns: Json
+      }
       respond_share_waiver: {
         Args: { p_accept: boolean; p_share_id: string }
         Returns: boolean

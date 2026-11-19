@@ -10,6 +10,7 @@ export interface RealisticTicketCardProps {
   template?: DrawTemplate | null
   variant?: 'full' | 'compact'
   className?: string
+  onSealClick?: () => void
 }
 
 export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
@@ -17,6 +18,7 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
   template,
   variant = 'full',
   className = '',
+  onSealClick,
 }) => {
   const [imageLoadError, setImageLoadError] = useState(false)
   const isCompact = variant === 'compact'
@@ -128,7 +130,26 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
           {/* Cuerpo Central: Capilla Artística + Número de 5 Cifras */}
           <div className="grid grid-cols-12 gap-3 items-center relative z-10 py-1">
             {/* Recuadro de Capilla con Sello Digital */}
-            <div className="col-span-4 rounded-xl border border-gold-300 bg-gradient-to-b from-amber-50/80 to-amber-100/50 p-2.5 flex flex-col items-center justify-center text-center shadow-xs">
+            <div
+              onClick={onSealClick}
+              role={onSealClick ? 'button' : undefined}
+              tabIndex={onSealClick ? 0 : undefined}
+              onKeyDown={
+                onSealClick
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onSealClick()
+                      }
+                    }
+                  : undefined
+              }
+              aria-label={onSealClick ? 'MISDECIMOS SELLO DIGITAL' : undefined}
+              title={onSealClick ? 'MISDECIMOS SELLO DIGITAL' : undefined}
+              className={`col-span-4 rounded-xl border border-gold-300 bg-gradient-to-b from-amber-50/80 to-amber-100/50 p-2.5 flex flex-col items-center justify-center text-center shadow-xs ${
+                onSealClick ? 'cursor-pointer select-none active:scale-95 transition' : ''
+              }`}
+            >
               <div className="h-8 w-8 rounded-full border border-gold-500/40 bg-white flex items-center justify-center text-gold-700 mb-1 shadow-xs">
                 <ShieldCheck className="h-4 w-4" />
               </div>

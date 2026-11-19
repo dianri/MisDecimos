@@ -280,6 +280,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   // Cálculo para el Donut Chart SVG
   const ownerShare = shares.find((s) => s.role === 'PROPIETARIO' && s.status === 'ACEPTADA')
   const participantShares = shares.filter((s) => s.role === 'PARTICIPANTE' && s.status === 'ACEPTADA')
+  const renouncedShares = shares.filter((s) => s.status === 'RENUNCIADA')
   const activePendingInvites = isOwner ? pendingInvites.filter((i) => i.status === 'PENDIENTE') : []
   const totalPendingPct = activePendingInvites.reduce((acc, i) => acc + Number(i.percentage), 0)
 
@@ -682,6 +683,55 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                     </button>
                   </div>
                 )}
+            </div>
+          )
+        })}
+
+        {/* Participantes que han renunciado formalmente a su cuota */}
+        {renouncedShares.map((share) => {
+          const isMe = share.user_id === user?.id
+          const shareDisplayName =
+            share.profiles?.display_name || (isMe ? 'Tú (Renunciado)' : 'Cotitular (Renunciado)')
+
+          return (
+            <div
+              key={share.id}
+              className="bg-gray-50/80 border border-gray-200/70 rounded-2xl p-3.5 relative shadow-xs opacity-75"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-xs">
+                    {share.profiles?.avatar_url ? (
+                      <img
+                        src={share.profiles.avatar_url}
+                        alt="Avatar"
+                        className="w-full h-full rounded-full object-cover grayscale"
+                      />
+                    ) : (
+                      <span>{shareDisplayName.slice(0, 2).toUpperCase()}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-700">{shareDisplayName}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-gray-200 text-gray-600 uppercase">
+                        Renunciada
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mt-0.5">
+                      <span>0% · Renuncia formal registrada en auditoría</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-base font-extrabold font-mono text-gray-400">
+                    0%
+                  </span>
+                  <p className="text-[10px] text-gray-400 font-mono">0,00 €</p>
+                </div>
+              </div>
             </div>
           )
         })}

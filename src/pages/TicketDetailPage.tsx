@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { RealisticTicketCard } from '../components/tickets/RealisticTicketCard'
@@ -12,6 +12,10 @@ import {
   type AuditEvent,
 } from '../components/tickets/TicketAuditTimeline'
 import { PrizeCheckCard } from '../components/tickets/PrizeCheckCard'
+import {
+  simulateTicketPrize,
+  resetTicketPrizeSimulation,
+} from '../services/prizeService'
 import type { Database } from '../types/database.types'
 import {
   ArrowLeft,
@@ -26,6 +30,8 @@ import {
   Barcode,
   AlertCircle,
   CheckCircle2,
+  Sparkles,
+  RotateCcw,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -56,6 +62,73 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
+
+  // Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 toques consecutivos en el sello digital)
+  const [showSimulationPanel, setShowSimulationPanel] = useState(
+    Boolean(import.meta.env.DEV)
+  )
+  const [sealTapCount, setSealTapCount] = useState(0)
+  const [isSimulating, setIsSimulating] = useState(false)
+  const lastTapRef = useRef<number>(0)
+
+  const handleSealClick = () => {
+    const now = Date.now()
+    if (now - lastTapRef.current > 2500) {
+      setSealTapCount(1)
+    } else {
+      const nextCount = sealTapCount + 1
+      setSealTapCount(nextCount)
+      if (nextCount >= 5) {
+        setShowSimulationPanel((prev) => !prev)
+        setSealTapCount(0)
+      }
+    }
+    lastTapRef.current = now
+  }
+
+  const handleSimulatePrize = async (amount: number = 1000) => {
+    if (!ticket) return
+    setIsSimulating(true)
+    setStatusMsg(null)
+    try {
+      const res = await simulateTicketPrize(ticket.id, amount)
+      setStatusMsg({
+        type: 'success',
+        text: `Simulación activada: Premio de ${res.formattedPrize} registrado para el décimo.`,
+      })
+      await loadTicketDetails()
+    } catch (err: unknown) {
+      console.error('Error simulando premio:', err)
+      setStatusMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al simular premio.',
+      })
+    } finally {
+      setIsSimulating(false)
+    }
+  }
+
+  const handleResetSimulation = async () => {
+    if (!ticket) return
+    setIsSimulating(true)
+    setStatusMsg(null)
+    try {
+      await resetTicketPrizeSimulation(ticket.id)
+      setStatusMsg({
+        type: 'success',
+        text: 'Simulación restablecida: Décimo devuelto a 0,00 € y estado PENDIENTE.',
+      })
+      await loadTicketDetails()
+    } catch (err: unknown) {
+      console.error('Error restableciendo simulación:', err)
+      setStatusMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al restablecer simulación.',
+      })
+    } finally {
+      setIsSimulating(false)
+    }
+  }
 
   const loadTicketDetails = useCallback(async () => {
     if (!ticketId || !user?.id) return
@@ -366,7 +439,12 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       {/* 2. Tarjeta Realista del Boleto */}
       <div className="space-y-3">
-        <RealisticTicketCard ticket={ticket} template={template} variant="full" />
+        <RealisticTicketCard
+          ticket={ticket}
+          template={template}
+          variant="full"
+          onSealClick={isOwner ? handleSealClick : undefined}
+        />
 
         {/* Fila inferior de metadatos */}
         <div className="flex items-center justify-between text-xs px-2 text-gray-500">
@@ -381,6 +459,63 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Panel Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 taps en Sello Digital) */}
+      {isOwner && showSimulationPanel && (
+        <div className="bg-purple-50/90 border border-purple-200/90 rounded-2xl p-4 text-purple-950 space-y-3 shadow-xs animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-purple-100 text-purple-700">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-purple-900 leading-tight">
+                  Modo Prueba de Premio
+                </h4>
+                <p className="text-[10px] text-purple-700">Panel de diagnóstico para el custodio</p>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-purple-200/80 text-purple-900 tracking-wider">
+              Diagnóstico
+            </span>
+          </div>
+
+          <p className="text-[11px] text-purple-900/80 leading-relaxed">
+            Permite simular un premio oficial para validar el reparto proporcional en euros, el cobro de cotitulares y las notificaciones Web Push, o restablecer el décimo a su estado pendiente original.
+          </p>
+
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => handleSimulatePrize(1000)}
+              disabled={isSimulating}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              {isSimulating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5" />
+              )}
+              <span>Simular premio (1.000 €)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetSimulation}
+              disabled={isSimulating}
+              className="py-2.5 px-3 rounded-xl bg-white border border-purple-300 text-purple-800 hover:bg-purple-100/60 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition disabled:opacity-50 cursor-pointer"
+              title="Restablecer décimo a estado pendiente sin premio"
+            >
+              {isSimulating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5 text-purple-700" />
+              )}
+              <span>Restablecer</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 3. Tarjeta de Comprobación Oficial de Premios */}
       <PrizeCheckCard
