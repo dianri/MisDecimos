@@ -26,10 +26,11 @@ function resolveTicketsActiveTab(
 function resolveDetailBackDestination(options: {
   historyIdx?: number | null
   isDirectEntry?: boolean
+  fromTab?: string | null
   ticketOwnerId?: string
   currentUserId?: string
 }): { action: 'back' } | { action: 'navigateRoot'; targetTab: 'decimos' | 'participaciones' } {
-  const { historyIdx, isDirectEntry, ticketOwnerId, currentUserId } = options
+  const { historyIdx, isDirectEntry, fromTab, ticketOwnerId, currentUserId } = options
 
   // 1. Si existe historial interno de navegación (idx > 0 y no es entrada directa)
   if (typeof historyIdx === 'number' && historyIdx > 0 && !isDirectEntry) {
@@ -40,7 +41,12 @@ function resolveDetailBackDestination(options: {
   const isParticipant = Boolean(
     ticketOwnerId && currentUserId && ticketOwnerId !== currentUserId
   )
-  const targetTab = isParticipant ? 'participaciones' : 'decimos'
+  const targetTab =
+    fromTab === 'participaciones' || fromTab === 'archivados'
+      ? (fromTab as 'participaciones')
+      : isParticipant
+      ? 'participaciones'
+      : 'decimos'
 
   return { action: 'navigateRoot', targetTab }
 }
@@ -99,4 +105,15 @@ test('resolveDetailBackDestination - en entrada directa deriva a decimos si el u
     currentUserId: 'user-owner',
   })
   assert.deepEqual(result, { action: 'navigateRoot', targetTab: 'decimos' })
+})
+
+test('resolveDetailBackDestination - prioriza fromTab=participaciones en entrada directa incluso para el propietario', () => {
+  const result = resolveDetailBackDestination({
+    historyIdx: 0,
+    isDirectEntry: true,
+    fromTab: 'participaciones',
+    ticketOwnerId: 'user-owner',
+    currentUserId: 'user-owner',
+  })
+  assert.deepEqual(result, { action: 'navigateRoot', targetTab: 'participaciones' })
 })

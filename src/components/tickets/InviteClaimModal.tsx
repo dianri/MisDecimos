@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
+import {
+  previewInvite,
+  claimInvite,
+  rejectInvite,
+  type InvitePreviewResult,
+} from '../../services/inviteService'
 import { X, KeyRound, Ticket, Loader2, AlertCircle } from 'lucide-react'
 
-interface TicketPreview {
-  valid: boolean
-  ticket_id: string
-  number: string
-  serie?: string
-  fraccion?: string
-  draw_name: string
-  draw_date: string
-  percentage: number
-  label?: string
-  owner_name: string
-  short_code: string
-}
+type TicketPreview = InvitePreviewResult
 
 export interface InviteClaimModalProps {
   isOpen: boolean
@@ -69,16 +62,8 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
     setPreview(null)
 
     try {
-      const { data, error } = await supabase.rpc('accept_pending_invite', {
-        p_code_or_token: targetCode,
-        p_confirm: false,
-      })
-
-      if (error) throw error
-
-      if (data && typeof data === 'object') {
-        setPreview(data as unknown as TicketPreview)
-      }
+      const data = await previewInvite(targetCode)
+      setPreview(data)
     } catch (err: unknown) {
       console.warn('Error verificando código:', err)
       setErrorMsg(
@@ -96,11 +81,7 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
     setErrorMsg(null)
 
     try {
-      const { error } = await supabase.rpc('reject_pending_invite', {
-        p_code_or_token: code.trim(),
-      })
-
-      if (error) throw error
+      await rejectInvite(code.trim())
 
       // Cierre inmediato del modal sin esperas
       onClose()
@@ -125,16 +106,9 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
     setErrorMsg(null)
 
     try {
-      const { data, error } = await supabase.rpc('accept_pending_invite', {
-        p_code_or_token: code.trim(),
-        p_confirm: true,
-      })
-
-      if (error) throw error
-
-      const result = data as { success?: boolean; ticket_id?: string; percentage?: number }
-      const claimedTicketId = result?.ticket_id || preview?.ticket_id || ''
-      const claimedPercentage = result?.percentage ?? preview?.percentage
+      const result = await claimInvite(code.trim())
+      const claimedTicketId = result.ticket_id || preview?.ticket_id || ''
+      const claimedPercentage = result.percentage ?? preview?.percentage
 
       // Cierre inmediato del modal sin esperas ni setTimeouts
       onClose()

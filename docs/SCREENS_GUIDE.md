@@ -124,14 +124,18 @@ flowchart TD
      - **Recuperación Automática de Segundo Plano (`visibilitychange`):** Al cambiar de aplicación o apagar la pantalla, la cámara libera limpiamente sus pistas para evitar el bloqueo del hardware en Android. Al regresar a la PWA, tras 350 ms de estabilización, el escáner se reactiva automáticamente. Cuenta con hasta 2 reintentos silenciosos ante errores transitorios y oculta el fotograma congelado en caso de requerir intervención del usuario.
    - Al guardar, ejecuta la RPC transaccional `create_ticket`, asegurando el 100% de titularidad inicial y navegando inmediatamente a la ficha de detalle.
 2. **Botón "Reclamar / Canjear Código" (o QR):**
-   - Abre [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx).
+   - Abre [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx) o [`InvitePage.tsx`](../src/pages/InvitePage.tsx) si se accede por enlace web `/invite/:id`.
    - Permite introducir el código de 6 dígitos o escanear el código QR recibido por WhatsApp/email.
-   - Realiza una previsualización de la participación (número, sorteo, porcentaje e importe en €) y ofrece dos opciones:
-     - **"Aceptar y Asignar a mi cuenta":** Ejecuta `accept_pending_invite` y transfiere formalmente la cuota.
-     - **"Rechazar Participación":** Reintegra de inmediato el porcentaje al propietario.
-   - **Feedback Instantáneo (0 ms) y Cierre Inmediato:**
-     - Al pulsar *"Reclamar X%"* o *"Rechazar participación"*, todos los botones se deshabilitan inmediatamente para evitar dobles pulsaciones y el botón pulsado muestra un spinner con *"Reclamando..."* o *"Rechazando..."*.
-     - Al responder con éxito la RPC, el modal se cierra de forma inmediata (`onClose()`) sin retardos artificiales ni pantallas intermedias, lanzando la sincronización en segundo plano (`loadTickets()`) y mostrando un toast verde de confirmación en la pantalla principal: *"¡Participación del X% añadida a tus billetes!"*.
+   - Realiza una previsualización de la participación (número, sorteo, porcentaje e importe en €) mediante `previewInvite` (`src/services/inviteService.ts`) y ofrece dos opciones:
+     - **"Aceptar y Asignar a mi cuenta":** Ejecuta `claimInvite` (`accept_pending_invite` RPC), garantizando el retorno del `ticket_id` y transfiriendo formalmente la cuota.
+     - **"Rechazar Participación":** Ejecuta `rejectInvite` (`reject_pending_invite` RPC), reintegrando de inmediato el porcentaje al propietario.
+   - **Apertura Directa del Décimo y Retorno Garantizado a `Participaciones`:**
+     - Al pulsar *"Aceptar y ver mi participación"*, los botones se deshabilitan inmediatamente para evitar dobles pulsaciones y el botón muestra *"Aceptando participación..."*.
+     - Al confirmar con éxito:
+       1. Cierra de forma inmediata el modal (`onClose()`).
+       2. Sustituye la entrada actual en el historial del navegador (`/invite/:id` o `/`) por `/?tab=participaciones` (`replace: true`).
+       3. Navega inmediatamente a la ficha del décimo reclamado (`/billetes/:id`) transmitiendo `state: { fromTab: 'participaciones', claimMessage: '¡Participación del X% reclamada correctamente!' }`.
+       4. En el detalle del décimo, se muestra un banner superior esmeralda con el mensaje de confirmación, y si el usuario retrocede (con el botón Volver o el botón Atrás de Android), aterriza directamente en la pestaña **Participaciones** (`/?tab=participaciones`), donde el billete reclamado figura de inmediato en su lista activa.
 
 ---
 

@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.49] - 2026-11-19
+
+### Fixed
+- **Apertura Directa de la Ficha del Décimo Reclamado y Retorno a Participaciones (`src/services/inviteService.ts`, `InvitePage.tsx`, `TicketsPage.tsx`, `TicketDetailPage.tsx`):**
+  - **Retorno Consistente de `ticket_id` en Servicios de Reclamación (`src/services/inviteService.ts`):**
+    - Módulo centralizado con funciones tipadas `previewInvite()`, `claimInvite()` y `rejectInvite()`.
+    - Garantía de que `claimInvite()` devuelve de forma estricta y obligatoria el identificador del décimo (`ticket_id`) y el porcentaje asignado tras confirmar la participación en la base de datos (`accept_pending_invite` RPC).
+  - **Apertura Inmediata del Décimo y Sustitución de Historial (`TicketsPage.tsx`, `InvitePage.tsx`):**
+    - Tras reclamar con éxito una participación (mediante enlace web `/invite/:id`, introducción del código de 6 dígitos o escaneo de código QR):
+      - Cierra el modal de forma inmediata y limpia el código activo.
+      - Muestra el toast contextual de confirmación (*"¡Participación del X% reclamada correctamente!"*).
+      - Sustituye la entrada actual en el historial del navegador (`/invite/:id` o `/`) por `/?tab=participaciones` mediante `window.history.replaceState` y `setSearchParams({ tab: 'participaciones' }, { replace: true })`.
+      - Navega inmediatamente a la ficha del décimo (`/billetes/:id`) transmitiendo `state: { fromTab: 'participaciones', claimMessage: '...' }`.
+  - **Experiencia de Usuario en el Detalle del Décimo (`TicketDetailPage.tsx`):**
+    - Captura en el arranque el mensaje `claimMessage` desde el historial y lo renderiza en un banner verde esmeralda superior de confirmación.
+    - `handleBack()` adaptativo: si el usuario pulsa el botón Volver o el botón Atrás nativo de Android, regresa limpiamente a `/?tab=participaciones` respetando el historial o derivando por `fromTab: 'participaciones'`, asegurando que nunca vuelva a una invitación ya consumida ni caiga en la pestaña **Décimos**.
+  - **Batería de Pruebas Unitarias (`src/lib/__tests__/claimShareNavigation.test.ts`):**
+    - 6 nuevos tests unitarios certificando la preparación de estados de navegación post-reclamación, prioridad de `fromTab: 'participaciones'` en retornos y compatibilidad con direct entry (93 tests unitarios en total superados).
+
 ## [1.0.48] - 2026-11-19
 
 ### Fixed

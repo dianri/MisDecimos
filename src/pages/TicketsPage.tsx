@@ -25,7 +25,10 @@ import {
 } from 'lucide-react'
 
 export interface TicketsPageProps {
-  onSelectTicket?: (ticketId: string, options?: { state?: { fromTab?: string } }) => void
+  onSelectTicket?: (
+    ticketId: string,
+    options?: { state?: { fromTab?: string; claimMessage?: string; [key: string]: unknown } }
+  ) => void
 }
 
 export const TicketsPage: React.FC<TicketsPageProps> = ({
@@ -460,10 +463,53 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           setIsClaimModalOpen(false)
           setClaimInitialCode(null)
         }}
-        onClaimed={(_ticketId, percentage) => {
-          loadTickets()
+        onClaimed={(ticketId, percentage) => {
+          setIsClaimModalOpen(false)
+          setClaimInitialCode(null)
+
           const pctText = percentage ? ` del ${percentage}%` : ''
-          setClaimToastMsg(`¡Participación${pctText} añadida a tus billetes!`)
+          const toastMsg = `¡Participación${pctText} reclamada correctamente!`
+          setClaimToastMsg(toastMsg)
+
+          // 1. Sustituye la entrada actual del historial por /?tab=participaciones
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(
+              {
+                ...(window.history.state || {}),
+                tab: 'billetes',
+                ticketId: null,
+                fromTab: 'participaciones',
+                subTab: 'participaciones',
+                directFallbackTab: 'participaciones',
+              },
+              '',
+              '/?tab=participaciones'
+            )
+          }
+          setSearchParams(
+            { tab: 'participaciones' },
+            {
+              replace: true,
+              state: {
+                fromTab: 'participaciones',
+                subTab: 'participaciones',
+                directFallbackTab: 'participaciones',
+              },
+            }
+          )
+
+          // 2. Recargar billetes en segundo plano
+          loadTickets()
+
+          // 3. Navega inmediatamente a la ficha del décimo
+          if (onSelectTicket && ticketId) {
+            onSelectTicket(ticketId, {
+              state: {
+                fromTab: 'participaciones',
+                claimMessage: toastMsg,
+              },
+            })
+          }
         }}
         onRejected={() => {
           loadTickets()
