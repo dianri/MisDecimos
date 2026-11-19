@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.54] - 2026-11-19
+
+### Changed
+- **Reordenación de la Estructura Vertical en el Detalle del Décimo (`src/pages/TicketDetailPage.tsx`, `docs/SCREENS_GUIDE.md`):**
+  - **Bloque de Propiedad y Reparto en Primera Posición:**
+    - El bloque de pestañas (**`Propiedad y Reparto`** e **`Historial`**) junto con su contenido activo (`OwnershipBreakdownCard` y `TicketAuditTimeline`) se sitúa inmediatamente debajo de la cabecera superior fija (*"Detalles del Décimo"*), permitiendo a los usuarios visualizar el gráfico de distribución, los cotitulares, cuotas y acciones de cesión sin necesidad de hacer scroll vertical.
+  - **Boleto Realista, Comprobador y Acciones a Continuación:**
+    - Se reubica inmediatamente después (con espaciado vertical armónico):
+      1. La tarjeta visual del décimo (`RealisticTicketCard`), conservando el listener interactivo de 5 pulsaciones sobre el *"MISDECIMOS SELLO DIGITAL"* para el panel de diagnóstico.
+      2. La fila de metadatos (`FECHA SORTEO` y `ORIGEN: Escáner GS1-128 / Manual`).
+      3. El comprobador oficial de premios (`PrizeCheckCard`) y banners informativos de escrutinio.
+      4. El panel de diagnóstico *"Modo Prueba de Premio"* para custodios.
+      5. Los botones de gestión (`Archivar billete`, `Eliminar`) y el aviso de *Protección de cotitulares*.
+  - **Actualización de Documentación:**
+    - Actualizado `docs/SCREENS_GUIDE.md` con la nueva jerarquía vertical del detalle de billete.
+
 ## [1.0.53] - 2026-11-19
 
 ### Fixed

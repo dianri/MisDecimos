@@ -538,8 +538,61 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       )}
 
-      {/* 2. Tarjeta Realista del Boleto */}
-      <div className="space-y-3">
+      {/* 2. Pestañas de PROPIEDAD e HISTORIAL */}
+      <div className="space-y-4">
+        <div className="flex border-b border-gray-200">
+          <button
+            type="button"
+            onClick={() => setActiveTab('propiedad')}
+            className={`flex items-center gap-1.5 pb-2.5 px-4 text-xs font-bold border-b-2 transition ${
+              activeTab === 'propiedad'
+                ? 'border-lottery text-lottery'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>
+              Propiedad y Reparto ({shares.length + pendingInvites.length})
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('historial')}
+            className={`flex items-center gap-1.5 pb-2.5 px-4 text-xs font-bold border-b-2 transition ${
+              activeTab === 'historial'
+                ? 'border-lottery text-lottery'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <Shield className="h-3.5 w-3.5" />
+            <span>Historial ({auditEvents.length})</span>
+          </button>
+        </div>
+
+        {activeTab === 'propiedad' ? (
+          <OwnershipBreakdownCard
+            ticketId={ticket.id}
+            ticketNumber={ticket.number}
+            drawName={ticket.draw_name}
+            ticketStatus={ticket.status}
+            prizeAmountCents={ticket.prize_amount_cents}
+            isOwner={isOwner}
+            shares={shares}
+            pendingInvites={pendingInvites}
+            onRefresh={loadTicketDetails}
+            onRenounced={handleShareRenounced}
+          />
+        ) : (
+          <TicketAuditTimeline
+            events={auditEvents}
+            onRefresh={loadTicketDetails}
+          />
+        )}
+      </div>
+
+      {/* 3. Tarjeta Realista del Boleto y Metadatos */}
+      <div className="space-y-3 pt-2">
         <RealisticTicketCard
           ticket={ticket}
           template={template}
@@ -561,7 +614,16 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       </div>
 
-      {/* Panel Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 taps en Sello Digital) */}
+      {/* 4. Tarjeta de Comprobación Oficial de Premios */}
+      <PrizeCheckCard
+        ticket={ticket}
+        userShare={userShare}
+        shares={shares}
+        isOwner={isOwner}
+        onRefresh={loadTicketDetails}
+      />
+
+      {/* 5. Panel Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 taps en Sello Digital) */}
       {isOwner && showSimulationPanel && (
         <div className="bg-purple-50/90 border border-purple-200/90 rounded-2xl p-4 text-purple-950 space-y-3 shadow-xs animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between">
@@ -618,16 +680,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       )}
 
-      {/* 3. Tarjeta de Comprobación Oficial de Premios */}
-      <PrizeCheckCard
-        ticket={ticket}
-        userShare={userShare}
-        shares={shares}
-        isOwner={isOwner}
-        onRefresh={loadTicketDetails}
-      />
-
-      {/* 4. Acciones del Décimo */}
+      {/* 6. Acciones del Décimo */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
         <button
           type="button"
@@ -662,7 +715,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         )}
       </div>
 
-      {/* Aviso de seguridad si tiene cotitulares activos */}
+      {/* 7. Aviso de seguridad si tiene cotitulares activos */}
       {hasAcceptedThirdPartyShares && (
         <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-start gap-2.5">
           <Lock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
@@ -671,59 +724,6 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           </p>
         </div>
       )}
-
-      {/* 4. Pestañas de PROPIEDAD e HISTORIAL */}
-      <div className="space-y-4 pt-2">
-        <div className="flex border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setActiveTab('propiedad')}
-            className={`flex items-center gap-1.5 pb-2.5 px-4 text-xs font-bold border-b-2 transition ${
-              activeTab === 'propiedad'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span>
-              Propiedad y Reparto ({shares.length + pendingInvites.length})
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('historial')}
-            className={`flex items-center gap-1.5 pb-2.5 px-4 text-xs font-bold border-b-2 transition ${
-              activeTab === 'historial'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Shield className="h-3.5 w-3.5" />
-            <span>Historial ({auditEvents.length})</span>
-          </button>
-        </div>
-
-        {activeTab === 'propiedad' ? (
-          <OwnershipBreakdownCard
-            ticketId={ticket.id}
-            ticketNumber={ticket.number}
-            drawName={ticket.draw_name}
-            ticketStatus={ticket.status}
-            prizeAmountCents={ticket.prize_amount_cents}
-            isOwner={isOwner}
-            shares={shares}
-            pendingInvites={pendingInvites}
-            onRefresh={loadTicketDetails}
-            onRenounced={handleShareRenounced}
-          />
-        ) : (
-          <TicketAuditTimeline
-            events={auditEvents}
-            onRefresh={loadTicketDetails}
-          />
-        )}
-      </div>
     </div>
   )
 }
