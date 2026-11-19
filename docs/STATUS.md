@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.29` (Producción Estable · Cierre de Sesión Centralizado en Perfil)  
+**Versión Actual:** `1.0.30` (Producción Estable · Alertas Centralizadas en Barra Inferior)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.29`)  
+**Rama de Producción:** `main` (Tag `v1.0.30`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

@@ -13,7 +13,6 @@ import {
 } from '../lib/ticketMetrics'
 import {
   Ticket,
-  Bell,
   KeyRound,
   QrCode,
   Users,
@@ -26,12 +25,10 @@ import {
 
 export interface TicketsPageProps {
   onSelectTicket?: (ticketId: string) => void
-  onNavigateToAlerts?: () => void
 }
 
 export const TicketsPage: React.FC<TicketsPageProps> = ({
   onSelectTicket,
-  onNavigateToAlerts,
 }) => {
   const { user } = useAuth()
 
@@ -40,7 +37,6 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     classifyUserTickets([], [], new Set(), '')
   )
   const [isLoading, setIsLoading] = useState(true)
-  const [unreadCount, setUnreadCount] = useState(0)
 
   // Modales
   const [isAddTicketOpen, setIsAddTicketOpen] = useState(false)
@@ -137,24 +133,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }, [user?.id])
 
-  // 3. Consultar contador de alertas no leídas
-  const checkAlerts = useCallback(async () => {
-    if (!user?.id) return
-    try {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
-      setUnreadCount(count || 0)
-    } catch (e) {
-      console.warn('Error al verificar alertas:', e)
-    }
-  }, [user?.id])
-
   useEffect(() => {
     loadTickets()
-    checkAlerts()
 
     // Suscripción Realtime para actualizar al haber cambios en tickets o shares
     const channel = supabase
@@ -174,7 +154,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [loadTickets, checkAlerts])
+  }, [loadTickets])
 
   // Listas y métricas extraídas del clasificador reactivo
   const {
@@ -195,25 +175,10 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     <div className="space-y-6 pb-12 max-w-xl mx-auto">
       {/* 1. Tarjeta Resumen Superior */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
+        <div>
           <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
             Mis Billetes Compartidos
           </h2>
-
-          <button
-            type="button"
-            onClick={onNavigateToAlerts}
-            className="relative p-2.5 rounded-2xl bg-gray-50 border border-gray-200/80 text-gray-600 hover:text-lottery hover:bg-lottery-50 transition"
-            title="Ver alertas"
-          >
-            <Bell className="h-4 w-4" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-              </span>
-            )}
-          </button>
         </div>
 
         {/* Dos recuadros métricos */}
