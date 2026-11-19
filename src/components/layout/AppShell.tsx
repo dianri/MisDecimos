@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { safeImageUrl } from '../../lib/sanitize'
-import { useAndroidBackNavigation } from '../../hooks/useAndroidBackNavigation'
+import { useAndroidBackNavigation, parseRouteFromPath } from '../../hooks/useAndroidBackNavigation'
 import { usePushPermissionPrompt } from '../../hooks/usePushPermissionPrompt'
 import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
@@ -81,6 +81,45 @@ export const AppShell: React.FC = () => {
       })
     }
   }, [user?.id])
+
+  // Escuchar eventos de clic en notificaciones Push nativas desde el Service Worker
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+
+    const handleSwMessage = (event: MessageEvent) => {
+      const data = event.data
+      if (data?.type === 'PUSH_NOTIFICATION_CLICK') {
+        const { ticketId, notificationId, url } = data
+
+        // 1. Navegación directa al recurso especificado
+        if (ticketId) {
+          navigateTo({ tab: 'billetes', ticketId })
+        } else if (url) {
+          const target = parseRouteFromPath(url)
+          navigateTo(target)
+        } else {
+          navigateTo({ tab: 'alertas', ticketId: null })
+        }
+
+        // 2. Marcar la notificación como leída silenciosamente en Supabase si se provee su ID
+        if (notificationId && user?.id) {
+          Promise.resolve(
+            supabase
+              .from('notifications')
+              .update({ is_read: true })
+              .eq('id', notificationId)
+          ).catch((err: unknown) => {
+            console.warn('Error marcando notificación push como leída:', err)
+          })
+        }
+      }
+    }
+
+    navigator.serviceWorker.addEventListener('message', handleSwMessage)
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleSwMessage)
+    }
+  }, [navigateTo, user?.id])
 
   // Consultar notificaciones no leídas y suscribirse a Realtime
   useEffect(() => {
