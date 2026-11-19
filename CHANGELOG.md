@@ -5,6 +5,23 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.42] - 2026-11-19
+
+### Added
+- **Diseño Celebratorio y Destacado de Tarjetas Premiadas en el Listado Principal (`TicketListItemCard.tsx`, `ticketCardHelper.ts`, `TicketsPage.tsx`):**
+  - **Acabado Visual Ganador con Borde y Halo:**
+    - Reemplazado el fondo blanco plano por un degradado sutil dorado y esmeralda (`bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/75`).
+    - Borde dorado reforzado (`border-2 border-amber-400/85`) con halo suave y sombra enriquecida (`ring-2 ring-amber-300/25 shadow-md shadow-amber-900/5`).
+    - Franja superior degradada de acento continuo (`from-amber-400 via-yellow-400 to-emerald-500`).
+  - **Iconografía y Badge Ganador:**
+    - Icono superior izquierdo en caja dorada con trofeo (`bg-amber-100 text-amber-700 border border-amber-300/80`).
+    - Badge dinámico de estado sustituido por **`¡PREMIADO!`** (o **`LIQUIDADO`**) en degradado dorado/ámbar (`bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold tracking-wide shadow-sm`) con icono `Sparkles`.
+  - **Banner de Premio Integrado:**
+    - Recuadro resaltado en verde esmeralda (`bg-emerald-600/10 border border-emerald-500/25 rounded-2xl px-3.5 py-2.5`) con icono `Trophy` que resalta de forma prioritaria el importe correspondiente al usuario en fuente mono de 16 px (ej. **`750,00 € tuyos`**) y el premio total del billete (`Décimo: 1.000,00 €`).
+    - Tratamiento transparente y neutro para participaciones con renuncia formal (`Cuota: Renunciada (0,00 €)`).
+  - **Consistencia Multidimensional:** Visualización idéntica aplicada transversalmente en las tres pestañas (**Décimos**, **Participaciones** y **Archivados**).
+  - **Batería de Pruebas Unitarias (`winningTicketCard.test.ts`):** 7 nuevos tests unitarios validando estados pendientes, no premiados, ganadores activos, 100% custodio, liquidados y archivados (74 tests unitarios totales superados).
+
 ## [1.0.41] - 2026-11-19
 
 ### Added
