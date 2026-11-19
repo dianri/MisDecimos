@@ -518,14 +518,12 @@ export const ProfilePage: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                const event = new CustomEvent('trigger-pwa-install')
-                window.dispatchEvent(event)
-                alert('Añade MisDecimos desde el menú del navegador a tu pantalla de inicio.')
+                window.dispatchEvent(new CustomEvent('trigger-pwa-install'))
               }}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition active:scale-98"
             >
               <Download className="h-4 w-4 text-lottery" />
-              <span>Instalar aplicación en el teléfono</span>
+              <span>Instalar aplicación en tu dispositivo</span>
             </button>
           </div>
         )}

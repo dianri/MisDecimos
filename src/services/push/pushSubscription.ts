@@ -35,9 +35,12 @@ export function detectPlatform(): PlatformType {
  * Comprueba si la aplicación está ejecutándose en modo instalado (PWA standalone).
  */
 export function isStandaloneMode(): boolean {
+  if (typeof window === 'undefined') return false
   return (
+    localStorage.getItem('misdecimos_pwa_installed') === 'true' ||
     window.matchMedia('(display-mode: standalone)').matches ||
-    (navigator as unknown as { standalone?: boolean }).standalone === true
+    (navigator as unknown as { standalone?: boolean }).standalone === true ||
+    (typeof document !== 'undefined' && Boolean(document.referrer?.startsWith('android-app://')))
   )
 }
 
