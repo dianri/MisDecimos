@@ -198,6 +198,18 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             ? 'Ya no tienes acceso a este décimo porque renunciaste a tu participación.'
             : 'Ya no tienes acceso a este décimo.'
 
+          if (user?.id && ticketId) {
+            try {
+              await supabase
+                .from('notifications')
+                .update({ is_read: true })
+                .eq('user_id', user.id)
+                .eq('ticket_id', ticketId)
+            } catch (notifErr) {
+              console.error('Error al marcar notificaciones como leídas:', notifErr)
+            }
+          }
+
           if (onNavigateToRoot) {
             onNavigateToRoot('participaciones', { toastMsg })
           } else if (onBack) {
@@ -300,7 +312,19 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   }, [])
 
   // Salida automática al renunciar a una participación
-  const handleShareRenounced = useCallback(() => {
+  const handleShareRenounced = useCallback(async () => {
+    if (user?.id && ticketId) {
+      try {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', user.id)
+          .eq('ticket_id', ticketId)
+      } catch (notifErr) {
+        console.error('Error marcando notificaciones al renunciar:', notifErr)
+      }
+    }
+
     const toastMsg =
       'Has renunciado a la participación. El décimo se ha retirado de tus participaciones.'
     if (onNavigateToRoot) {
@@ -310,7 +334,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     } else if (typeof window !== 'undefined') {
       window.location.replace('/?tab=participaciones')
     }
-  }, [onNavigateToRoot, onBack])
+  }, [user?.id, ticketId, onNavigateToRoot, onBack])
 
   // Navegación hacia atrás respetando el historial o derivando según rol en entradas directas
   const handleBack = useCallback(() => {
@@ -435,6 +459,21 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
   const isOwner = ticket.owner_id === user?.id
   const userShare = shares.find((s) => s.user_id === user?.id)
+  const hasActiveShare = Boolean(
+    isOwner ||
+      (userShare &&
+        (userShare.status === 'ACEPTADA' || userShare.status === 'PENDIENTE') &&
+        Number(userShare.percentage) > 0)
+  )
+
+  if (!hasActiveShare) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="h-7 w-7 animate-spin text-lottery" />
+      </div>
+    )
+  }
+
   const hasAcceptedThirdPartyShares = shares.some(
     (s) => s.user_id !== user?.id && s.status === 'ACEPTADA'
   )

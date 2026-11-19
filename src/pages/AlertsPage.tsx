@@ -14,7 +14,12 @@ import {
   Check,
   X,
   ExternalLink,
+  Ban,
 } from 'lucide-react'
+import {
+  extractTicketIdFromNotification,
+  isNotificationTicketRenounced,
+} from '../lib/renouncedAlerts'
 
 type Notification = Database['public']['Tables']['notifications']['Row']
 
@@ -29,16 +34,19 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
 }) => {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [renouncedTicketIds, setRenouncedTicketIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [isMarkingAll, setIsMarkingAll] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
-  const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
-    null
-  )
+  const [actionMsg, setActionMsg] = useState<{
+    type: 'success' | 'error' | 'info'
+    text: string
+  } | null>(null)
 
   const loadNotifications = async () => {
     if (!user?.id) return
     try {
+      // 1. Cargar notificaciones del usuario
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -47,6 +55,19 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
 
       if (error) throw error
       setNotifications(data || [])
+
+      // 2. Cargar participaciones del usuario para identificar décimos renunciados
+      const { data: sharesData } = await supabase
+        .from('ownership_shares')
+        .select('ticket_id, status, role')
+        .eq('user_id', user.id)
+
+      const renounced = new Set(
+        (sharesData || [])
+          .filter((s) => s.role !== 'PROPIETARIO' && s.status === 'RENUNCIADA')
+          .map((s) => s.ticket_id)
+      )
+      setRenouncedTicketIds(renounced)
     } catch (err) {
       console.error('Error cargando notificaciones:', err)
     } finally {
@@ -111,8 +132,19 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
       )
     }
 
-    if (notif.ticket_id && onSelectTicket) {
-      onSelectTicket(notif.ticket_id)
+    const targetTicketId = extractTicketIdFromNotification(notif)
+    const isRenounced = isNotificationTicketRenounced(notif, renouncedTicketIds)
+
+    if (isRenounced) {
+      setActionMsg({
+        type: 'info',
+        text: 'Ya renunciaste a esta participación; no tienes acceso al décimo.',
+      })
+      return
+    }
+
+    if (targetTicketId && onSelectTicket) {
+      onSelectTicket(targetTicketId)
     }
   }
 
@@ -122,8 +154,9 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
     const shareId = meta?.share_id as string | undefined
 
     if (!shareId) {
-      if (notif.ticket_id && onSelectTicket) {
-        onSelectTicket(notif.ticket_id)
+      const targetTicketId = extractTicketIdFromNotification(notif)
+      if (targetTicketId && onSelectTicket && !isNotificationTicketRenounced(notif, renouncedTicketIds)) {
+        onSelectTicket(targetTicketId)
       }
       return
     }
@@ -144,8 +177,17 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
 
       if (error) throw error
 
-      // Marcar notificación como leída
-      await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id)
+      // Marcar notificación(es) como leídas
+      const targetTicketId = extractTicketIdFromNotification(notif)
+      if (accept && targetTicketId && user?.id) {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', user.id)
+          .eq('ticket_id', targetTicketId)
+      } else {
+        await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id)
+      }
 
       setActionMsg({
         type: 'success',
@@ -260,6 +302,8 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
           className={`p-3 rounded-2xl text-xs font-medium flex items-center justify-between ${
             actionMsg.type === 'success'
               ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+              : actionMsg.type === 'info'
+              ? 'bg-amber-50 border border-amber-200 text-amber-800'
               : 'bg-rose-50 border border-rose-200 text-rose-800'
           }`}
         >
@@ -294,6 +338,8 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
           {notifications.map((item) => {
             const iconConfig = getNotificationIcon(item.type)
             const Icon = iconConfig.icon
+            const targetTicketId = extractTicketIdFromNotification(item)
+            const isRenounced = isNotificationTicketRenounced(item, renouncedTicketIds)
             const isWaiverRequest = item.type === 'WAIVER_REQUEST'
 
             return (
@@ -332,7 +378,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                     <p className="text-xs text-gray-600 leading-relaxed">{item.body}</p>
 
                     {/* Acciones directas para solicitudes de renuncia */}
-                    {isWaiverRequest && (
+                    {isWaiverRequest && !isRenounced && (
                       <div
                         className="flex items-center gap-2 pt-2"
                         onClick={(e) => e.stopPropagation()}
@@ -363,12 +409,21 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                       </div>
                     )}
 
-                    {/* Enlace al billete si tiene ticket_id */}
-                    {item.ticket_id && (
-                      <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-lottery">
-                        <span>Ver billete</span>
-                        <ExternalLink className="h-3 w-3" />
+                    {/* Indicador de renuncia o enlace al billete */}
+                    {isRenounced ? (
+                      <div className="pt-1.5 flex items-center">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-500 text-[10px] font-medium border border-gray-200/80 cursor-default select-none">
+                          <Ban className="h-3 w-3 text-gray-400" />
+                          <span>Participación renunciada · Sin acceso</span>
+                        </span>
                       </div>
+                    ) : (
+                      targetTicketId && (
+                        <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-lottery">
+                          <span>Ver billete</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </div>
+                      )
                     )}
                   </div>
                 </div>
