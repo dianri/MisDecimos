@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.52` (Producción Estable · Símbolos BMP Seguros para WhatsApp)  
+**Versión Actual:** `1.0.53` (Producción Estable · Restauración de Emojis Ricos en WhatsApp)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.52`)  
+**Rama de Producción:** `main` (Tag `v1.0.53`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -134,3 +134,4 @@
 - [x] v1.0.50: Redirección automática y protección de acceso tras renuncia de participación (`TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `TicketsPage.tsx`): salida inmediata hacia `/?tab=participaciones` con `replace: true` tras confirmar renuncia (voluntaria o aceptando requerimiento del custodio), banner de confirmación *"Has renunciado a la participación. El décimo se ha retirado de tus participaciones."*, bloqueo y redirección de reentradas directas a décimos renunciados con toast de aviso, e invariante de exclusión total en listado activo, archivados y métricas.
 - [x] v1.0.51: Bloqueo de navegación y marcado de lectura para décimos renunciados en Alertas y Detalle (`AlertsPage.tsx`, `TicketDetailPage.tsx`, `renouncedAlerts.ts`): detección reactiva de décimos renunciados (`status = 'RENUNCIADA'`), inhabilitación de apertura de ficha desde la bandeja de alertas con badge `Participación renunciada · Sin acceso`, supresión de botones de renuncia obsoletos, marcado automático como leídas de las notificaciones al renunciar o al pulsar la tarjeta con toast informativo, protección estricta en el render de `TicketDetailPage` evitando cualquier visualización no autorizada y suite de tests unitarios (`renouncedAlerts.test.ts`).
 - [x] v1.0.52: Símbolos seguros del plano BMP para compartir por WhatsApp (`shareHelper.ts`, `whatsappShare.test.ts`): sustitución de emojis de 4 bytes por símbolos seguros Unicode del Plano Básico Multilingüe (`\u2605` ★, `\u2022` •, `\u2192` →, `<= 0xFFFF`) erradicando la corrupción a `\uFFFD` producida por `api.whatsapp.com/send` ante pares subrogados, con suite de pruebas unitarias verificando la conformidad estricta BMP.
+- [x] v1.0.53: Restauración de emojis ricos originales en mensaje de WhatsApp (`shareHelper.ts`, `whatsappShare.test.ts`): recuperación de los emojis oficiales (`🎟️` `\u{1F3AB}`, `🔑` `\u{1F511}`, `👉` `\u{1F449}`) mediante secuencias de escape Unicode explícitas en UTF-8, garantizando la apariencia visual rica original en dispositivos móviles mientras se preserva el respaldo automático al portapapeles en escritorio.
