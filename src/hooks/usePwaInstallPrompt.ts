@@ -10,6 +10,7 @@ export interface BeforeInstallPromptEvent extends Event {
 export const PWA_PROMPT_COUNT_KEY = 'misdecimos_pwa_install_prompt_count'
 export const PWA_INSTALLED_KEY = 'misdecimos_pwa_installed'
 export const PWA_SESSION_SHOWN_KEY = 'misdecimos_pwa_prompt_shown_session'
+export const PWA_DISMISSED_KEY = 'misdecimos_pwa_prompt_dismissed'
 
 // Captura global de beforeinstallprompt a nivel de módulo para no perder el evento si se dispara antes del render
 let globalDeferredPrompt: BeforeInstallPromptEvent | null = null
@@ -55,6 +56,45 @@ export function incrementPwaPromptCount(): number {
   const next = current + 1
   localStorage.setItem(PWA_PROMPT_COUNT_KEY, next.toString())
   return next
+}
+
+/**
+ * Comprueba si el usuario ha descartado definitivamente el aviso automático en este navegador.
+ */
+export function isPwaPromptPermanentlyDismissed(): boolean {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(PWA_DISMISSED_KEY) === 'true'
+}
+
+/**
+ * Consulta la API navigator.getInstalledRelatedApps() si está disponible en Chromium/Edge
+ * para verificar si la PWA ya ha sido instalada localmente.
+ */
+export async function checkGetInstalledRelatedApps(customNav?: {
+  getInstalledRelatedApps?: () => Promise<Array<{ id?: string; platform?: string; url?: string }>>
+}): Promise<boolean> {
+  const nav =
+    customNav ||
+    (typeof window !== 'undefined' && typeof navigator !== 'undefined'
+      ? (navigator as unknown as {
+          getInstalledRelatedApps?: () => Promise<Array<{ id?: string; platform?: string; url?: string }>>
+        })
+      : undefined)
+
+  if (typeof nav?.getInstalledRelatedApps === 'function') {
+    try {
+      const relatedApps = await nav.getInstalledRelatedApps()
+      if (Array.isArray(relatedApps) && relatedApps.length > 0) {
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+          localStorage.setItem(PWA_INSTALLED_KEY, 'true')
+        }
+        return true
+      }
+    } catch (e) {
+      console.warn('Error comprobando getInstalledRelatedApps:', e)
+    }
+  }
+  return false
 }
 
 /**
@@ -150,6 +190,13 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
     setIsInstalled(isPwaInstalled())
     setDeferredPrompt(globalDeferredPrompt)
 
+    // Comprobación asíncrona de app relacionada/instalada en Chromium
+    checkGetInstalledRelatedApps().then((installed) => {
+      if (installed) {
+        setIsInstalled(true)
+      }
+    })
+
     const handlePromptReady = () => {
       setDeferredPrompt(globalDeferredPrompt)
     }
@@ -177,10 +224,11 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
     }
   }, [])
 
-  // Disparador automático: solo tras 2.5s, máximo 3 veces y 1 vez por sesión
+  // Disparador automático: solo tras 2.5s, máximo 3 veces, 1 vez por sesión y si no fue descartado definitivamente
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (isInstalled || isPwaInstalled()) return
+    if (isPwaPromptPermanentlyDismissed()) return
     if (options?.isBlocked) return
 
     // Comprobar si ya se mostró en esta sesión
@@ -194,12 +242,22 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
       return
     }
 
-    const timer = window.setTimeout(() => {
-      if (!isPwaInstalled() && !options?.isBlocked) {
-        sessionStorage.setItem(PWA_SESSION_SHOWN_KEY, 'true')
-        setIsManualTrigger(false)
-        setIsOpen(true)
+    const timer = window.setTimeout(async () => {
+      // Re-verificar si fue instalada o descartada mientras corría el timer
+      if (isPwaInstalled() || isPwaPromptPermanentlyDismissed() || options?.isBlocked) {
+        return
       }
+
+      // En navegadores Chromium, si la PWA ya está instalada, el navegador suprime beforeinstallprompt.
+      // NUNCA mostrar el modal automático de tres puntos si deferredPrompt es null en Chromium.
+      const currentPlatform = detectPwaPlatform()
+      if (currentPlatform === 'chromium' && !globalDeferredPrompt) {
+        return
+      }
+
+      sessionStorage.setItem(PWA_SESSION_SHOWN_KEY, 'true')
+      setIsManualTrigger(false)
+      setIsOpen(true)
     }, 2500)
 
     return () => clearTimeout(timer)
@@ -228,14 +286,20 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
     }
   }, [deferredPrompt])
 
-  const dismiss = useCallback(() => {
+  const dismiss = useCallback((permanent = false) => {
     setIsOpen(false)
     sessionStorage.setItem(PWA_SESSION_SHOWN_KEY, 'true')
-    if (!isManualTrigger) {
+    if (permanent) {
+      localStorage.setItem(PWA_DISMISSED_KEY, 'true')
+    } else if (!isManualTrigger) {
       incrementPwaPromptCount()
     }
     setIsManualTrigger(false)
   }, [isManualTrigger])
+
+  const neverShowAgain = useCallback(() => {
+    dismiss(true)
+  }, [dismiss])
 
   const openManually = useCallback(() => {
     setIsManualTrigger(true)
@@ -250,6 +314,7 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
     isManualTrigger,
     install,
     dismiss,
+    neverShowAgain,
     openManually,
   }
 }

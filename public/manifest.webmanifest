@@ -1,0 +1,35 @@
+{
+  "id": "/",
+  "name": "MisDecimos - Trazabilidad Asegurada",
+  "short_name": "MisDecimos",
+  "description": "Custodia compartida y reparto de décimos de Lotería Nacional",
+  "theme_color": "#2E6146",
+  "background_color": "#F7F9F7",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://misdecimos.dianrie.com/manifest.webmanifest"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

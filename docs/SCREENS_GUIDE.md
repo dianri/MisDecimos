@@ -81,6 +81,10 @@ flowchart TD
    - **Solicitud No Intrusiva:** Dispara un modal adaptado a móvil (`z-50` sobre `BottomNav` con soporte de botón Atrás nativo) tras 1,5 segundos en la primera visita del usuario (`dismissals === 0`) o de forma contextualizada si recibe notificaciones sin leer (`unreadCount > 0`) sin tener el servicio push activado.
    - **Límite de 3 Cancelaciones:** Controla los descartes en `localStorage` por `user.id` con guardias en `sessionStorage` para no repetir preguntas en la misma sesión. Al alcanzar 3 cancelaciones o si el permiso es denegado en el navegador, el sistema no vuelve a solicitarlo de forma automática.
    - **Aviso Informativo con Enlace a Perfil:** Al pulsar *"Ahora no"* o cerrar el modal, se despliega un toast durante 5 segundos informando: *"No recibirás notificaciones push en este dispositivo. Siempre puedes activarlas o desactivarlas en tu Perfil."*, con enlace directo para navegar a `/perfil`.
+6. **Instalador y Banner PWA Multiplataforma (`<PwaInstallBanner />` y `usePwaInstallPrompt`):**
+   - **Detección Avanzada de Instalación:** Integra comprobación síncrona de modo standalone y asíncrona mediante `navigator.getInstalledRelatedApps()`, apoyado en el Web App Manifest oficial con `"id": "/"` y `"related_applications"`.
+   - **Anti-Redundancia en Navegadores Chromium:** En Chrome/Edge/Brave/Samsung Internet, donde el navegador suprime el evento `beforeinstallprompt` si la app ya está instalada, el sistema nunca muestra automáticamente la guía manual de los tres puntos. Solo se activa si `deferredPrompt` está disponible de forma nativa.
+   - **Cierre Definitivo en 1 Clic:** Unifica los botones de acción en un botón principal (*«Instalar aplicación»* si hay prompt nativo o *«Entendido»* en guías manuales) acompañado de *«No volver a mostrar»*, guardando de forma permanente en `localStorage` el flag `misdecimos_pwa_prompt_dismissed` para no volver a mostrar el modal de forma automática en ese navegador.
 
 ---
 
@@ -112,6 +116,9 @@ flowchart TD
    - Realiza una previsualización de la participación (número, sorteo, porcentaje e importe en €) y ofrece dos opciones:
      - **"Aceptar y Asignar a mi cuenta":** Ejecuta `accept_pending_invite` y transfiere formalmente la cuota.
      - **"Rechazar Participación":** Reintegra de inmediato el porcentaje al propietario.
+   - **Feedback Instantáneo (0 ms) y Cierre Inmediato:**
+     - Al pulsar *"Reclamar X%"* o *"Rechazar participación"*, todos los botones se deshabilitan inmediatamente para evitar dobles pulsaciones y el botón pulsado muestra un spinner con *"Reclamando..."* o *"Rechazando..."*.
+     - Al responder con éxito la RPC, el modal se cierra de forma inmediata (`onClose()`) sin retardos artificiales ni pantallas intermedias, lanzando la sincronización en segundo plano (`loadTickets()`) y mostrando un toast verde de confirmación en la pantalla principal: *"¡Participación del X% añadida a tus billetes!"*.
 
 ---
 

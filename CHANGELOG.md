@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.23] - 2026-11-19
+
+### Fixed
+- **Detección Avanzada de PWA Instalada y Optimización Anti-Redundancia (`usePwaInstallPrompt.ts` y `PwaInstallBanner.tsx`):**
+  - Añadido soporte para `navigator.getInstalledRelatedApps()` asíncrono e integrado `"id": "/"` y `"related_applications"` en `vite.config.ts` y `public/manifest.webmanifest`.
+  - Suprimida la visualización automática de la guía manual (tres puntos) en navegadores Chromium cuando `deferredPrompt` es `null`, evitando falsos avisos cuando la app ya está instalada.
+  - Unificados los botones inferiores del modal en una única acción clara (*«Instalar aplicación»* con `deferredPrompt` o *«Entendido»* en guías manuales) acompañada de *«No volver a mostrar»*, guardando el flag `misdecimos_pwa_prompt_dismissed` en `localStorage` con un solo clic.
+- **Feedback Instantáneo (0 ms) y Cierre Inmediato al Reclamar Participación (`InviteClaimModal.tsx` y `TicketsPage.tsx`):**
+  - Estado de carga inmediato (`isSubmitting`) al pulsar *«Reclamar X%»* o *«Rechazar participación»*, deshabilitando todos los controles y mostrando el spinner *"Reclamando..."* / *"Rechazando..."*.
+  - Eliminados los `setTimeout` y pantallas intermedias dentro del modal, ejecutando el cierre inmediato (`onClose()`) tras la respuesta exitosa de la RPC y actualizando los datos en segundo plano (`loadTickets()`).
+  - Toast verde de confirmación en la pantalla principal (*"¡Participación del X% añadida a tus billetes!"* o *"Invitación rechazada"*).
+
 ## [1.0.22] - 2026-11-19
 
 ### Security

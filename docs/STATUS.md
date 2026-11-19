@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.22` (Producción Estable · Privacidad Estricta de Invitaciones Pendientes)  
+**Versión Actual:** `1.0.23` (Producción Estable · Detección Avanzada PWA y Feedback Instantáneo de Reclamación)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.22`)  
+**Rama de Producción:** `main` (Tag `v1.0.23`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -104,3 +104,4 @@
 - [x] v1.0.20: Desglose canónico oficial de 20 dígitos en código de barras SELAE (`2 + 3 + 2 + 3 + 6 + 4`) con soporte para separadores y prefijos GS1.
 - [x] v1.0.21: Exclusión de participaciones renunciadas (`status = 'RENUNCIADA'` o `percentage <= 0`) en el conteo de billetes activos, sumatorio de premios y pestañas de la interfaz (`ticketMetrics.ts`).
 - [x] v1.0.22: Privacidad estricta de invitaciones pendientes (`pending_invites`): restricción de RLS a propietario y receptor aceptado, ocultación completa en UI para cotitulares y porcentaje agregado neutro en Donut/leyenda.
+- [x] v1.0.23: Detección avanzada de PWA instalada (`getInstalledRelatedApps`, `id: /`), supresión de guía redundante en Chromium sin `deferredPrompt`, botón unificado de descarte permanente (`misdecimos_pwa_prompt_dismissed`), feedback instantáneo (0 ms) y cierre inmediato al reclamar participaciones (`InviteClaimModal.tsx`).

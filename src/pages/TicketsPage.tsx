@@ -19,6 +19,8 @@ import {
   Archive,
   Loader2,
   Camera,
+  CheckCircle2,
+  X,
 } from 'lucide-react'
 
 export interface TicketsPageProps {
@@ -47,6 +49,16 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false)
   const [claimInitialCode, setClaimInitialCode] = useState<string | null>(null)
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
+  const [claimToastMsg, setClaimToastMsg] = useState<string | null>(null)
+
+  // Auto-cierre del toast de confirmación tras 5 segundos
+  useEffect(() => {
+    if (!claimToastMsg) return
+    const timer = setTimeout(() => {
+      setClaimToastMsg(null)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [claimToastMsg])
 
   // Manejar escaneo directo de décimo desde el botón rápido de cámara
   const handleTicketBarcodeScanned = (rawCode: string) => {
@@ -440,9 +452,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           setIsClaimModalOpen(false)
           setClaimInitialCode(null)
         }}
-        onClaimed={(ticketId) => {
+        onClaimed={(_ticketId, percentage) => {
           loadTickets()
-          if (onSelectTicket) onSelectTicket(ticketId)
+          const pctText = percentage ? ` del ${percentage}%` : ''
+          setClaimToastMsg(`¡Participación${pctText} añadida a tus billetes!`)
+        }}
+        onRejected={() => {
+          loadTickets()
+          setClaimToastMsg('Invitación rechazada. El porcentaje ha regresado a la cuota del propietario.')
         }}
       />
 
@@ -459,6 +476,28 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           setIsClaimModalOpen(true)
         }}
       />
+
+      {/* Toast informativo al reclamar o rechazar participación */}
+      {claimToastMsg && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 bg-emerald-800 text-white text-xs font-semibold rounded-2xl shadow-2xl border border-emerald-600 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0" />
+            <span>{claimToastMsg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setClaimToastMsg(null)}
+            className="p-1 text-emerald-200 hover:text-white transition cursor-pointer"
+            title="Cerrar aviso"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
