@@ -11,6 +11,7 @@ export interface SelaeParsedTicket {
   fraccion: string
   fraction: string
   drawCode?: string
+  drawYearCode?: string
   checkDigits?: string
   drawType: 'NAVIDAD' | 'EL_NINO'
   drawName: string
@@ -69,18 +70,22 @@ export function getUpcomingDraw(today: Date = new Date()): {
 
 /**
  * Normaliza y decodifica un código de barras de décimo de SELAE.
- * Estructura estándar SELAE (20 dígitos):
- * [Prefijo 2d][Código Sorteo 5d][Fracción 2d][Serie 3d][Número Décimo 5d][Control 3d]
- * Ejemplo: 51020101100876719833 -> Número: 76719, Fracción: 11, Serie: 008, Sorteo: 02010, Control: 833
+ * Estructura verificada en décimos físicos oficiales de SELAE (20 dígitos: 2 + 3 + 2 + 3 + 6 + 4):
+ * [Prefijo 2d][Código Sorteo/Año 3d][Fracción 2d][Serie 3d][Número Décimo 6d (slice -5)][Control 4d]
+ *
+ * Ejemplos reales de producción:
+ * - 5102607065>0023205830 -> Número: 02320, Fracción: 07, Serie: 065, Sorteo/Año: 026, Control: 5830
+ * - 51020101100876719833 -> Número: 87671, Fracción: 10, Serie: 110, Sorteo/Año: 020, Control: 9833
  */
 export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
   if (!rawInput) {
     return createEmptyResult('', 'Código de barras vacío')
   }
 
-  // 1. Limpieza de prefijos GS1, espacios, guiones y caracteres de control
+  // 1. Limpieza de prefijos GS1, espacios, guiones, separadores como '>' y caracteres de control
   let cleaned = rawInput
     .replace(/^\][a-zA-Z0-9]{2}/, '') // Elimina prefijo GS1 AIM tipo ']C1'
+    .replace(/[>]/g, '')
     .replace(/[\s\-_().]/g, '')
     .trim()
 
@@ -103,22 +108,21 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
 
   const upcoming = getUpcomingDraw()
 
-  // 3. Estructura estándar SELAE (20 dígitos canónicos con prefijo 51 o 01)
-  // Patrón canónico SELAE:
+  // 3. Estructura estándar oficial SELAE (20 dígitos canónicos: 2 + 3 + 2 + 3 + 6 + 4)
   // (51|01) -> Prefijo juego Lotería Nacional (2 dígitos)
-  // (\d{5}) -> Código interno de sorteo (5 dígitos, ej. 02010)
-  // (\d{2}) -> Fracción (2 dígitos, ej. 11)
-  // (\d{3}) -> Serie (3 dígitos, ej. 008)
-  // (\d{5}) -> Número del décimo (5 dígitos, ej. 76719)
-  // (\d{3}) -> Dígitos de control (3 dígitos, ej. 833)
-  const selae20Regex = /(?:51|01)(\d{5})(\d{2})(\d{3})(\d{5})(\d{3})/
+  // (\d{3}) -> Código sorteo / año (3 dígitos, pos 2..5, ej. 026 -> año 2026)
+  // (\d{2}) -> Fracción (2 dígitos, pos 5..7, ej. 07)
+  // (\d{3}) -> Serie (3 dígitos, pos 7..10, ej. 065)
+  // (\d{6}) -> Número de 6 dígitos con cero inicial (pos 10..16, ej. 002320 -> slice(-5) '02320')
+  // (\d{4}) -> Dígitos de control (4 dígitos, pos 16..20, ej. 5830)
+  const selae20Regex = /(?:51|01)(\d{3})(\d{2})(\d{3})(\d{6})(\d{4})/
   const match20 = digitsOnly.match(selae20Regex)
 
   if (match20) {
-    const drawCode = match20[1]
+    const drawYearCode = match20[1]
     const fraction = String(parseInt(match20[2], 10) || 1).padStart(2, '0')
     const series = String(parseInt(match20[3], 10) || 1).padStart(3, '0')
-    const ticketNumber = match20[4]
+    const ticketNumber = match20[4].slice(-5)
     const checkDigits = match20[5]
 
     return {
@@ -129,7 +133,8 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
       series,
       fraccion: fraction,
       fraction,
-      drawCode,
+      drawCode: drawYearCode,
+      drawYearCode,
       checkDigits,
       drawType: upcoming.drawType,
       drawName: upcoming.drawName,
@@ -140,14 +145,14 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
     }
   }
 
-  // 4. Variante de 20 dígitos exactos con prefijo genérico de 2 dígitos
+  // 4. Variante de 20 dígitos exactos con prefijo genérico de 2 dígitos (2 + 3 + 2 + 3 + 6 + 4)
   if (digitsOnly.length === 20) {
-    const alt20Match = digitsOnly.match(/^(\d{2})(\d{5})(\d{2})(\d{3})(\d{5})(\d{3})$/)
+    const alt20Match = digitsOnly.match(/^(\d{2})(\d{3})(\d{2})(\d{3})(\d{6})(\d{4})$/)
     if (alt20Match) {
-      const drawCode = alt20Match[2]
+      const drawYearCode = alt20Match[2]
       const fraction = String(parseInt(alt20Match[3], 10) || 1).padStart(2, '0')
       const series = String(parseInt(alt20Match[4], 10) || 1).padStart(3, '0')
-      const ticketNumber = alt20Match[5]
+      const ticketNumber = alt20Match[5].slice(-5)
       const checkDigits = alt20Match[6]
 
       return {
@@ -158,7 +163,8 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
         series,
         fraccion: fraction,
         fraction,
-        drawCode,
+        drawCode: drawYearCode,
+        drawYearCode,
         checkDigits,
         drawType: upcoming.drawType,
         drawName: upcoming.drawName,

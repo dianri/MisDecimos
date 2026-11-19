@@ -2,45 +2,64 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { parseSelaeBarcode, getUpcomingDraw } from '../selaeBarcodeParser.ts'
 
-test('parseSelaeBarcode - standard 20-digit SELAE barcode (prefix 51)', () => {
+test('parseSelaeBarcode - production code 1: 5102607065>0023205830 with separator >', () => {
+  const barcode = '5102607065>0023205830'
+  const result = parseSelaeBarcode(barcode)
+
+  assert.equal(result.isValid, true)
+  assert.equal(result.number, '02320')
+  assert.equal(result.ticketNumber, '02320')
+  assert.equal(result.serie, '065')
+  assert.equal(result.series, '065')
+  assert.equal(result.fraccion, '07')
+  assert.equal(result.fraction, '07')
+  assert.equal(result.drawCode, '026')
+  assert.equal(result.drawYearCode, '026')
+  assert.equal(result.checkDigits, '5830')
+  assert.equal(result.confidence, 'HIGH')
+  assert.equal(result.barcodeRaw, barcode)
+})
+
+test('parseSelaeBarcode - production code 2: 51020101100876719833', () => {
   const barcode = '51020101100876719833'
   const result = parseSelaeBarcode(barcode)
 
   assert.equal(result.isValid, true)
-  assert.equal(result.number, '76719')
-  assert.equal(result.ticketNumber, '76719')
-  assert.equal(result.serie, '008')
-  assert.equal(result.series, '008')
-  assert.equal(result.fraccion, '11')
-  assert.equal(result.fraction, '11')
-  assert.equal(result.drawCode, '02010')
-  assert.equal(result.checkDigits, '833')
+  assert.equal(result.number, '87671')
+  assert.equal(result.ticketNumber, '87671')
+  assert.equal(result.serie, '110')
+  assert.equal(result.series, '110')
+  assert.equal(result.fraccion, '10')
+  assert.equal(result.fraction, '10')
+  assert.equal(result.drawCode, '020')
+  assert.equal(result.drawYearCode, '020')
+  assert.equal(result.checkDigits, '9833')
   assert.equal(result.confidence, 'HIGH')
   assert.equal(result.barcodeRaw, barcode)
 })
 
 test('parseSelaeBarcode - GS1 AIM identifier prefix and spaces', () => {
-  const raw = ']C1 51 02010 11 008 76719 833'
+  const raw = ']C1 51 026 07 065 002320 5830'
   const result = parseSelaeBarcode(raw)
 
   assert.equal(result.isValid, true)
-  assert.equal(result.number, '76719')
-  assert.equal(result.fraction, '11')
-  assert.equal(result.series, '008')
-  assert.equal(result.drawCode, '02010')
-  assert.equal(result.checkDigits, '833')
+  assert.equal(result.number, '02320')
+  assert.equal(result.fraction, '07')
+  assert.equal(result.series, '065')
+  assert.equal(result.drawYearCode, '026')
+  assert.equal(result.checkDigits, '5830')
   assert.equal(result.confidence, 'HIGH')
 })
 
 test('parseSelaeBarcode - standard 20-digit SELAE barcode with prefix 01', () => {
-  const barcode = '01020101100876719833'
+  const barcode = '01026070650023205830'
   const result = parseSelaeBarcode(barcode)
 
   assert.equal(result.isValid, true)
-  assert.equal(result.number, '76719')
-  assert.equal(result.series, '008')
-  assert.equal(result.fraction, '11')
-  assert.equal(result.drawCode, '02010')
+  assert.equal(result.number, '02320')
+  assert.equal(result.series, '065')
+  assert.equal(result.fraction, '07')
+  assert.equal(result.drawYearCode, '026')
   assert.equal(result.confidence, 'HIGH')
 })
 
