@@ -171,82 +171,152 @@ export const AppShell: React.FC = () => {
     <div className="min-h-screen bg-cream text-gray-900 flex flex-col justify-between selection:bg-lottery selection:text-white pb-24 md:pb-10">
       {/* 1. Cabecera Superior Fija */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-6">
-          {(() => {
-            const isProfileActive = (activeTab === 'perfil' || activeTab === 'auditoria') && !selectedTicketId
-            return (
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeTab === 'perfil' && !selectedTicketId) {
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  } else {
-                    navigateTo({ tab: 'perfil', ticketId: null })
-                  }
-                }}
-                aria-label="Abrir mi perfil"
-                title="Ir a mi perfil"
-                className={`flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer ${
-                  isProfileActive
-                    ? 'bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30'
-                    : 'hover:bg-black/[0.03]'
-                }`}
-              >
-                <div
-                  className={`w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs transition-all ${
-                    isProfileActive ? 'ring-2 ring-[#2E6146]/50' : ''
-                  }`}
-                >
-                  {userAvatar ? (
-                    <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <UserIcon className="w-5 h-5 text-lottery" />
-                  )}
-                </div>
-                <div className="min-w-0 flex flex-col justify-center gap-0.5">
-                  <p className="text-xs sm:text-sm font-bold text-gray-900 truncate leading-tight">
-                    {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
-                  </p>
-                  <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
-                </div>
-              </button>
-            )
-          })()}
-
-          {/* Menú de Navegación Horizontal en Escritorio (>= 768px) */}
-          <nav aria-label="Navegación de escritorio" className="hidden md:flex items-center gap-1.5 shrink-0">
-            {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-              const isActive = activeTab === id && !selectedTicketId
+        <div className="max-w-4xl mx-auto w-full">
+          {/* Cabecera Móvil (< 768px): Perfil del usuario a la izquierda */}
+          <div className="flex md:hidden items-center justify-between w-full">
+            {(() => {
+              const isProfileActive = (activeTab === 'perfil' || activeTab === 'auditoria') && !selectedTicketId
               return (
                 <button
-                  key={id}
                   type="button"
-                  onClick={() => navigateTo({ tab: id, ticketId: null })}
-                  className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm transition-colors cursor-pointer ${
-                    isActive
-                      ? 'bg-[#2E6146]/10 text-[#2E6146] font-semibold'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-black/[0.04] font-medium'
+                  onClick={() => {
+                    if (activeTab === 'perfil' && !selectedTicketId) {
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    } else {
+                      navigateTo({ tab: 'perfil', ticketId: null })
+                    }
+                  }}
+                  aria-label="Abrir mi perfil"
+                  title="Ir a mi perfil"
+                  className={`flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer ${
+                    isProfileActive
+                      ? 'bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30'
+                      : 'hover:bg-black/[0.03]'
                   }`}
                 >
-                  <div className="relative flex items-center justify-center">
-                    <Icon className="w-4 h-4" />
-                    {id === 'alertas' && unreadAlertsCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-                      </span>
+                  <div
+                    className={`w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs transition-all ${
+                      isProfileActive ? 'ring-2 ring-[#2E6146]/50' : ''
+                    }`}
+                  >
+                    {userAvatar ? (
+                      <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-5 h-5 text-lottery" />
                     )}
                   </div>
-                  <span>{label}</span>
-                  {id === 'alertas' && unreadAlertsCount > 0 && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white">
-                      {unreadAlertsCount}
-                    </span>
-                  )}
+                  <div className="min-w-0 flex flex-col justify-center gap-0.5">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 truncate leading-tight">
+                      {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
+                  </div>
                 </button>
               )
-            })}
-          </nav>
+            })()}
+          </div>
+
+          {/* Cabecera de Escritorio (>= 768px): Marca / Inicio a la izquierda y Navegación + Perfil a la derecha */}
+          <div className="hidden md:flex items-center justify-between w-full gap-6">
+            {/* Izquierda: Logotipo y Nombre -> Inicio (/) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (activeTab === 'billetes' && !selectedTicketId) {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                } else {
+                  navigateTo({ tab: 'billetes', ticketId: null })
+                }
+              }}
+              aria-label="Ir a la pantalla principal"
+              title="Inicio · Mis Billetes Compartidos"
+              className="flex items-center gap-2.5 rounded-xl p-1 -ml-1 hover:bg-black/[0.03] active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#2E6146] text-white flex items-center justify-center shadow-sm shrink-0">
+                <Ticket className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-gray-900">MisDecimos</span>
+            </button>
+
+            {/* Derecha: Enlaces de Navegación + Separador + Perfil de Usuario */}
+            <div className="flex items-center gap-2 shrink-0">
+              <nav aria-label="Navegación de escritorio" className="flex items-center gap-1.5">
+                {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+                  const isActive = activeTab === id && !selectedTicketId
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => navigateTo({ tab: id, ticketId: null })}
+                      className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm transition-colors cursor-pointer ${
+                        isActive
+                          ? 'bg-[#2E6146]/10 text-[#2E6146] font-semibold'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-black/[0.04] font-medium'
+                      }`}
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <Icon className="w-4 h-4" />
+                        {id === 'alertas' && unreadAlertsCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                          </span>
+                        )}
+                      </div>
+                      <span>{label}</span>
+                      {id === 'alertas' && unreadAlertsCount > 0 && (
+                        <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+                          {unreadAlertsCount}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </nav>
+
+              {/* Separador vertical sutil */}
+              <div className="h-6 w-px bg-gray-200 mx-1" aria-hidden="true" />
+
+              {/* Botón de Perfil Compacto en Escritorio */}
+              {(() => {
+                const isProfileActive = (activeTab === 'perfil' || activeTab === 'auditoria') && !selectedTicketId
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === 'perfil' && !selectedTicketId) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      } else {
+                        navigateTo({ tab: 'perfil', ticketId: null })
+                      }
+                    }}
+                    aria-label="Abrir mi perfil"
+                    title="Ir a mi perfil"
+                    className={`flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer ${
+                      isProfileActive
+                        ? 'bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30'
+                        : 'hover:bg-black/[0.04]'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs transition-all ${
+                        isProfileActive ? 'ring-2 ring-[#2E6146]/50' : ''
+                      }`}
+                    >
+                      {userAvatar ? (
+                        <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <UserIcon className="w-4 h-4 text-lottery" />
+                      )}
+                    </div>
+                    <span className="text-sm font-bold text-gray-900 truncate max-w-[140px] leading-tight">
+                      {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
+                    </span>
+                  </button>
+                )
+              })()}
+            </div>
+          </div>
         </div>
       </header>
 
