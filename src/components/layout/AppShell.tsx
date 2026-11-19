@@ -149,7 +149,6 @@ export const AppShell: React.FC = () => {
           ) : (
             <TicketsPage
               onSelectTicket={(id) => navigateTo({ tab: 'billetes', ticketId: id })}
-              onNavigateToAlerts={() => navigateTo({ tab: 'alertas', ticketId: null })}
             />
           )
         )}

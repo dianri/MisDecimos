@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.30] - 2026-11-19
+
+### Removed
+- **Eliminación de la Campana de Alertas en Cabecera de Billetes (`TicketsPage.tsx` y `AppShell.tsx`):**
+  - Eliminado el botón flotante de campana (`Bell`) y su badge de no leídas de la tarjeta superior de la pantalla principal, suprimiendo la duplicidad visual con la pestaña permanente de **Alertas** en la barra inferior móvil.
+  - Limpiadas las consultas redundantes de conteo de notificaciones (`checkAlerts`), estados y propiedades sin uso en `TicketsPage.tsx`.
+
 ## [1.0.29] - 2026-11-19
 
 ### Changed
