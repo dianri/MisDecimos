@@ -150,7 +150,7 @@ flowchart TD
 - **Confirmación de Cobro:** Botón *"He recibido mi premio"*, disponible para cotitulares cuando el estado es `VALIDADO`. Ejecuta `confirm_prize_paid` registrando fecha, hora e IP para la liquidación formal unánime.
 
 #### C) Cuadro de Propiedad y Gráfico Donut SVG (`<OwnershipBreakdownCard />`)
-- **Gráfico Donut SVG Dinámico:** Visualiza el 100% de la propiedad dividido en sectores de color por cotitular. En el centro certifica el estado `100% Distribuido` (Principio Cero Huérfanos).
+- **Gráfico Donut SVG Segmentado de Alta Precisión:** Sustituye arcos superpuestos por un anillo de 50 segmentos radiales discretos distribuidos uniformemente cada 7,2° empezando a las 12 en punto (-90°). Cada segmento se colorea de forma determinista y exclusiva (verde `#2E6146` para Propietario, azul `#2563EB` para Cotitulares, naranja `#D97706` para Pendientes y gris suave `#E5E7EB` para Disponible) garantizando tramos continuos sin solapamiento ni mezcla de colores. En el centro certifica el porcentaje total distribuido (Principio Cero Huérfanos).
 - **Lista de Cotitulares:** Nombre, avatar, porcentaje exacto, importe jugado y estado de cuota (`ACEPTADA`).
   - **Menú Contextual Flotante (`...`):** En estado `PENDIENTE` del décimo, el propietario dispone del botón de opciones (`MoreVertical`) con menú contextual desbloqueado (`z-30`/`z-40` libre de recortes por `overflow`), área táctil cómoda (`py-2.5 px-3.5`) y auto-cierre al pulsar fuera (`mousedown`/`touchstart`) para iniciar el flujo de solicitud de renuncia de participación.
 - **Invitaciones Pendientes (Privacidad Exclusiva del Propietario):**

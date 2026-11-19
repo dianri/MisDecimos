@@ -44,7 +44,7 @@ interface OwnershipBreakdownCardProps {
   onRefresh: () => Promise<void>
 }
 
-const BLUE_PALETTE = ['#1D4ED8', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD']
+import { computeRadialOwnershipSegments } from '../../lib/ownershipSegments'
 
 export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   ticketId,
@@ -288,83 +288,11 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
     ? totalAcceptedSharesPct + totalPendingPct
     : totalAcceptedSharesPct + unassignedPct
 
-  // Geometría del Donut SVG
-  const radius = 38
-  const circumference = 2 * Math.PI * radius // ~238.76
+  const coOwnersPct = participantShares.reduce((acc, s) => acc + Number(s.percentage), 0)
+  const pendingPct = isOwner ? totalPendingPct : unassignedPct
 
-  // Segmentos del anillo
-  let cumulativePct = 0
-  const segments: Array<{
-    id: string
-    color: string
-    percentage: number
-    strokeDasharray: string
-    strokeDashoffset: number
-    isDashed: boolean
-  }> = []
-
-  // 1. Propietario (Verde)
-  if (ownerPct > 0) {
-    const length = (ownerPct / 100) * circumference
-    segments.push({
-      id: 'owner',
-      color: '#2E6146',
-      percentage: ownerPct,
-      strokeDasharray: `${length} ${circumference - length}`,
-      strokeDashoffset: -((cumulativePct / 100) * circumference),
-      isDashed: false,
-    })
-    cumulativePct += ownerPct
-  }
-
-  // 2. Participantes aceptados (Azules)
-  participantShares.forEach((share, idx) => {
-    const pct = Number(share.percentage)
-    if (pct > 0) {
-      const length = (pct / 100) * circumference
-      segments.push({
-        id: `share-${share.id}`,
-        color: BLUE_PALETTE[idx % BLUE_PALETTE.length],
-        percentage: pct,
-        strokeDasharray: `${length} ${circumference - length}`,
-        strokeDashoffset: -((cumulativePct / 100) * circumference),
-        isDashed: false,
-      })
-      cumulativePct += pct
-    }
-  })
-
-  // 3. Cuotas pendientes:
-  // - Para el Propietario: desglose individual de cada invitación pendiente (Ámbar discontinuo)
-  // - Para un Participante: porcentaje neutro agregado sin asignar / pendiente (Ámbar discontinuo)
-  if (isOwner) {
-    activePendingInvites.forEach((invite) => {
-      const pct = Number(invite.percentage)
-      if (pct > 0) {
-        const length = (pct / 100) * circumference
-        segments.push({
-          id: `invite-${invite.id}`,
-          color: '#D97706',
-          percentage: pct,
-          strokeDasharray: `${length} ${circumference - length}`,
-          strokeDashoffset: -((cumulativePct / 100) * circumference),
-          isDashed: true,
-        })
-        cumulativePct += pct
-      }
-    })
-  } else if (unassignedPct > 0) {
-    const length = (unassignedPct / 100) * circumference
-    segments.push({
-      id: 'unassigned-pending',
-      color: '#D97706',
-      percentage: unassignedPct,
-      strokeDasharray: `${length} ${circumference - length}`,
-      strokeDashoffset: -((cumulativePct / 100) * circumference),
-      isDashed: true,
-    })
-    cumulativePct += unassignedPct
-  }
+  // Anillo de 50 segmentos radiales discretos sin solapamiento
+  const radialSegments = computeRadialOwnershipSegments(ownerPct, coOwnersPct, pendingPct)
 
   return (
     <div className="space-y-5">
@@ -403,41 +331,26 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         </div>
       )}
 
-      {/* 2. Gráfico Donut SVG */}
+      {/* 2. Gráfico Donut SVG Segmentado */}
       <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
         <div className="relative w-44 h-44 flex items-center justify-center">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            {/* Pista de fondo */}
-            <circle
-              cx="50"
-              cy="50"
-              r={radius}
-              className="text-gray-100"
-              strokeWidth="9"
-              stroke="currentColor"
-              fill="transparent"
-            />
-
-            {/* Segmentos del Donut */}
-            {segments.map((seg) => (
-              <circle
-                key={seg.id}
-                cx="50"
-                cy="50"
-                r={radius}
+          <svg
+            className="w-full h-full"
+            viewBox="0 0 100 100"
+            role="img"
+            aria-label="Gráfico de distribución de propiedad"
+          >
+            {radialSegments.map((seg) => (
+              <line
+                key={seg.index}
+                x1={seg.x1}
+                y1={seg.y1}
+                x2={seg.x2}
+                y2={seg.y2}
                 stroke={seg.color}
-                strokeWidth="9"
-                strokeDasharray={seg.strokeDasharray}
-                strokeDashoffset={seg.strokeDashoffset}
-                strokeLinecap="butt"
-                strokeDashoffset-transition="all 0.5s ease"
-                strokeDasharray-transition="all 0.5s ease"
-                strokeDasharray-offset={seg.isDashed ? '4, 2' : undefined}
-                fill="transparent"
-                style={{
-                  transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease',
-                  strokeDasharray: seg.isDashed ? '4 2' : seg.strokeDasharray,
-                }}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                className="transition-colors duration-300"
               />
             ))}
           </svg>
