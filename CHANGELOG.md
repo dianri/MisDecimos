@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.28] - 2026-11-19
+
+### Added
+- **Selector Dual Cámara / Galería para Foto de Perfil (`ProfilePage.tsx`):**
+  - Implementado menú inferior (*Action Sheet / Bottom Sheet*) al tocar el círculo del avatar o la insignia de cámara, con jerarquía `z-50`, fondo oscurecido, margen seguro `safe-area-inset-bottom` y gestión del botón Atrás de Android con `useModalBackHandler`.
+  - Doble input de archivo desacoplado:
+    - `cameraInputRef`: input con `capture="user"` para abrir directamente la cámara fotográfica del móvil.
+    - `galleryInputRef`: input estándar para explorar la galería o archivos guardados en el dispositivo.
+  - Opción contextual para eliminar la foto actual (`handleRemoveAvatar`) restableciendo el avatar por defecto.
+  - Actualizado el texto descriptivo inferior: *"Toca para hacerte una foto o elegir de la galería"*.
+
 ## [1.0.27] - 2026-11-19
 
 ### Fixed
