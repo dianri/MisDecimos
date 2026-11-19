@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.32] - 2026-11-19
+
+### Changed
+- **Simplificación de la Navegación Principal y Centralización de Auditoría (`AppShell.tsx`, `ProfilePage.tsx`, `AuditPage.tsx`):**
+  - Simplificado el menú de navegación (`NAV_ITEMS`) tanto en escritorio como en la barra inferior móvil, reduciéndolo a las 2 secciones esenciales de uso frecuente: **Billetes** (`/`) y **Alertas** (`/alertas` con contador en tiempo real de notificaciones no leídas).
+  - Integrado indicador visual activo en el botón de usuario de la cabecera (`isProfileActive` con sutil anillo `ring-1 ring-[#2E6146]/30` y fondo `bg-[#2E6146]/[0.08]`) al encontrarse en las vistas de Perfil o Auditoría.
+  - Movido el acceso al **Centro de Auditoría y Trazabilidad** dentro de la pantalla de **Perfil** (`ProfilePage.tsx`) a través de una tarjeta interactiva destacada con icono de garantía criptográfica (`ShieldCheck`), chevron de navegación y descripción detallada.
+  - Añadido botón de retorno *"Volver a Perfil"* en la parte superior de `AuditPage.tsx` para una transición fluida entre ambas secciones.
+  - Preservada la ruta canónica `/auditoria` y compatibilidad total con el historial de navegación hacia atrás en Android.
+
 ## [1.0.31] - 2026-11-19
 
 ### Added

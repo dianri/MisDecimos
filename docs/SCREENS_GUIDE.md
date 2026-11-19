@@ -60,11 +60,11 @@ flowchart TD
 ### Elementos de la Interfaz:
 1. **Cabecera Superior Fija con Safe-Area Dinámica y Navegación Adaptativa:**
    - **Padding y Área Segura:** Padding superior dinámico `pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6` que garantiza 14 px de aire vertical en escritorio y dispositivos sin notch, y absorbe fluidamente la zona del notch/isla dinámica en iOS y Android sin encajonar el contenido.
-   - **Identidad del Usuario como Acceso a Perfil:** El bloque interactivo (avatar circular de 40 px + nombre + correo) permite navegar directamente a la pantalla de **Perfil** (`/perfil`) con un clic o realizar scroll suave hacia arriba si ya se está en dicha pantalla.
-   - **Navegación Superior en Escritorio (`>= 768px`):** En pantallas medianas y grandes (`md:flex`), la cabecera aloja un menú horizontal a la derecha con enlaces a las 4 secciones (`Billetes`, `Alertas`, `Auditoría`, `Perfil`), con iconos, etiquetas en línea, estado activo en verde corporativo `#2E6146` y contador dinámico de notificaciones sin leer.
+   - **Identidad del Usuario como Acceso a Perfil:** El bloque interactivo (avatar circular de 40 px + nombre + correo) permite navegar directamente a la pantalla de **Perfil** (`/perfil`) con un clic o realizar scroll suave hacia arriba si ya se está en dicha pantalla. Muestra además un indicador activo visual sutil (anillo verde y fondo suave) cuando el usuario se encuentra en **Perfil** o **Auditoría**.
+   - **Navegación Superior en Escritorio (`>= 768px`):** En pantallas medianas y grandes (`md:flex`), la cabecera aloja un menú horizontal a la derecha simplificado con accesos directos a **Billetes** y **Alertas**, con iconos, etiquetas en línea, estado activo en verde corporativo `#2E6146` y contador dinámico de notificaciones sin leer.
    - **Centralización de Cierre de Sesión:** El botón de salida se mantiene centralizado en la pantalla de **Perfil** para evitar clics accidentales.
-2. **Barra Inferior Móvil (`BottomNav`) y Respuesta Responsive:**
-   - En dispositivos móviles (`< 768px`), la navegación se realiza mediante la barra fija inferior (`md:hidden`), con 4 accesos optimizados para el pulgar y capa base `z-30`.
+2. **Barra Inferior Móvil (`BottomNav`) Simplificada y Respuesta Responsive:**
+   - En dispositivos móviles (`< 768px`), la navegación se realiza mediante la barra fija inferior (`md:hidden`), optimizada para el pulgar con las dos secciones centrales del día a día: **Billetes** y **Alertas** (con badge dinámico en tiempo real).
    - En ordenadores y tabletas (`>= 768px`), la barra inferior se oculta automáticamente y el relleno inferior de la pantalla se reduce (`pb-24 md:pb-10`), posicionando los toasts flotantes de forma ergonómica (`bottom-20 md:bottom-6`).
    - **Historial Completo de Navegación:** El cambio de pestaña añade entradas al historial de navegación (sin `replace: true`), permitiendo que el botón o gesto "Atrás" de Android regrese naturalmente a la vista anterior.
 3. **Gestión del Botón Atrás de Android y Protección contra Cierre PWA (`useAndroidBackNavigation` y `useModalBackHandler`):**
@@ -205,6 +205,7 @@ flowchart TD
 ## 6. Centro Global de Auditoría y Trazabilidad
 
 - **Página:** [`src/pages/AuditPage.tsx`](../src/pages/AuditPage.tsx)
+- **Acceso:** Desde la tarjeta dedicada en **Perfil** (`/perfil`), o ruta directa `/auditoria`. Cuenta con botón superior *"Volver a Perfil"*.
 - **Backend:** Tabla inmutable `public.audit_events` (sin permisos de UPDATE o DELETE en RLS).
 
 ### Secciones Principales:
@@ -250,5 +251,7 @@ flowchart TD
    - **En macOS Safari:** Explica cómo anclar la aplicación al Dock mediante *Archivo → Añadir al Dock*.
    - **En Otros Navegadores de Escritorio:** Guía para instalar desde la barra de direcciones o el menú de opciones del navegador.
    - **Acceso Manual Siempre Disponible:** El botón *"Instalar aplicación en tu dispositivo"* en la pantalla de Perfil permanece siempre activo e ignora el límite de 3 avisos automáticos para permitir la instalación en cualquier momento.
-5. **Cierre de Sesión:**
+5. **Acceso al Centro de Auditoría:**
+   - Tarjeta interactiva destacada con icono de escudo criptográfico (`ShieldCheck`), chevron indicador y texto explicativo *"Historial inmutable de movimientos, participaciones y premios"*. Al pulsar, navega fluidamente a `/auditoria`.
+6. **Cierre de Sesión:**
    - Botón *"Cerrar sesión"* con diseño accesible en rojo suave e icono `LogOut`, confirmación previa, estado de carga durante el proceso y ejecución de `signOut()`, limpiando el estado global y devolviendo al usuario a la pantalla de Login.

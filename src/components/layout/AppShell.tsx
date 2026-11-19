@@ -13,7 +13,7 @@ import { TicketDetailPage } from '../../pages/TicketDetailPage'
 import { AlertsPage } from '../../pages/AlertsPage'
 import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
-import { Ticket, Bell, Shield, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
+import { Ticket, Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
 
 export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 
@@ -26,8 +26,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: 'billetes', label: 'Billetes', icon: Ticket },
   { id: 'alertas', label: 'Alertas', icon: Bell },
-  { id: 'auditoria', label: 'Auditoría', icon: Shield },
-  { id: 'perfil', label: 'Perfil', icon: UserIcon },
 ]
 
 export const AppShell: React.FC = () => {
@@ -121,33 +119,46 @@ export const AppShell: React.FC = () => {
       {/* 1. Cabecera Superior Fija */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-6">
-          <button
-            type="button"
-            onClick={() => {
-              if (activeTab === 'perfil' && !selectedTicketId) {
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              } else {
-                navigateTo({ tab: 'perfil', ticketId: null })
-              }
-            }}
-            aria-label="Abrir mi perfil"
-            title="Ir a mi perfil"
-            className="flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all hover:bg-black/[0.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs">
-              {userAvatar ? (
-                <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon className="w-5 h-5 text-lottery" />
-              )}
-            </div>
-            <div className="min-w-0 flex flex-col justify-center gap-0.5">
-              <p className="text-xs sm:text-sm font-bold text-gray-900 truncate leading-tight">
-                {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
-              </p>
-              <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
-            </div>
-          </button>
+          {(() => {
+            const isProfileActive = (activeTab === 'perfil' || activeTab === 'auditoria') && !selectedTicketId
+            return (
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeTab === 'perfil' && !selectedTicketId) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  } else {
+                    navigateTo({ tab: 'perfil', ticketId: null })
+                  }
+                }}
+                aria-label="Abrir mi perfil"
+                title="Ir a mi perfil"
+                className={`flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer ${
+                  isProfileActive
+                    ? 'bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30'
+                    : 'hover:bg-black/[0.03]'
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs transition-all ${
+                    isProfileActive ? 'ring-2 ring-[#2E6146]/50' : ''
+                  }`}
+                >
+                  {userAvatar ? (
+                    <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserIcon className="w-5 h-5 text-lottery" />
+                  )}
+                </div>
+                <div className="min-w-0 flex flex-col justify-center gap-0.5">
+                  <p className="text-xs sm:text-sm font-bold text-gray-900 truncate leading-tight">
+                    {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
+                  </p>
+                  <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
+                </div>
+              </button>
+            )
+          })()}
 
           {/* Menú de Navegación Horizontal en Escritorio (>= 768px) */}
           <nav aria-label="Navegación de escritorio" className="hidden md:flex items-center gap-1.5 shrink-0">
@@ -209,9 +220,14 @@ export const AppShell: React.FC = () => {
         {activeTab === 'auditoria' && (
           <AuditPage
             onSelectTicket={(ticketId) => navigateTo({ tab: 'billetes', ticketId })}
+            onBack={() => navigateTo({ tab: 'perfil', ticketId: null })}
           />
         )}
-        {activeTab === 'perfil' && <ProfilePage />}
+        {activeTab === 'perfil' && (
+          <ProfilePage
+            onNavigateToAudit={() => navigateTo({ tab: 'auditoria', ticketId: null })}
+          />
+        )}
       </main>
 
       {/* 4. Badge Anti-Caché flotante (por encima de la barra inferior en móvil) */}
