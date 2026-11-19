@@ -302,13 +302,16 @@ Para solventar la confusión habitual de los usuarios al utilizar el botón ráp
 1. **Lotería de Navidad (`NAVIDAD`):** Endpoint oficial JSONP de El País (`https://api.elpais.com/ws/LoteriaNavidadPremiados?n={numero}`). Limpieza de prefijo `busqueda=`, conversión de euros a céntimos y estado `provisional` o `final` (`status === 4`).
 2. **Sorteo de El Niño (`EL_NINO`):** Endpoint oficial JSONP de El País (`https://api.elpais.com/ws/LoteriaNinoPremiados?n={numero}`).
 3. **Sorteos Semanales y Ordinarios (`JUEVES`, `SABADO`, `ESPECIAL`):** API de SELAE con fallback mediante `loteriasapi.com` autenticado por `LOTERIAS_API_KEY`.
-4. **Blindaje Defensivo Pre-Sorteo (Hora Peninsular Española CET):**
+4. **Validación Estricta de Fecha, Hora y Año (`Europe/Madrid`):**
    - La Edge Function recupera de la base de datos la fecha canónica del sorteo (`draw_date`) y su modalidad (`draw_type`).
    - Calcula el inicio oficial del sorteo en CET (`Europe/Madrid`, UTC+1): 09:00 para `NAVIDAD` y 12:00 para `EL_NINO`.
-   - Si `now < drawStart`, devuelve inmediatamente `{ ok: false, code: 'DRAW_NOT_HELD_YET', message: 'El sorteo aún no se ha celebrado...' }` sin mutar el décimo ni registrar auditorías erróneas.
-   - Durante la celebración, si la API indica que el sorteo sigue en curso (`error === 1` o `status === 0`), devuelve `{ ok: false, code: 'DRAW_IN_PROGRESS', ... }` sin marcar el billete como `VALIDADO` o sin premio.
+   - **Sorteos Futuros (`draw_date > today` o antes del inicio oficial):** Devuelve `{ ok: false, code: 'DRAW_NOT_HELD_YET', message: 'Este sorteo se celebrará el DD/MM/AAAA. Aún no hay resultados oficiales.' }` sin mutar el décimo ni registrar auditorías erróneas.
+   - **Sorteo en Celebración (`draw_date === today` tras el inicio):** Si la API indica que el sorteo sigue en curso (`error === 1` o `status === 0`), devuelve `{ ok: false, code: 'DRAW_IN_PROGRESS', message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.' }` sin marcar el billete como validado.
+   - **Sorteos Históricos de Años Anteriores (`draw_date < today`):**
+     - Si la consulta al proveedor corresponde a un año distinto al de la temporada activa o devuelve `status === 0` / `error === 1` para una fecha pasada, **nunca** devuelve "sorteo en curso". En su lugar, devuelve el código específico `{ ok: false, code: 'HISTORICAL_UNAVAILABLE', message: 'No hay resultados históricos disponibles en el proveedor oficial para el sorteo del DD/MM/AAAA.' }`.
+     - Si el proveedor oficial dispone de escrutinio verificado para ese año y fecha (premio de `0 €` o `> 0 €`), persiste el resultado mediante `record_ticket_prize_check`, marca el décimo como `VALIDADO`, registra el evento en `audit_events` y, si `prize_amount_cents > 0`, dispara notificaciones a todos los cotitulares con cuota aceptada.
 
 ### Estrategia de Caché y Persistencia Atómica
-- **Caché en Memoria (Edge Runtime):** Map con clave `${drawType}:${number}`. TTL de 24 horas para resultados finales (`listStatus === 'final'`) y 5 minutos para listas provisionales durante la celebración del sorteo.
+- **Caché en Memoria (Edge Runtime):** Map con clave `${drawDate}:${drawType}:${number}` para aislar sorteos del mismo número en diferentes años. TTL de 24 horas para resultados finales (`listStatus === 'final'`) y 5 minutos para listas provisionales durante la celebración del sorteo.
 - **Refresco Forzado (`forceRefresh`):** Bypasea la caché cuando el usuario pulsa *"Comprobar de nuevo"*.
 - **Persistencia Transaccional:** La Edge Function invoca la RPC `record_ticket_prize_check` con la cabecera `Authorization` del llamante, garantizando RLS estricto e inserción inmutable de auditoría.
