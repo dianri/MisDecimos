@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
+import { classifyScannedPayload } from '../../lib/scanPayloadClassifier'
 import { X, Camera, Upload, AlertCircle, RefreshCw } from 'lucide-react'
 
 export interface BarcodeScannerModalProps {
@@ -9,6 +10,14 @@ export interface BarcodeScannerModalProps {
   onClose: () => void
   onScanSuccess: (decodedText: string) => void
 }
+
+const UNIFIED_SUPPORTED_FORMATS = [
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.ITF,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.QR_CODE,
+]
 
 export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   isOpen,
@@ -19,15 +28,40 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   useModalBackHandler({ isOpen, onClose, modalKey: 'barcode_scanner_modal' })
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [warningMsg, setWarningMsg] = useState<string | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
   const [isScanningFile, setIsScanningFile] = useState(false)
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null)
   const readerId = useRef(`reader-${Math.random().toString(36).substring(7)}`).current
 
-  // Manejar resultado exitoso del escaneo
+  // Limpiar temporizador al desmontar
+  useEffect(() => {
+    return () => {
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current)
+    }
+  }, [])
+
+  // Manejar resultado del escaneo
   const handleSuccess = useCallback((decodedText: string) => {
-    // Detener cámara antes de llamar callback
+    // 1. Clasificar polimórficamente el código leído
+    const classified = classifyScannedPayload(decodedText)
+
+    // Si no es un décimo ni una invitación reconocida, mostrar aviso inline y permitir seguir escaneando
+    if (classified.kind === 'UNKNOWN') {
+      setWarningMsg(classified.errorMessage)
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current)
+      warningTimerRef.current = setTimeout(() => {
+        setWarningMsg(null)
+      }, 3500)
+      return
+    }
+
+    // Código válido (TICKET o INVITE): limpiar avisos y detener cámara
+    setWarningMsg(null)
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current)
+
     if (html5QrCodeRef.current?.isScanning) {
       html5QrCodeRef.current.stop().then(() => {
         onScanSuccess(decodedText)
@@ -39,42 +73,29 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     }
   }, [onScanSuccess])
 
-  // Iniciar cámara con Html5Qrcode
+  // Iniciar cámara con Html5Qrcode habilitando siempre formatos 1D + QR
   const startCamera = useCallback(async () => {
     setIsInitializing(true)
     setErrorMsg(null)
+    setWarningMsg(null)
 
     try {
       if (!html5QrCodeRef.current) {
-        // Formatos de códigos de barras soportados
-        const formatsToSupport =
-          mode === 'TICKET_BARCODE'
-            ? [
-                Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.ITF,
-                Html5QrcodeSupportedFormats.EAN_13,
-                Html5QrcodeSupportedFormats.QR_CODE,
-              ]
-            : [Html5QrcodeSupportedFormats.QR_CODE]
-
         html5QrCodeRef.current = new Html5Qrcode(readerId, {
-          formatsToSupport,
+          formatsToSupport: UNIFIED_SUPPORTED_FORMATS,
           verbose: false,
         })
       }
 
-      // Configuración de visor según el modo
-      const qrbox =
-        mode === 'TICKET_BARCODE'
-          ? { width: 280, height: 120 } // Guía horizontal para código de barras de décimo
-          : { width: 220, height: 220 } // Guía cuadrada para QR de invitación
+      // Guía visual unificada para abarcar tanto códigos de barras 1D horizontales como QR 2D
+      const qrbox = { width: 270, height: 160 }
 
       await html5QrCodeRef.current.start(
         { facingMode: 'environment' },
         {
           fps: 15,
           qrbox,
-          aspectRatio: mode === 'TICKET_BARCODE' ? 1.777778 : 1.0,
+          aspectRatio: 1.333333,
         },
         (decodedText) => {
           handleSuccess(decodedText)
@@ -91,7 +112,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     } finally {
       setIsInitializing(false)
     }
-  }, [mode, readerId, handleSuccess])
+  }, [readerId, handleSuccess])
 
   // Iniciar / detener según isOpen
   useEffect(() => {
@@ -127,7 +148,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
     try {
       if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode(readerId, { verbose: false })
+        html5QrCodeRef.current = new Html5Qrcode(readerId, {
+          formatsToSupport: UNIFIED_SUPPORTED_FORMATS,
+          verbose: false,
+        })
       }
 
       // Si la cámara estaba activa, pausar antes de analizar archivo
@@ -162,7 +186,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               <Camera className="h-4 w-4" />
             </span>
             <h3 className="text-sm font-bold text-white">
-              {mode === 'TICKET_BARCODE' ? 'Escanear Código del Décimo' : 'Escanear QR de Invitación'}
+              {mode === 'INVITE_QR' ? 'Escanear QR de Invitación' : 'Escanear Décimo o Invitación'}
             </h3>
           </div>
           <button
@@ -177,20 +201,36 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         <div className="relative bg-black flex items-center justify-center min-h-[300px] overflow-hidden">
           <div id={readerId} className="w-full h-full" />
 
+          {/* Banner de aviso inline si se escanea un código no reconocido */}
+          {warningMsg && (
+            <div className="absolute top-4 inset-x-4 z-20 flex items-center gap-2 p-3 bg-amber-900/90 border border-amber-500/70 text-amber-100 text-xs rounded-xl shadow-xl backdrop-blur-xs animate-in fade-in slide-in-from-top-2 duration-200">
+              <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+              <span className="flex-1">{warningMsg}</span>
+              <button
+                type="button"
+                onClick={() => setWarningMsg(null)}
+                className="p-1 text-amber-300 hover:text-white transition"
+                aria-label="Cerrar aviso"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Guía visual láser sobre el código */}
           {!errorMsg && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div
                 className={`relative border-2 border-lottery-400/90 rounded-2xl shadow-lg transition-all ${
-                  mode === 'TICKET_BARCODE' ? 'w-64 h-28' : 'w-52 h-52'
+                  mode === 'INVITE_QR' ? 'w-56 h-56' : 'w-64 h-40'
                 }`}
               >
                 {/* Línea láser de escaneo animada */}
                 <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-lottery-300 to-transparent shadow-[0_0_8px_#5fa788] animate-pulse top-1/2 -translate-y-1/2" />
-                <span className="absolute -top-6 inset-x-0 text-center text-[11px] font-medium text-gray-300 tracking-wide">
-                  {mode === 'TICKET_BARCODE'
-                    ? 'Apunta al código de barras del décimo'
-                    : 'Apunta al código QR de invitación'}
+                <span className="absolute -top-7 inset-x-0 text-center text-[11px] font-medium text-gray-300 tracking-wide px-2 leading-tight">
+                  {mode === 'INVITE_QR'
+                    ? 'Apunta al código QR de invitación'
+                    : 'Apunta al código de barras del décimo o al código QR de una participación'}
                 </span>
               </div>
             </div>

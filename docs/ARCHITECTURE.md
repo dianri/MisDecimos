@@ -233,7 +233,26 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 
 ## 4. Captura GS1-128 y Motor de Plantillas de Boletos
 
-### Parser de Códigos de Barras SELAE (`src/lib/selaeBarcodeParser.ts`)
+### Parser de Códigos de Barras SELAE (`src/lib/selaeBarcodeParser.ts`) y Clasificador Unificado (`src/lib/scanPayloadClassifier.ts`)
+
+#### Clasificador Polimórfico de Cargas Escaneadas (`scanPayloadClassifier.ts`)
+Para solventar la confusión habitual de los usuarios al utilizar el botón rápido de cámara para escanear tanto décimos físicos como códigos QR de invitación, se implementa una capa de clasificación inteligente previa que categoriza de forma pura e instantánea cualquier contenido leído por el escáner:
+- **`kind: 'INVITE'`**: Detecta invitaciones en formatos polimórficos:
+  - URLs de invitación: `/invite/`, `/invitacion/`, `/claim/`, `/reclamar/`, y parámetros `token`, `code`, `invite`.
+  - Códigos UUID estándar (v4/v1).
+  - Códigos PIN alfanuméricos de 6 caracteres (mayúsculas y números legibles sin `0/O`, `1/I`).
+  - Cargas útiles JSON con propiedades `inviteCode`, `token`, `pin` o `code`.
+- **`kind: 'TICKET'`**: Detecta décimos de Lotería Nacional:
+  - Estructura SELAE oficial de 20 dígitos (`51` o `01` + sorteo/año + fracción + serie + número) decodificada con confianza alta por `parseSelaeBarcode`.
+  - Números de 5 dígitos introducidos o escaneados directamente.
+- **`kind: 'UNKNOWN'`**: Ante códigos o URLs ajenas, retorna un error comprensible y activa un aviso no intrusivo en el visor de cámara sin interrumpir el flujo del usuario.
+
+#### Visor Unificado y Enrutamiento Multimodal (`BarcodeScannerModal.tsx`)
+- Habilitación concurrente de simbologías 1D y 2D (`CODE_128`, `ITF`, `EAN_13`, `CODE_39`, `QR_CODE`) tanto en captura de vídeo en directo como en decodificación de fotos estáticas desde la galería.
+- Visor con guía unificada rectangular (`270 x 160 px`) y láser de barrido animado para capturar con igual comodidad códigos de barras horizontales o códigos QR.
+- Banner de aviso flotante (`warningMsg`) temporal (3,5 segundos) ante códigos no reconocidos, manteniendo el visor activo sin cerrar el modal.
+- Enrutamiento automático: si se lee un QR de invitación desde el botón rápido de cámara, se redirige de inmediato a `InviteClaimModal` con previsualización reactiva; si se lee un código de barras de décimo desde el escáner de invitaciones, se conmuta limpiamente a `TicketFormModal` precargando los datos del décimo.
+
 - **Estructura Estándar Oficial Definitiva (20 Dígitos: `2 + 3 + 2 + 3 + 6 + 4`):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
 
 | Segmento | Longitud | Posiciones | Campo decodificado | Ejemplo 1 (`5102607065>0023205830`) | Ejemplo 2 (`51020101100876719833`) |

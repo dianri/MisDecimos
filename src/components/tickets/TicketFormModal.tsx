@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { parseSelaeBarcode, type SelaeParsedTicket } from '../../lib/selaeBarcodeParser'
+import { classifyScannedPayload } from '../../lib/scanPayloadClassifier'
 import { BarcodeScannerModal } from './BarcodeScannerModal'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
@@ -24,6 +25,7 @@ export interface TicketFormModalProps {
   initialScannedData?: SelaeParsedTicket | null
   onClose: () => void
   onCreated: (ticketId: string) => void
+  onInviteScanned?: (inviteCode: string) => void
 }
 
 export const TicketFormModal: React.FC<TicketFormModalProps> = ({
@@ -32,6 +34,7 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   initialScannedData = null,
   onClose,
   onCreated,
+  onInviteScanned,
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'ticket_form_modal' })
 
@@ -157,7 +160,17 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   // Manejar lectura desde el escáner de código de barras
   const handleBarcodeScanned = (scannedCode: string) => {
     setIsScannerOpen(false)
-    const parsed = parseSelaeBarcode(scannedCode)
+    const classified = classifyScannedPayload(scannedCode)
+
+    if (classified.kind === 'INVITE') {
+      onClose()
+      if (onInviteScanned) {
+        onInviteScanned(classified.inviteCodeOrToken)
+      }
+      return
+    }
+
+    const parsed = classified.kind === 'TICKET' ? classified.parsed : parseSelaeBarcode(scannedCode)
 
     setBarcodeRaw(scannedCode)
     setOrigin('BARCODE_GS1')

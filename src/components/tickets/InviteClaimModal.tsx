@@ -20,6 +20,7 @@ interface TicketPreview {
 export interface InviteClaimModalProps {
   isOpen: boolean
   initialCode?: string | null
+  initialInviteCode?: string | null
   onClose: () => void
   onClaimed: (ticketId: string, percentage?: number) => void
   onRejected?: () => void
@@ -28,28 +29,32 @@ export interface InviteClaimModalProps {
 export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   isOpen,
   initialCode,
+  initialInviteCode,
   onClose,
   onClaimed,
   onRejected,
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'invite_claim_modal' })
 
-  const [code, setCode] = useState(initialCode || '')
+  const effectiveInitial = initialInviteCode || initialCode
+  const [code, setCode] = useState(effectiveInitial || '')
   const [preview, setPreview] = useState<TicketPreview | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState<'claiming' | 'rejecting' | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
-    if (initialCode) {
-      setCode(initialCode)
-      handleCheckCode(initialCode)
+    const raw = (initialInviteCode || initialCode || '').trim()
+    if (raw) {
+      setCode(raw)
+      handleCheckCode(raw)
     } else {
+      setCode('')
       setPreview(null)
       setErrorMsg(null)
       setIsSubmitting(null)
     }
-  }, [initialCode, isOpen])
+  }, [initialCode, initialInviteCode, isOpen])
 
   // 1. Previsualizar invitación (p_confirm = false)
   const handleCheckCode = async (codeToCheck?: string) => {
