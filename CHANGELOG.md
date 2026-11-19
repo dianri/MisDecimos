@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.41] - 2026-11-19
+
+### Added
+- **Flujo Completo de Premios, Simulación Controlada y Trazabilidad Transaccional (`check-prizes` v5, `prizeService.ts`, `TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, RPC `reset_ticket_prize_simulation`):**
+  - **Tubería de Simulación en Edge Function (`check-prizes` v5):**
+    - Parámetro `simulatedPrizePerDecimo`: Permite simular premios oficiales (ej. 1.000 €) verificando que el solicitante sea estrictamente el propietario (`ticket.owner_id === user.id`).
+    - Invoca la función RPC transaccional `record_ticket_prize_check`, que calcula la distribución exacta en céntimos y euros exclusivamente entre participaciones con estado `ACEPTADA`, inserta el evento inmutable `PREMIO_REGISTRADO` en `public.audit_events` incluyendo `shares_breakdown` en sus metadatos y dispara notificaciones en `public.notifications` con Web Push nativo y deep links a la ficha del décimo.
+  - **Función RPC Transaccional de Restablecimiento (`reset_ticket_prize_simulation`):**
+    - RPC `SECURITY DEFINER` en PostgreSQL que restablece atómicamente `prize_amount_cents = 0`, el estado a `PENDIENTE`, resetea confirmaciones de cobro de cotitulares y registra el evento inmutable `SIMULACION_PREMIO_RESTABLECIDA` en `public.audit_events`.
+    - Integrado en `check-prizes` v5 con parámetro `resetSimulation: true` restringido al propietario custodio.
+  - **Panel de Diagnóstico "Modo Prueba de Premio" en `TicketDetailPage.tsx`:**
+    - Visible exclusivamente para el custodio propietario cuando `import.meta.env.DEV === true` o tras pulsar 5 veces consecutivas sobre el componente interactivo `"MISDECIMOS SELLO DIGITAL"` en el décimo realista.
+    - Botón **"Simular premio (1.000 €)"**: activa el premio, actualiza las cuotas en euros y notifica a cotitulares.
+    - Botón **"Restablecer"**: devuelve el décimo a su estado original sin premio.
+  - **Desglose de Premios y Participaciones Renunciadas en `OwnershipBreakdownCard.tsx`:**
+    - Visualización en euros del premio proporcional correspondiente para el propietario y cada cotitular aceptado cuando `prize_amount_cents > 0`.
+    - Muestra explícita de participaciones renunciadas con `0%`, `0,00 €` y estado *"Renuncia formal registrada en auditoría"*.
+  - **Batería de Pruebas Unitarias (`prizeDistribution.test.ts`):** 4 nuevos tests que certifican el reparto proporcional, la exclusión de cuotas pendientes o renunciadas y el ciclo de simulación y reseteo (67 tests unitarios totales superados).
+
 ## [1.0.40] - 2026-11-19
 
 ### Fixed
