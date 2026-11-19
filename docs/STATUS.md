@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.31` (Producción Estable · Navegación Adaptativa Híbrida Escritorio y Móvil)  
+**Versión Actual:** `1.0.32` (Producción Estable · Navegación Simplificada y Auditoría en Perfil)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.31`)  
+**Rama de Producción:** `main` (Tag `v1.0.32`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -105,3 +105,12 @@
 - [x] v1.0.21: Exclusión de participaciones renunciadas (`status = 'RENUNCIADA'` o `percentage <= 0`) en el conteo de billetes activos, sumatorio de premios y pestañas de la interfaz (`ticketMetrics.ts`).
 - [x] v1.0.22: Privacidad estricta de invitaciones pendientes (`pending_invites`): restricción de RLS a propietario y receptor aceptado, ocultación completa en UI para cotitulares y porcentaje agregado neutro en Donut/leyenda.
 - [x] v1.0.23: Detección avanzada de PWA instalada (`getInstalledRelatedApps`, `id: /`), supresión de guía redundante en Chromium sin `deferredPrompt`, botón unificado de descarte permanente (`misdecimos_pwa_prompt_dismissed`), feedback instantáneo (0 ms) y cierre inmediato al reclamar participaciones (`InviteClaimModal.tsx`).
+- [x] v1.0.24: Escáner unificado y polimórfico inteligente (`scanPayloadClassifier.ts`): detección automática de códigos de barras SELAE (décimos) y códigos QR (invitaciones) con redirección al flujo adecuado.
+- [x] v1.0.25: Estabilización de ciclo de vida del escáner (`BarcodeScannerModal.tsx`): desacoplamiento de dependencias volátiles con refs, auto-reanudación tras segundo plano en Android y liberación garantizada de `MediaStreamTrack`.
+- [x] v1.0.26: Bloque de usuario interactivo en cabecera (`AppShell.tsx`): acceso directo a `/perfil` pulsando el avatar, nombre o email.
+- [x] v1.0.27: Eliminación del subtítulo redundante *"MisDecimos · Trazabilidad Asegurada"* en la cabecera del dashboard principal (`TicketsPage.tsx`).
+- [x] v1.0.28: Selector dual cámara/galería con Bottom Sheet en la pantalla de perfil (`ProfilePage.tsx`) y opción de eliminar avatar.
+- [x] v1.0.29: Centralización de cierre de sesión en `ProfilePage.tsx` y eliminación del botón «Salir» de la cabecera superior.
+- [x] v1.0.30: Supresión del botón duplicado de campana de alertas en la tarjeta de billetes compartidos (`TicketsPage.tsx`).
+- [x] v1.0.31: Navegación adaptativa híbrida en escritorio (`md:flex` en `<header>`) y móvil (`md:hidden` en barra inferior).
+- [x] v1.0.32: Simplificación de la navegación principal a dos secciones (**Billetes** y **Alertas**), indicador activo en el avatar de cabecera y reubicación de **Auditoría** dentro de la pantalla de **Perfil** con retorno directo.
