@@ -75,9 +75,18 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 ## 5. Confirmación de Cobro de Premios y Liquidación Automática
 
-- Cuando un décimo resulta premiado (`prize_amount_cents > 0`), se habilita en la interfaz de cada participante con cuota activa el botón interactivo *"He recibido mi premio"*.
-- Al ser presionado, la RPC `confirm_prize_received(ticket_id)` valida la identidad del participante y marca `prize_paid_confirmed = true, prize_paid_confirmed_at = now()`, registrando el evento de auditoría `COBRO_PREMIO_CONFIRMADO`.
-- **Cierre y Liquidación Automática:** Si tras dicha confirmación **todas** las cuotas activas (`ACEPTADA`) del décimo tienen `prize_paid_confirmed = true`, el estado del décimo cambia automáticamente a `LIQUIDADO` y se emite el evento `DECIMO_LIQUIDADO`.
+- **Flujo Bilateral de Solicitud y Confirmación de Cobro:**
+  1. **Solicitud iniciada por el Custodio (`request_prize_payout_confirmation`):**
+     - En décimos con premio (`prize_amount_cents > 0`), el custodio propietario dispone del menú contextual de tres puntos (`MoreVertical`) en cada tarjeta de cotitular con cuota aceptada que figure como `PENDIENTE DE COBRO`.
+     - Al pulsar *"Solicitar confirmación de cobro"* (o *"Reenviar solicitud de cobro"* si ya se envió), la RPC transaccional registra `prize_payout_requested_at = now()`, emite el evento inmutable `SOLICITUD_CONFIRMACION_COBRO` en `audit_events` y despacha una notificación en `public.notifications` con deep link al décimo, activando el envío Web Push nativo a Android.
+     - La tarjeta del cotitular refleja un banner informativo en ámbar suave: *"Solicitud de confirmación de cobro enviada. Esperando respuesta del participante."*
+  2. **Confirmación con un toque por el Cotitular (`confirm_prize_payout_received` / `confirm_prize_received`):**
+     - El participante visualiza de forma destacada en su propia tarjeta de cotitular (y en la tarjeta superior de premio) el botón interactivo *"Confirmar cobro recibido (X,XX €)"*.
+     - Al ser presionado, la RPC valida la identidad del participante y marca `prize_paid_confirmed = true, prize_paid_confirmed_at = now()`, registrando el evento de auditoría `COBRO_PREMIO_CONFIRMADO` y notificando de inmediato al custodio.
+  3. **Cierre y Liquidación Automática:**
+     - Si tras dicha confirmación **todas** las cuotas activas (`ACEPTADA`) del décimo tienen `prize_paid_confirmed = true`, el estado del décimo cambia automáticamente a `LIQUIDADO` y se emite el evento `DECIMO_LIQUIDADO`.
+  4. **Restablecimiento Limpio en Simulaciones:**
+     - Al restablecer una simulación con `reset_ticket_prize_simulation`, se purgan automáticamente `prize_paid_confirmed`, `prize_paid_confirmed_at`, `prize_payout_requested_at` y `prize_payout_requested_by`, devolviendo el décimo a su estado inicial íntegro.
 
 ---
 

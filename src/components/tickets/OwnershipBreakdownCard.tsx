@@ -19,7 +19,13 @@ import {
   ShieldCheck,
   Clock,
   LogOut,
+  BadgeCheck,
+  CheckCircle2,
 } from 'lucide-react'
+import {
+  requestPrizePayoutConfirmation,
+  confirmPrizePayoutReceived,
+} from '../../services/prizeService'
 
 export type OwnershipShare = Database['public']['Tables']['ownership_shares']['Row'] & {
   profiles?: {
@@ -274,6 +280,58 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       })
     } finally {
       setIsRenouncing(false)
+    }
+  }
+
+  // Custodio solicita confirmación de cobro al participante
+  const handleRequestPrizePayoutConfirmation = async (shareId: string) => {
+    setActionLoadingId(shareId)
+    setActionMsg(null)
+    try {
+      await requestPrizePayoutConfirmation(shareId)
+      setActionMsg({
+        type: 'success',
+        text: 'Solicitud de confirmación de cobro enviada al cotitular.',
+      })
+      await onRefresh()
+    } catch (err: unknown) {
+      console.error('Error solicitando confirmación de cobro:', err)
+      setActionMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al enviar la solicitud de confirmación de cobro.',
+      })
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  // Cotitular confirma la recepción de su parte del premio
+  const handleConfirmPrizePayout = async (shareId: string) => {
+    if (
+      !confirm(
+        '¿Confirmas que has recibido tu parte del premio? Esta acción quedará registrada de forma inmutable en la auditoría.'
+      )
+    ) {
+      return
+    }
+
+    setActionLoadingId(shareId)
+    setActionMsg(null)
+    try {
+      await confirmPrizePayoutReceived(shareId)
+      setActionMsg({
+        type: 'success',
+        text: '¡Enhorabuena! Has confirmado la recepción de tu parte del premio.',
+      })
+      await onRefresh()
+    } catch (err: unknown) {
+      console.error('Error confirmando cobro de premio:', err)
+      setActionMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al confirmar la recepción del premio.',
+      })
+    } finally {
+      setActionLoadingId(null)
     }
   }
 
@@ -564,47 +622,116 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                     )}
                   </div>
 
-                  {/* Menú de acciones para el Propietario (Solicitar Renuncia) */}
-                  {isOwner && !share.waiver_requested && ticketStatus === 'PENDIENTE' && (
-                    <div
-                      className="relative"
-                      ref={activeMenuShareId === share.id ? menuContainerRef : null}
-                    >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setActiveMenuShareId(
-                            activeMenuShareId === share.id ? null : share.id
-                          )
-                        }}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
-                        title="Opciones del participante"
-                        aria-label="Opciones del participante"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
+                  {/* Menú de acciones para el Propietario (Solicitar Renuncia / Solicitar Confirmación de Cobro) */}
+                  {(() => {
+                    const canRequestWaiver = isOwner && !share.waiver_requested && ticketStatus === 'PENDIENTE'
+                    const canRequestPayout = isOwner && prizeAmountCents > 0 && !share.prize_paid_confirmed
+                    const showMoreMenu = canRequestWaiver || canRequestPayout
 
-                      {activeMenuShareId === share.id && (
-                        <div className="absolute right-0 top-full mt-1.5 min-w-[200px] rounded-xl bg-white shadow-xl border border-gray-200 z-40 py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuShareId(null)
-                              handleRequestWaiver(share.id)
-                            }}
-                            disabled={actionLoadingId === share.id}
-                            className="w-full text-left py-2.5 px-3.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2 font-medium transition active:bg-rose-100"
-                          >
-                            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-                            <span>Solicitar renuncia</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    if (!showMoreMenu) return null
+
+                    return (
+                      <div
+                        className="relative"
+                        ref={activeMenuShareId === share.id ? menuContainerRef : null}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setActiveMenuShareId(
+                              activeMenuShareId === share.id ? null : share.id
+                            )
+                          }}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                          title="Opciones del participante"
+                          aria-label="Opciones del participante"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+
+                        {activeMenuShareId === share.id && (
+                          <div className="absolute right-0 top-full mt-1.5 min-w-[220px] rounded-xl bg-white shadow-xl border border-gray-200 z-40 py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+                            {canRequestPayout && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuShareId(null)
+                                  handleRequestPrizePayoutConfirmation(share.id)
+                                }}
+                                disabled={actionLoadingId === share.id}
+                                className="w-full text-left py-2.5 px-3.5 text-amber-900 hover:bg-amber-50 flex items-center gap-2 font-medium transition active:bg-amber-100"
+                              >
+                                <BadgeCheck className="h-4 w-4 text-amber-600 shrink-0" />
+                                <span>
+                                  {share.prize_payout_requested_at
+                                    ? 'Reenviar solicitud de cobro'
+                                    : 'Solicitar confirmación de cobro'}
+                                </span>
+                              </button>
+                            )}
+
+                            {canRequestWaiver && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuShareId(null)
+                                  handleRequestWaiver(share.id)
+                                }}
+                                disabled={actionLoadingId === share.id}
+                                className="w-full text-left py-2.5 px-3.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2 font-medium transition active:bg-rose-100"
+                              >
+                                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                                <span>Solicitar renuncia</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
+
+              {/* Si se ha solicitado confirmación de cobro y sigue pendiente */}
+              {share.prize_payout_requested_at && !share.prize_paid_confirmed && (
+                <div className="pl-2 pt-1.5 border-t border-amber-100/80">
+                  <div className="flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-200">
+                    <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span>Solicitud de confirmación de cobro enviada. Esperando respuesta del participante.</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Botón para que el cotitular confirme la recepción de su premio */}
+              {isMe &&
+                share.role === 'PARTICIPANTE' &&
+                share.status === 'ACEPTADA' &&
+                prizeAmountCents > 0 &&
+                !share.prize_paid_confirmed && (
+                  <div className="pl-2 pt-2 border-t border-emerald-100">
+                    <button
+                      type="button"
+                      onClick={() => handleConfirmPrizePayout(share.id)}
+                      disabled={actionLoadingId === share.id}
+                      className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition active:scale-98 disabled:opacity-50 cursor-pointer"
+                    >
+                      {actionLoadingId === share.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-200" />
+                      )}
+                      <span>
+                        Confirmar cobro recibido (
+                        {((prizeAmountCents / 100) * (Number(share.percentage) / 100)).toLocaleString('es-ES', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{' '}
+                        €)
+                      </span>
+                    </button>
+                  </div>
+                )}
 
               {/* Si la renuncia ya fue solicitada */}
               {share.waiver_requested && (
