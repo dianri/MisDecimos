@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.26` (Producción Estable · Acceso Directo a Perfil desde Cabecera)  
+**Versión Actual:** `1.0.27` (Producción Estable · Ajuste Visual Hero Principal)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.26`)  
+**Rama de Producción:** `main` (Tag `v1.0.27`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

@@ -195,15 +195,10 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     <div className="space-y-6 pb-12 max-w-xl mx-auto">
       {/* 1. Tarjeta Resumen Superior */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
-              Mis Billetes Compartidos
-            </h2>
-            <p className="text-[11px] text-gray-400 font-medium">
-              MisDecimos · Trazabilidad Asegurada
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
+            Mis Billetes Compartidos
+          </h2>
 
           <button
             type="button"
