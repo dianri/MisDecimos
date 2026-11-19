@@ -106,18 +106,18 @@ export const AppShell: React.FC = () => {
   return (
     <div className="min-h-screen bg-cream text-gray-900 flex flex-col justify-between selection:bg-lottery selection:text-white pb-20">
       {/* 1. Cabecera Superior Fija */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs">
-        <div className="max-w-xl mx-auto px-4 h-15 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs">
               {userAvatar ? (
                 <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <UserIcon className="w-4 h-4 text-lottery" />
+                <UserIcon className="w-5 h-5 text-lottery" />
               )}
             </div>
-            <div className="truncate max-w-[200px] sm:max-w-xs">
-              <p className="text-xs font-bold text-gray-900 truncate leading-tight">
+            <div className="min-w-0 flex flex-col justify-center gap-0.5">
+              <p className="text-xs sm:text-sm font-bold text-gray-900 truncate leading-tight">
                 {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
               </p>
               <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
@@ -131,7 +131,7 @@ export const AppShell: React.FC = () => {
                 signOut()
               }
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
+            className="shrink-0 px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
             title="Cerrar sesión"
           >
             <LogOut className="h-4 w-4" />

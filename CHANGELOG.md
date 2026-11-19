@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.19] - 2026-11-19
+
+### Fixed
+- **Padding Vertical y Safe-Area en Cabecera Superior (`AppShell.tsx`):**
+  - Eliminada la altura fija restrictiva (`h-15`) y aplicado padding vertical dinámico `pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6`.
+  - Asegurada una separación superior mínima garantizada de 14 px (`0.875rem`) en pantallas de escritorio y dispositivos móviles sin notch (donde `safe-area-inset-top` reporta `0px`), eliminando la sensación de encajonamiento vertical del avatar.
+  - Incrementado el tamaño del avatar del usuario a `w-10 h-10` (40x40 px) con sombra suave y separación clara de 14 px (`gap-3.5`) respecto al bloque de nombre y correo.
+  - Ajustado el botón *"Salir"* con centrado vertical y proporciones táctiles ergonómicas (`shrink-0 px-3 py-2 rounded-xl flex items-center gap-1.5`).
+
 ## [1.0.18] - 2026-11-19
 
 ### Fixed

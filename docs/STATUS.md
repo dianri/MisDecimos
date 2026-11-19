@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.18` (Producción Estable · Handoff Cámara-Formulario y Pila de Modales)  
+**Versión Actual:** `1.0.19` (Producción Estable · Padding Vertical Safe-Area en Cabecera)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.18`)  
+**Rama de Producción:** `main` (Tag `v1.0.19`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
