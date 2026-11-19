@@ -100,9 +100,11 @@ flowchart TD
   - **Mis Billetes Compartidos:** Cabecera limpia y minimalista alineada directamente sobre el panel de métricas. El acceso a las notificaciones y su indicador dinámico de no leídas se centralizan exclusivamente en la pestaña fija **Alertas** de la barra de navegación inferior.
   - **Billetes Activos:** Cuenta los billetes propios y participaciones activas aceptadas (`percentage > 0` y `status = 'ACEPTADA'`). Las participaciones a las que el usuario ha renunciado (`status = 'RENUNCIADA'`) quedan estrictamente excluidas de este contador.
   - **Total Premios:** Agrega la parte proporcional ganada por el usuario de los premios en billetes activos propios y participaciones activas aceptadas.
-- **Mis Décimos:** Muestra los décimos donde el usuario actual es el custodio legal y propietario registrador (`owner_id = user.id`).
-- **Mis Participaciones:** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`status = 'ACEPTADA'` y `percentage > 0`). Las participaciones renunciadas no se muestran aquí.
-- **Archivados:** Décimos propios o participaciones activas ocultados o archivados por el usuario para limpiar su vista principal. Las participaciones renunciadas quedan excluidas.
+- **Pestañas de Filtrado y Sincronización en URL (`?tab=...`):**
+  - **Mis Décimos (`/` o `/?tab=decimos`):** Muestra los décimos donde el usuario actual es el custodio legal y propietario registrador (`owner_id = user.id`).
+  - **Mis Participaciones (`/?tab=participaciones`):** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`status = 'ACEPTADA'` y `percentage > 0`). Las participaciones renunciadas no se muestran aquí.
+  - **Archivados (`/?tab=archivados`):** Décimos propios o participaciones activas ocultados o archivados por el usuario para limpiar su vista principal. Las participaciones renunciadas quedan excluidas.
+  - **Persistencia de Navegación Bidireccional:** La pestaña activa se sincroniza con `useSearchParams` (`{ replace: true }`) y con `state: { fromTab: activeTab }`. Al abrir la ficha de un décimo y regresar (mediante el botón superior Atrás o el botón físico de Android), la aplicación preserva de forma estricta la pestaña en la que se encontraba el usuario. En aperturas directas sin historial (push/deep-link), el botón superior deriva inteligentemente a `/?tab=participaciones` para cotitulares o a `/` para propietarios.
 
 ### Botones y Acciones:
 1. **Fila "Añadir un Décimo" (Botón Principal Manual + Botón Rápido de Cámara Polimórfico):**

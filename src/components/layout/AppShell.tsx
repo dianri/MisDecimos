@@ -36,6 +36,7 @@ export const AppShell: React.FC = () => {
     selectedTicketId,
     showExitToast,
     navigateTo,
+    navigateToRootWithSearch,
     goBack,
   } = useAndroidBackNavigation()
   const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(0)
@@ -256,10 +257,20 @@ export const AppShell: React.FC = () => {
             <TicketDetailPage
               ticketId={selectedTicketId}
               onBack={goBack}
+              onNavigateToRoot={(subTab) => {
+                const search = subTab && subTab !== 'decimos' ? `?tab=${subTab}` : ''
+                navigateToRootWithSearch(search)
+              }}
             />
           ) : (
             <TicketsPage
-              onSelectTicket={(id) => navigateTo({ tab: 'billetes', ticketId: id })}
+              onSelectTicket={(id, options) =>
+                navigateTo({
+                  tab: 'billetes',
+                  ticketId: id,
+                  state: options?.state,
+                })
+              }
             />
           )
         )}

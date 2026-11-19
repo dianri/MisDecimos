@@ -34,11 +34,13 @@ type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
 export interface TicketDetailPageProps {
   ticketId: string
   onBack: () => void
+  onNavigateToRoot?: (tab?: 'decimos' | 'participaciones' | 'archivados') => void
 }
 
 export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   ticketId,
   onBack,
+  onNavigateToRoot,
 }) => {
   const { user } = useAuth()
 
@@ -70,6 +72,19 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       if (ticketErr) throw ticketErr
       setTicket(ticketData)
+
+      // Si se accedió por entrada directa, marcar el fallback según si es cotitular o propietario
+      if (typeof window !== 'undefined' && window.history.state?.isDirectEntry) {
+        const isParticipant = ticketData.owner_id !== user.id
+        window.history.replaceState(
+          {
+            ...window.history.state,
+            directFallbackTab: isParticipant ? 'participaciones' : 'decimos',
+          },
+          '',
+          window.location.href
+        )
+      }
 
       // 2. Cargar plantilla si tiene template_id
       if (ticketData.template_id) {
@@ -168,6 +183,36 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
   }, [ticketId, loadTicketDetails])
 
+  // Navegación hacia atrás respetando el historial o derivando según rol en entradas directas
+  const handleBack = useCallback(() => {
+    // 1. Si existe historial interno de navegación dentro de la app (idx > 0)
+    const historyState = typeof window !== 'undefined' ? window.history.state : null
+    const historyIdx = historyState?.idx
+    const isDirectEntry = Boolean(historyState?.isDirectEntry)
+
+    if (typeof historyIdx === 'number' && historyIdx > 0 && !isDirectEntry) {
+      if (onBack) {
+        onBack()
+      } else if (typeof window !== 'undefined') {
+        window.history.back()
+      }
+      return
+    }
+
+    // 2. Si se abrió directamente sin historial previo (notificación Push o enlace directo)
+    const isParticipant = Boolean(ticket && user?.id && ticket.owner_id !== user.id)
+    const targetTab: 'decimos' | 'participaciones' = isParticipant ? 'participaciones' : 'decimos'
+
+    if (onNavigateToRoot) {
+      onNavigateToRoot(targetTab)
+    } else if (onBack) {
+      onBack()
+    } else if (typeof window !== 'undefined') {
+      const search = targetTab === 'participaciones' ? '?tab=participaciones' : ''
+      window.location.href = `/${search}`
+    }
+  }, [ticket, user?.id, onBack, onNavigateToRoot])
+
   // Archivar o Desarchivar
   const handleToggleArchive = async () => {
     if (!ticket || isActionLoading) return
@@ -210,7 +255,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     try {
       const { error } = await supabase.from('tickets').delete().eq('id', ticket.id)
       if (error) throw error
-      onBack()
+      handleBack()
     } catch (err: unknown) {
       console.error('Error eliminando décimo:', err)
       setStatusMsg({
@@ -243,7 +288,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           </p>
         </div>
         <button
-          onClick={onBack}
+          onClick={handleBack}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-lottery text-white text-xs font-semibold shadow hover:bg-lottery-600 transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -279,7 +324,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={onBack}
+            onClick={handleBack}
             className="p-2 rounded-2xl bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 active:scale-95 transition shadow-xs"
             title="Volver"
           >
