@@ -108,6 +108,13 @@ flowchart TD
   - **Mis Participaciones (`/?tab=participaciones`):** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`status = 'ACEPTADA'` y `percentage > 0`). Las participaciones renunciadas no se muestran aquí.
   - **Archivados (`/?tab=archivados`):** Décimos propios o participaciones activas ocultados o archivados por el usuario para limpiar su vista principal. Las participaciones renunciadas quedan excluidas.
   - **Persistencia de Navegación Bidireccional:** La pestaña activa se sincroniza con `useSearchParams` (`{ replace: true }`) y con `state: { fromTab: activeTab }`. Al abrir la ficha de un décimo y regresar (mediante el botón superior Atrás o el botón físico de Android), la aplicación preserva de forma estricta la pestaña en la que se encontraba el usuario. En aperturas directas sin historial (push/deep-link), el botón superior deriva inteligentemente a `/?tab=participaciones` para cotitulares o a `/` para propietarios.
+- **Diseño de Tarjetas en el Listado (`<TicketListItemCard />`):**
+  - **Tarjetas Pendientes o No Premiadas:** Contenedor blanco minimalista (`bg-white rounded-3xl border border-gray-100 shadow-sm`), icono de billete o archivo en esquina superior izquierda, recuadro de número central en gris claro (`bg-gray-50/90`) y pie de tarjeta con fecha del sorteo, estado y porcentaje de participación.
+  - **Tarjetas Premiadas Destacadas (`prize_amount_cents > 0`):**
+    - **Acabado Celebratorio Dorado/Esmeralda:** Fondo con degradado sutil (`bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/75`), borde doble destacado (`border-2 border-amber-400/85`), halo suave (`ring-2 ring-amber-300/25 shadow-md shadow-amber-900/5`) y franja superior de acento degradado (`from-amber-400 via-yellow-400 to-emerald-500`).
+    - **Icono y Badge Ganador:** Icono superior izquierdo de trofeo dorado (`bg-amber-100 text-amber-700 border border-amber-300/80`) y badge dinámico **`¡PREMIADO!`** (o **`LIQUIDADO`**) en degradado dorado/ámbar con icono `Sparkles`.
+    - **Banner de Premio Integrado:** Recuadro destacado verde esmeralda (`bg-emerald-600/10 border border-emerald-500/25 rounded-2xl`) con icono `Trophy` que resalta con gran jerarquía el importe personal del usuario (ej. **`750,00 € tuyos`**) y el premio total del décimo (`Décimo: 1.000,00 €`). En caso de participación renunciada previa, muestra de forma transparente `Cuota: Renunciada (0,00 €)`.
+    - **Consistencia Total:** Se aplica con idéntico diseño en las pestañas **Décimos**, **Participaciones** y **Archivados**.
 
 ### Botones y Acciones:
 1. **Fila "Añadir un Décimo" (Botón Principal Manual + Botón Rápido de Cámara Polimórfico):**
