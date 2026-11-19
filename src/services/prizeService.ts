@@ -11,12 +11,14 @@ export interface CheckPrizeResult {
   code?: string
   message?: string
   error?: string
+  drawDate?: string
 }
 
 export async function checkTicketPrize(params: {
   ticketId: string
   number: string
   drawType: string
+  drawDate?: string
   ticketPrice?: number
   forceRefresh?: boolean
 }): Promise<CheckPrizeResult> {
@@ -39,6 +41,7 @@ export async function checkTicketPrize(params: {
       success: false,
       code: data.code,
       message: data.message,
+      drawDate: data.drawDate,
       prizeAmountCents: 0,
       formattedPrize: '0,00 €',
       checkSource: 'none',

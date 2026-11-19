@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.39` (Producción Estable · Cabecera de Escritorio con Logotipo y Marca a la Izquierda)  
+**Versión Actual:** `1.0.40` (Producción Estable · Validación de Año e Históricos en Comprobador de Premios)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.39`)  
+**Rama de Producción:** `main` (Tag `v1.0.40`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -121,3 +121,4 @@
 - [x] v1.0.37: Gráfico circular Donut SVG sólido (`OwnershipBreakdownCard.tsx` y `ownershipSegments.ts`): arcos continuos de alta precisión (`viewBox="0 0 160 160"`, `r = 62`, `strokeWidth = 15`) sin solapamientos, con círculo base gris para disponible y arcos proporcionales acumulados para Propietario (`#2E6146`), Cotitulares (`#2563EB`) y Pendientes (`#D97706`) con animación `duration-500`.
 - [x] v1.0.38: Parser oficial SELAE de 20 dígitos canónicos (`1 + 3 + 1 + 2 + 3 + 6 + 4`) con expresión regular `/(?:01)?5(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})/`, autodetección de tipo de sorteo (`102` Navidad, `002` El Niño) y fecha (`YYYY-12-22`, `YYYY-01-06`), resolución de fallo en billetes de El Niño (`5002...`), sincronización con `TicketFormModal.tsx` preservando fechas leídas sin sobrescritura y suite de pruebas unitarias con décimos reales de producción.
 - [x] v1.0.39: Cabecera superior adaptativa en escritorio (`>= 768px`): logotipo corporativo y marca **MisDecimos** a la izquierda enlazando a inicio (`/`), menú de navegación (**Billetes** y **Alertas**) y perfil de usuario compacto a la derecha separados por divisor sutil, preservando sin cambios la disposición móvil (`< 768px`).
+- [x] v1.0.40: Validación estricta de año y gestión de históricos en el comprobador de premios (`check-prizes` v4): eliminación del falso positivo "sorteo en curso" en billetes de años anteriores (ej. 2020), código específico `HISTORICAL_UNAVAILABLE` con aviso informativo neutro en gris pizarra, tarjeta clara *"Sin premio en el sorteo oficial del DD/MM/AAAA"*, paso explícito de `drawDate` en `prizeService.ts` y suite de tests unitarios (`prizeCheckerValidation.test.ts`).

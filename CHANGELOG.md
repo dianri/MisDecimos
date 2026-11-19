@@ -5,6 +5,24 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.40] - 2026-11-19
+
+### Fixed
+- **Validación Estricta de Año y Gestión de Sorteos Históricos en Comprobación de Premios (`check-prizes` v4, `prizeService.ts`, `PrizeCheckCard.tsx`, `prizeCheckerValidation.ts`):**
+  - **Eliminación del Falso Positivo "Sorteo en curso":** Corregido el mapeo indiscriminado de respuestas vacías o `error: 1` / `status: 0` a "sorteo en curso" para billetes con fecha de sorteo pasada (`draw_date < today`, ej. Navidad 2020 `2020-12-22`).
+  - **Validación Cronológica y de Año en la Edge Function (`check-prizes` v4):**
+    - Sorteos futuros (`draw_date > today` o antes del inicio oficial CET): Retorna inmediatamente `code: 'DRAW_NOT_HELD_YET'` indicando la fecha futura de celebración.
+    - Sorteos del día de hoy en celebración (`draw_date === today`): Si el proveedor indica escrutinio no cerrado (`status === 0`), devuelve `code: 'DRAW_IN_PROGRESS'`.
+    - Sorteos históricos de años anteriores (`draw_date < today`): Si el proveedor oficial no dispone de base de datos histórica para ese año específico, devuelve el estado específico `code: 'HISTORICAL_UNAVAILABLE'` con el mensaje claro: *"No hay resultados históricos disponibles en el proveedor oficial para el sorteo del DD/MM/AAAA."*.
+    - Si el proveedor confirma el resultado oficial (tanto `0 €` como `> 0 €`), persiste el resultado en `public.tickets` (`status = 'VALIDADO'`), inserta evento en `audit_events` y despacha notificaciones a los cotitulares con cuota aceptada.
+  - **Aislamiento en Memoria Caché:** Clave de caché compuesta `${effectiveDrawDate}:${drawType}:${number}` para prevenir colisiones entre billetes del mismo número en distintos años.
+  - **Mejora Visual en la Ficha de Detalle (`PrizeCheckCard.tsx`):**
+    - **Histórico no disponible:** Banner informativo neutro en gris pizarra (`bg-slate-50 border-slate-200 text-slate-800`), permitiendo seguir archivando o gestionando el décimo con normalidad sin alarmar al usuario con un error de red.
+    - **Sorteo futuro / en curso:** Aviso informativo en ámbar (`bg-amber-50`).
+    - **Comprobado sin premio:** Estado nítido *"Sin premio en el sorteo oficial del DD/MM/AAAA"*.
+    - **Comprobado con premio:** Tarjeta destacada en verde esmeralda con el premio total y el desglose de la cuota personal.
+  - **Batería de Pruebas Unitarias (`prizeCheckerValidation.test.ts`):** Cobertura automatizada de fechas futuras, horas de inicio peninsulares CET, sorteos en curso, sorteos históricos sin proveedor y comprobaciones con y sin premio (10 nuevos tests unitarios).
+
 ## [1.0.39] - 2026-11-19
 
 ### Added
