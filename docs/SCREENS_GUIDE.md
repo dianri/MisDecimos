@@ -93,10 +93,13 @@ flowchart TD
 - **Parser Oficial GS1-128:** [`src/lib/selaeBarcodeParser.ts`](../src/lib/selaeBarcodeParser.ts)
 - **Modal de Reclamación:** [`src/components/tickets/InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx)
 
-### Pestañas del Dashboard:
+### Pestañas del Dashboard y Cuadro de Mando:
+- **Cuadro de Mando Superior:**
+  - **Billetes Activos:** Cuenta los billetes propios y participaciones activas aceptadas (`percentage > 0` y `status = 'ACEPTADA'`). Las participaciones a las que el usuario ha renunciado (`status = 'RENUNCIADA'`) quedan estrictamente excluidas de este contador.
+  - **Total Premios:** Agrega la parte proporcional ganada por el usuario de los premios en billetes activos propios y participaciones activas aceptadas.
 - **Mis Décimos:** Muestra los décimos donde el usuario actual es el custodio legal y propietario registrador (`owner_id = user.id`).
-- **Mis Participaciones:** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`percentage > 0`).
-- **Archivados:** Décimos ocultados o archivados por el usuario para limpiar su vista principal.
+- **Mis Participaciones:** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`status = 'ACEPTADA'` y `percentage > 0`). Las participaciones renunciadas no se muestran aquí.
+- **Archivados:** Décimos propios o participaciones activas ocultados o archivados por el usuario para limpiar su vista principal. Las participaciones renunciadas quedan excluidas.
 
 ### Botones y Acciones:
 1. **Fila "Añadir un Décimo" (Botón Principal Manual + Botón Rápido de Cámara):**

@@ -105,3 +105,13 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   - Los décimos permanecen en estado `PENDIENTE` con todas las acciones de gestión, reparto y cancelación de cuotas activas.
   - La Edge Function `check-prizes` valida en servidor la hora oficial y rechaza cualquier consulta prematura con el código `DRAW_NOT_HELD_YET` sin persistir mutaciones en base de datos.
   - Si la API indica que el sorteo se encuentra en curso (`error: 1` o `status: 0`), se responde con `DRAW_IN_PROGRESS` sin registrar el décimo como no premiado.
+
+---
+
+## 8. Visibilidad y Cómputo de Participaciones Renunciadas
+
+- Si un participante renuncia a una participación (`ownership_shares.status = 'RENUNCIADA'` y `percentage = 0`), ese décimo:
+  1. **Deja de computar como billete activo** en la tarjeta superior **"BILLETES ACTIVOS"** (`totalActivosCount`) para dicho usuario en `TicketsPage`.
+  2. **Queda excluido del total métrico "TOTAL PREMIOS"** (`totalPremiosGanados`) del usuario.
+  3. **Desaparece de la pestaña "Participaciones"** del usuario y de la pestaña **"Archivados"** del usuario.
+  4. **Trazabilidad intacta:** Permanece inmutable en el registro de auditoría (`audit_events`) y visible en el panel del custodio propietario del décimo.
