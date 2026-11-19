@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.33] - 2026-11-19
+
+### Fixed
+- **Reparación Integral del Pipeline de Entrega Web Push en Android (`send-push`, `public/push-sw.js`, `pushNotifications.ts`):**
+  - **Corrección de Error 401 en Trigger PostgreSQL (`trigger_send_push_notification`):** Inyectadas las cabeceras `apikey` y `Authorization: Bearer <anon_key>` en `net.http_post` (`pg_net`) para autenticar ante Kong/API Gateway de Supabase, resolviendo el bloqueo permanente donde las notificaciones creadas en base de datos nunca alcanzaban la Edge Function `send-push`. Omitidos registros de tipo `PUSH_TEST` en el trigger para evitar duplicidades.
+  - **Sincronización Silenciosa de Suscripciones en el Cliente (`syncPushSubscription`):** Creado el módulo `src/lib/pushNotifications.ts` con gestión unificada de claves VAPID, detección de plataforma y resincronización automática de `registration.pushManager.getSubscription()` en `AppShell.tsx` tras el inicio de sesión o apertura de la PWA cuando `Notification.permission === 'granted'`.
+  - **Blindaje del Service Worker (`push-sw.js`):** Estandarizados los iconos y badges a `/pwa-192x192.png`, resolución de URLs absolutas con `new URL(targetUrl, self.location.origin).href` y navegación inteligente en `notificationclick` con apertura o enfoque condicional a `/alertas`.
+  - **Mejora del Botón de Prueba en Perfil (`ProfilePage.tsx`):** Verificación previa de permisos en el sistema operativo, resincronización activa de la suscripción antes del envío y feedback verídico sin falsos positivos mostrando el número exacto de dispositivos alcanzados o el motivo técnico de error.
+  - **Actualización de la Edge Function (`send-push` v2):** Despacho firmado a todas las suscripciones activas del usuario, auto-limpieza de suscripciones revocadas (HTTP 404/410) y respuesta estructurada `{ success, sent, failed, errors, deactivatedCount }`.
+  - **Vista de Compatibilidad en Base de Datos:** Creada la vista `public.push_subscriptions` sobre `public.web_push_subscriptions` con `security_invoker = on`.
+
 ## [1.0.32] - 2026-11-19
 
 ### Changed

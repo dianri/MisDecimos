@@ -8,6 +8,7 @@ import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
 import { PushPermissionModal } from '../pwa/PushPermissionModal'
 import { VersionBadge } from '../common/VersionBadge'
+import { syncPushSubscription } from '../../lib/pushNotifications'
 import { TicketsPage } from '../../pages/TicketsPage'
 import { TicketDetailPage } from '../../pages/TicketDetailPage'
 import { AlertsPage } from '../../pages/AlertsPage'
@@ -68,6 +69,18 @@ export const AppShell: React.FC = () => {
   useEffect(() => {
     setIsPushModalOpen(isPromptOpen)
   }, [isPromptOpen])
+
+  // Sincronización silenciosa de la suscripción Web Push al iniciar sesión o abrir la PWA
+  useEffect(() => {
+    if (!user?.id) return
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+
+    if (Notification.permission === 'granted') {
+      syncPushSubscription(user.id).catch((err) => {
+        console.warn('Sincronización silenciosa de push pospuesta:', err)
+      })
+    }
+  }, [user?.id])
 
   // Consultar notificaciones no leídas y suscribirse a Realtime
   useEffect(() => {
