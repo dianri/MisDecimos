@@ -90,15 +90,20 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       if (sharesErr) console.error('Error cargando participaciones:', sharesErr)
       setShares((sharesData as unknown as OwnershipShare[]) || [])
 
-      // 4. Cargar invitaciones pendientes (pending_invites)
-      const { data: invitesData, error: invitesErr } = await supabase
-        .from('pending_invites')
-        .select('*')
-        .eq('ticket_id', ticketId)
-        .order('created_at', { ascending: true })
+      // 4. Cargar invitaciones pendientes (pending_invites) exclusivamente si el usuario es el propietario
+      const isTicketOwner = ticketData.owner_id === user.id
+      if (isTicketOwner) {
+        const { data: invitesData, error: invitesErr } = await supabase
+          .from('pending_invites')
+          .select('*')
+          .eq('ticket_id', ticketId)
+          .order('created_at', { ascending: true })
 
-      if (invitesErr) console.error('Error cargando invitaciones pendientes:', invitesErr)
-      setPendingInvites(invitesData || [])
+        if (invitesErr) console.error('Error cargando invitaciones pendientes:', invitesErr)
+        setPendingInvites(invitesData || [])
+      } else {
+        setPendingInvites([])
+      }
 
       // 5. Cargar eventos de auditoría con perfil del actor
       const { data: auditData, error: auditErr } = await supabase

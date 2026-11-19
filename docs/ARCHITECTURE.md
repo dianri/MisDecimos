@@ -165,6 +165,15 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 | `mark_all_notifications_read` | - | Marca de forma masiva todas las notificaciones pendientes del usuario autenticado como leídas (`is_read = true`). |
 | `toggle_archive_ticket` | `p_ticket_id, p_archive` | Gestiona el registro en `ticket_archive_hides` para ocultar o desocultar el décimo en la vista del usuario llamante. |
 
+### Políticas de Seguridad y Aislamiento RLS (Row Level Security)
+
+- **`pending_invites` (Privacidad Estricta de Códigos PIN y Tokens):**
+  - La política `pending_invites_select` permite el acceso `SELECT` únicamente a:
+    1. El propietario del décimo (`created_by = auth.uid() OR is_ticket_owner(ticket_id)`).
+    2. El usuario que ya aceptó esa invitación concreta (`accepted_by_user_id = auth.uid()`).
+  - Ningún otro participante del décimo (`ownership_shares`) puede consultar ni listar invitaciones en estado `PENDIENTE` ni obtener códigos PIN o tokens por API directa.
+  - Las operaciones de previsualización y canje de invitaciones (`accept_pending_invite` y `reject_pending_invite`) operan mediante funciones RPC transaccionales `SECURITY DEFINER` con `search_path = public, auth`, permitiendo validar y canjear códigos PIN de 6 dígitos sin requerir permisos `SELECT` directos sobre la tabla por parte del invitado.
+
 ---
 
 ## 3. Arquitectura PWA y Web Push VAPID
