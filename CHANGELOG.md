@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.36] - 2026-11-19
+
+### Fixed
+- **Preservación de Pestaña Activa al Retroceder desde Detalle de Décimo (`TicketsPage.tsx`, `TicketDetailPage.tsx`, `useSearchParams.ts`, `useAndroidBackNavigation.ts`):**
+  - **Sincronización de Pestaña con URL (`?tab=...`):** Creado hook ligero `useSearchParams` (`src/hooks/useSearchParams.ts`) para sincronizar reactivamente la pestaña activa (**Décimos**, **Participaciones**, **Archivados**) con `window.location.search` (`/?tab=participaciones` y `/?tab=archivados`).
+  - **Actualización sin Contaminación del Historial:** La selección de pestañas actualiza el parámetro mediante `{ replace: true }` y almacena `fromTab` y `subTab` en el estado de historial, evitando entradas redundantes en la pila del navegador.
+  - **Respaldo Explícito en Selección de Décimo:** Al abrir la ficha de un décimo, `TicketsPage` transmite `state: { fromTab: activeTab }` en `navigateTo`.
+  - **Retorno Preciso y Unificado (`handleBack` en `TicketDetailPage`):**
+    - Con historial previo (`idx > 0`): invoca `onBack()` / `window.history.back()`, restaurando la URL anterior (`/?tab=participaciones` o `/?tab=archivados`) e igualando el comportamiento del botón superior de interfaz con el botón/gesto físico Atrás de Android.
+    - En accesos directos sin historial (`idx === 0` / cold start / push): deriva automáticamente a `/?tab=participaciones` si el usuario autenticado es cotitular (`owner_id !== user.id`) o a `/` si es el propietario.
+  - **Batería de Pruebas Unitarias (`activeTabBackNavigation.test.ts`):** Verificación de resolución de pestañas con URL params, fallbacks de historial y derivación de retorno según rol.
+
 ## [1.0.35] - 2026-11-19
 
 ### Added

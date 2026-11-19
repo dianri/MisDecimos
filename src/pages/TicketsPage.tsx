@@ -7,6 +7,7 @@ import { InviteClaimModal } from '../components/tickets/InviteClaimModal'
 import { BarcodeScannerModal } from '../components/tickets/BarcodeScannerModal'
 import { parseSelaeBarcode, type SelaeParsedTicket } from '../lib/selaeBarcodeParser'
 import { classifyScannedPayload } from '../lib/scanPayloadClassifier'
+import { useSearchParams } from '../hooks/useSearchParams'
 import {
   classifyUserTickets,
   type UserTicketListsAndMetrics,
@@ -24,7 +25,7 @@ import {
 } from 'lucide-react'
 
 export interface TicketsPageProps {
-  onSelectTicket?: (ticketId: string) => void
+  onSelectTicket?: (ticketId: string, options?: { state?: { fromTab?: string } }) => void
 }
 
 export const TicketsPage: React.FC<TicketsPageProps> = ({
@@ -32,7 +33,36 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 }) => {
   const { user } = useAuth()
 
-  const [activeTab, setActiveTab] = useState<'decimos' | 'participaciones' | 'archivados'>('decimos')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const tabParam = searchParams.get('tab')
+  const historyFromTab =
+    typeof window !== 'undefined'
+      ? (window.history.state as { fromTab?: string; subTab?: string } | null)?.fromTab
+      : undefined
+
+  const activeTab: 'decimos' | 'participaciones' | 'archivados' =
+    tabParam === 'participaciones' || tabParam === 'archivados'
+      ? tabParam
+      : tabParam === 'decimos'
+      ? 'decimos'
+      : historyFromTab === 'participaciones' || historyFromTab === 'archivados'
+      ? historyFromTab
+      : 'decimos'
+
+  const handleTabChange = (nextTab: 'decimos' | 'participaciones' | 'archivados') => {
+    if (nextTab === 'decimos') {
+      setSearchParams(
+        {},
+        { replace: true, state: { subTab: 'decimos', fromTab: 'decimos' } }
+      )
+    } else {
+      setSearchParams(
+        { tab: nextTab },
+        { replace: true, state: { subTab: nextTab, fromTab: nextTab } }
+      )
+    }
+  }
   const [ticketLists, setTicketLists] = useState<UserTicketListsAndMetrics>(() =>
     classifyUserTickets([], [], new Set(), '')
   )
@@ -167,7 +197,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
   const handleTicketClick = (ticketId: string) => {
     if (onSelectTicket) {
-      onSelectTicket(ticketId)
+      onSelectTicket(ticketId, { state: { fromTab: activeTab } })
     }
   }
 
@@ -277,7 +307,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         <div className="flex border-b border-gray-200">
           <button
             type="button"
-            onClick={() => setActiveTab('decimos')}
+            onClick={() => handleTabChange('decimos')}
             className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
               activeTab === 'decimos'
                 ? 'border-lottery text-lottery'
@@ -290,7 +320,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('participaciones')}
+            onClick={() => handleTabChange('participaciones')}
             className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
               activeTab === 'participaciones'
                 ? 'border-lottery text-lottery'
@@ -303,7 +333,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveTab('archivados')}
+            onClick={() => handleTabChange('archivados')}
             className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
               activeTab === 'archivados'
                 ? 'border-lottery text-lottery'
