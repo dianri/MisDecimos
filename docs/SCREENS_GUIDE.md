@@ -99,6 +99,7 @@ flowchart TD
 
 ### Pestañas del Dashboard y Cuadro de Mando:
 - **Cuadro de Mando Superior:**
+  - **Mis Billetes Compartidos:** Cabecera limpia y minimalista alineada directamente sobre el panel de métricas. El acceso a las notificaciones y su indicador dinámico de no leídas se centralizan exclusivamente en la pestaña fija **Alertas** de la barra de navegación inferior.
   - **Billetes Activos:** Cuenta los billetes propios y participaciones activas aceptadas (`percentage > 0` y `status = 'ACEPTADA'`). Las participaciones a las que el usuario ha renunciado (`status = 'RENUNCIADA'`) quedan estrictamente excluidas de este contador.
   - **Total Premios:** Agrega la parte proporcional ganada por el usuario de los premios en billetes activos propios y participaciones activas aceptadas.
 - **Mis Décimos:** Muestra los décimos donde el usuario actual es el custodio legal y propietario registrador (`owner_id = user.id`).
