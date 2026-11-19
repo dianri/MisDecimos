@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { safeImageUrl } from '../../lib/sanitize'
 import { useAndroidBackNavigation } from '../../hooks/useAndroidBackNavigation'
 import { usePushPermissionPrompt } from '../../hooks/usePushPermissionPrompt'
+import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
 import { PushPermissionModal } from '../pwa/PushPermissionModal'
 import { VersionBadge } from '../common/VersionBadge'
@@ -27,7 +28,15 @@ export const AppShell: React.FC = () => {
   } = useAndroidBackNavigation()
   const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(0)
 
-  // Onboarding inteligente de permisos de notificaciones push
+  // Estado del modal de push para coordinar exclusividad mutua con el instalador PWA
+  const [isPushModalOpen, setIsPushModalOpen] = useState(false)
+
+  // Instalador y guía PWA multiplataforma (evita solapamiento con modal push o detalle de ticket)
+  const pwaPrompt = usePwaInstallPrompt({
+    isBlocked: isPushModalOpen || !!selectedTicketId,
+  })
+
+  // Onboarding inteligente de permisos de notificaciones push (evita solapamiento con modal PWA o ticket)
   const {
     isPromptOpen,
     promptContext,
@@ -41,7 +50,13 @@ export const AppShell: React.FC = () => {
     profile,
     unreadCount: unreadAlertsCount,
     refreshProfile,
+    isBlocked: pwaPrompt.isOpen || !!selectedTicketId,
   })
+
+  // Sincronizar estado para el detector de bloqueo
+  useEffect(() => {
+    setIsPushModalOpen(isPromptOpen)
+  }, [isPromptOpen])
 
   // Consultar notificaciones no leídas y suscribirse a Realtime
   useEffect(() => {
@@ -125,12 +140,7 @@ export const AppShell: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. Banner de instalación PWA (si corresponde) */}
-      <div className="max-w-xl mx-auto w-full">
-        <PwaInstallBanner />
-      </div>
-
-      {/* 3. Contenedor de Contenido Principal según Pestaña */}
+      {/* 2. Contenedor de Contenido Principal según Pestaña */}
       <main className="max-w-xl mx-auto px-4 pt-4 flex-1 w-full">
         {activeTab === 'billetes' && (
           selectedTicketId ? (
@@ -171,7 +181,16 @@ export const AppShell: React.FC = () => {
         onDismiss={handleDismiss}
       />
 
-      {/* 6. Toast informativo al descartar notificaciones push (5s con enlace a Perfil) */}
+      {/* 6. Modal / Sheet Flotante de Instalación PWA Multiplataforma */}
+      <PwaInstallBanner
+        isOpen={pwaPrompt.isOpen}
+        platform={pwaPrompt.platform}
+        hasNativePrompt={pwaPrompt.hasNativePrompt}
+        onInstall={pwaPrompt.install}
+        onDismiss={pwaPrompt.dismiss}
+      />
+
+      {/* 7. Toast informativo al descartar notificaciones push (5s con enlace a Perfil) */}
       {showDismissToast && (
         <div
           role="status"

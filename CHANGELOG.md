@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.17] - 2026-11-19
+
+### Added
+- **Instalador y Guía PWA Multiplataforma (`usePwaInstallPrompt.ts` y `PwaInstallBanner.tsx`):**
+  - Implementado sistema de instalación contextual e inteligente para navegadores móviles y de escritorio (Android, iOS/iPadOS, macOS Safari y navegadores basados en Chromium / otros).
+  - **Detección Standalone Completa:** Verifica `display-mode: standalone`, `navigator.standalone === true`, referrers de Android app y persistencia local `misdecimos_pwa_installed` para omitir avisos automáticos si la app ya fue instalada.
+  - **Adaptación Visual por Plataforma:**
+    - **Chromium / Android:** Captura global de `beforeinstallprompt` y botón de instalación nativa en un solo clic con `deferredPrompt.prompt()`.
+    - **iOS / iPadOS:** Guía visual interactiva paso a paso con iconos de compartir (`Share`), añadir a pantalla de inicio (`PlusSquare`) y confirmación.
+    - **macOS Safari:** Instrucciones claras para añadir la aplicación al Dock desde el menú Archivo o botón Compartir de Safari.
+    - **Escritorio Otros:** Orientación para instalar desde el icono de la barra de direcciones o menú del navegador.
+  - **Control de Frecuencia Estricto (Máximo 3 Avisos):**
+    - Se activa tras 2,5 segundos al cargar la app.
+    - Máximo 1 aviso por sesión (`sessionStorage`).
+    - Límite estricto de 3 cancelaciones en `localStorage` (`misdecimos_pwa_install_prompt_count`). Al alcanzar 3 o descartar, nunca más se muestra automáticamente.
+  - **Coordinación con PushPermissionModal:** Exclusión mutua que impide que el instalador PWA y el modal de notificaciones push se abran a la vez.
+  - **Acceso Manual en Perfil (`ProfilePage.tsx`):** Botón *"Instalar aplicación en tu dispositivo"* siempre disponible, que abre el sheet correspondiente sin restricciones de frecuencia.
+  - **Tests Unitarios Automatizados (`pwaInstallPrompt.test.ts`):** Cobertura de detección de plataformas, gestión de contadores y comprobación de modo standalone.
+
 ## [1.0.16] - 2026-11-19
 
 ### Fixed

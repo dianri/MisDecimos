@@ -186,6 +186,21 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
 - **Límite de 3 Cancelaciones:** Se almacena el contador `misdecimos_push_prompt_dismissals_${userId}` en `localStorage` con bloqueo de sesión en `sessionStorage`. Si el usuario descarta 3 veces el diálogo o si el navegador tiene el permiso en `denied`, no se vuelve a preguntar de forma automática.
 - **Aviso de Descarte:** Al pulsar *"Ahora no"* o cerrar el modal, se muestra un aviso flotante de 5 segundos con acceso directo para gestionar las alertas en **Perfil**. Al activar manualmente el interruptor en `ProfilePage.tsx`, el contador de descartes se restablece automáticamente a 0.
 
+### Instalador y Guía PWA Multiplataforma (`src/hooks/usePwaInstallPrompt.ts` y `<PwaInstallBanner />`)
+- **Detección de Entorno Standalone:** Comprueba de forma combinada `display-mode: standalone`, `(navigator as any).standalone === true`, referrers `android-app://` y la persistencia en `localStorage` (`misdecimos_pwa_installed`). Si la app ya está instalada, anula cualquier aviso automático.
+- **Detección de Plataforma y Adaptación Visual:**
+  - `chromium`: Android (Chrome, Edge, Samsung Internet, Brave) y navegadores de escritorio Chromium. Captura a nivel global el evento `beforeinstallprompt` y escucha `appinstalled`. Dispone del botón directo de instalación en un clic (`deferredPrompt.prompt()`).
+  - `ios`: iPhone, iPod e iPadOS (incluyendo iPadOS que reporta `MacIntel` con pantalla multitáctil `maxTouchPoints > 1`). Despliega guía visual con iconos paso a paso: compartir (`Share`) → *"Añadir a pantalla de inicio"* (`PlusSquare`) → *"Añadir"*.
+  - `macos-safari`: Safari de escritorio en macOS. Muestra instrucciones guiadas para anclar al Dock mediante *Archivo → Añadir al Dock...*.
+  - `desktop-other`: Otros navegadores de escritorio (como Mozilla Firefox). Ofrece orientación para instalar desde la barra de direcciones o menú del navegador.
+- **Regla de Frecuencia Estricta (Máximo 3 Apariciones):**
+  - Almacena en `localStorage` la clave `misdecimos_pwa_install_prompt_count`.
+  - Dispone de bloqueo de sesión en `sessionStorage` (`misdecimos_pwa_prompt_shown_session`) para mostrarlo como máximo una única vez por sesión.
+  - Se activa con un retardo de 2,5 segundos tras cargar la app únicamente si no hay modales en primer plano (`PushPermissionModal` o vistas de billete).
+  - Al descartar (`dismiss()`), incrementa el contador en `+1`. Cuando alcanza `3`, no vuelve a mostrarse de forma automática jamás.
+- **Invocación Manual en Perfil:** La sección *"Instalar aplicación en tu dispositivo"* en `ProfilePage.tsx` permanece siempre accesible e ignora el límite de 3 avisos, abriendo de forma inmediata el instalador correspondiente.
+- **Soporte de Navegación Nativa:** Integrado con `useModalBackHandler` (`modalKey: 'pwa_install_banner'`) y presentado a nivel `z-50` sobre `BottomNav` con padding seguro para la barra de inicio (`env(safe-area-inset-bottom)`).
+
 ### Navegación Nativa Android y Gestión de Historial (PWA Anti-Cierre)
 - **Gestor Global (`src/hooks/useAndroidBackNavigation.ts`):**
   - Controla el evento `window.onpopstate` para sincronizar las vistas internas (`/`, `/billetes/:id`, `/alertas`, `/auditoria`, `/perfil`) con el botón o gesto físico de retroceso de Android sin depender de librerías externas pesadas.
