@@ -6,8 +6,11 @@ import {
   incrementPwaPromptCount,
   resetPwaPromptCount,
   isPwaInstalled,
+  isPwaPromptPermanentlyDismissed,
+  checkGetInstalledRelatedApps,
   PWA_PROMPT_COUNT_KEY,
   PWA_INSTALLED_KEY,
+  PWA_DISMISSED_KEY,
 } from '../../hooks/usePwaInstallPrompt.ts'
 
 // Mocking minimal browser globals for Node test environment
@@ -152,4 +155,45 @@ test('isPwaInstalled - detects installed flags and standalone modes', () => {
 
   globalThis.window = originalWindow
   globalThis.document = originalDocument
+})
+
+test('isPwaPromptPermanentlyDismissed - checks PWA_DISMISSED_KEY in localStorage', () => {
+  const originalWindow = globalThis.window
+  const mockLocalStorage = new MockStorage()
+
+  globalThis.window = { localStorage: mockLocalStorage } as unknown as Window & typeof globalThis
+  globalThis.localStorage = mockLocalStorage as unknown as Storage
+
+  assert.equal(isPwaPromptPermanentlyDismissed(), false)
+
+  mockLocalStorage.setItem(PWA_DISMISSED_KEY, 'true')
+  assert.equal(isPwaPromptPermanentlyDismissed(), true)
+
+  globalThis.window = originalWindow
+})
+
+test('checkGetInstalledRelatedApps - detects installed apps via navigator API', async () => {
+  const originalWindow = globalThis.window
+  const mockLocalStorage = new MockStorage()
+
+  globalThis.window = { localStorage: mockLocalStorage } as unknown as Window & typeof globalThis
+  globalThis.localStorage = mockLocalStorage as unknown as Storage
+
+  // Case 1: API not supported
+  assert.equal(await checkGetInstalledRelatedApps({}), false)
+
+  // Case 2: API supported but no related apps
+  const emptyNav = {
+    getInstalledRelatedApps: async () => [],
+  }
+  assert.equal(await checkGetInstalledRelatedApps(emptyNav), false)
+
+  // Case 3: API supported and returns related app
+  const appNav = {
+    getInstalledRelatedApps: async () => [{ platform: 'webapp', url: 'https://misdecimos.dianrie.com/manifest.webmanifest' }],
+  }
+  assert.equal(await checkGetInstalledRelatedApps(appNav), true)
+  assert.equal(mockLocalStorage.getItem(PWA_INSTALLED_KEY), 'true')
+
+  globalThis.window = originalWindow
 })

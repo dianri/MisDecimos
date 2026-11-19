@@ -21,6 +21,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
+        id: '/',
         name: 'MisDecimos - Trazabilidad Asegurada',
         short_name: 'MisDecimos',
         description: 'Custodia compartida y reparto de décimos de Lotería Nacional',
@@ -29,6 +30,12 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
+        related_applications: [
+          {
+            platform: 'webapp',
+            url: 'https://misdecimos.dianrie.com/manifest.webmanifest'
+          }
+        ],
         icons: [
           {
             src: '/pwa-192x192.png',
