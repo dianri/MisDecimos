@@ -9,6 +9,9 @@ interface HistoryItemState {
   isBase?: boolean
   isDirectEntry?: boolean
   modalOpen?: boolean
+  fromTab?: string
+  subTab?: string
+  directFallbackTab?: string
 }
 
 export function parseRouteFromPath(rawPath: string): { tab: TabType; ticketId: string | null } {
@@ -95,17 +98,20 @@ export function useAndroidBackNavigation() {
     const isRoot = tab === 'billetes' && ticketId === null
 
     if (isRoot) {
+      const currentSearch = window.location.search || ''
+      const rootPath = `/${currentSearch}`
+
       // Estado base de la app
       window.history.replaceState(
         { tab: 'billetes', ticketId: null, idx: 0, isBase: true },
         '',
-        '/'
+        rootPath
       )
       // Estado centinela para interceptar el botón Atrás de Android
       window.history.pushState(
         { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
         '',
-        '/'
+        rootPath
       )
       historyIdxRef.current = 0
     } else {
@@ -162,11 +168,14 @@ export function useAndroidBackNavigation() {
             exitTimerRef.current = null
           }, 2500)
 
+          const currentSearch = window.location.search || ''
+          const rootPath = `/${currentSearch}`
+
           // Rearmar la guardia centinela para capturar el siguiente tap
           window.history.pushState(
             { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
             '',
-            '/'
+            rootPath
           )
           return
         }
@@ -188,15 +197,22 @@ export function useAndroidBackNavigation() {
         setSelectedTicketId(null)
         historyIdxRef.current = 0
 
+        const fallbackSubTab = state?.directFallbackTab
+        const search =
+          fallbackSubTab && fallbackSubTab !== 'decimos'
+            ? `?tab=${fallbackSubTab}`
+            : window.location.search || ''
+        const rootPath = `/${search}`
+
         window.history.replaceState(
           { tab: 'billetes', ticketId: null, idx: 0, isBase: true },
           '',
-          '/'
+          rootPath
         )
         window.history.pushState(
           { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
           '',
-          '/'
+          rootPath
         )
         return
       }
@@ -214,10 +230,12 @@ export function useAndroidBackNavigation() {
 
         // Si regresamos a la raíz y cayó en isBase, rearmar centinela
         if (nextTab === 'billetes' && nextTicketId === null && !state.exitGuard) {
+          const currentSearch = window.location.search || ''
+          const rootPath = `/${currentSearch}`
           window.history.pushState(
             { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
             '',
-            '/'
+            rootPath
           )
         }
       } else {
@@ -225,15 +243,17 @@ export function useAndroidBackNavigation() {
         setActiveTab('billetes')
         setSelectedTicketId(null)
         historyIdxRef.current = 0
+        const currentSearch = window.location.search || ''
+        const rootPath = `/${currentSearch}`
         window.history.replaceState(
           { tab: 'billetes', ticketId: null, idx: 0, isBase: true },
           '',
-          '/'
+          rootPath
         )
         window.history.pushState(
           { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
           '',
-          '/'
+          rootPath
         )
       }
 
@@ -260,7 +280,15 @@ export function useAndroidBackNavigation() {
 
   // Navegar a una pestaña o billete añadiendo entrada al historial (sin replace: true)
   const navigateTo = useCallback(
-    ({ tab, ticketId = null }: { tab: TabType; ticketId?: string | null }) => {
+    ({
+      tab,
+      ticketId = null,
+      state: extraState = {},
+    }: {
+      tab: TabType
+      ticketId?: string | null
+      state?: Record<string, unknown>
+    }) => {
       if (tab === activeTabRef.current && ticketId === selectedTicketIdRef.current) {
         return
       }
@@ -274,6 +302,7 @@ export function useAndroidBackNavigation() {
           tab,
           ticketId,
           idx: nextIdx,
+          ...extraState,
         },
         '',
         targetPath
@@ -294,6 +323,43 @@ export function useAndroidBackNavigation() {
     []
   )
 
+  // Navegar a la raíz de billetes preservando o actualizando parámetros de búsqueda (?tab=...)
+  const navigateToRootWithSearch = useCallback((search: string = '') => {
+    const cleanSearch = search ? (search.startsWith('?') ? search : `?${search}`) : ''
+    const rootPath = `/${cleanSearch}`
+
+    window.history.replaceState(
+      { tab: 'billetes', ticketId: null, idx: 0, isBase: true },
+      '',
+      rootPath
+    )
+    window.history.pushState(
+      { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
+      '',
+      rootPath
+    )
+    historyIdxRef.current = 0
+    setActiveTab('billetes')
+    setSelectedTicketId(null)
+
+    if (showExitToastRef.current) {
+      setShowExitToast(false)
+      showExitToastRef.current = false
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current)
+        exitTimerRef.current = null
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new PopStateEvent('popstate', {
+          state: { tab: 'billetes', ticketId: null, idx: 0, exitGuard: true },
+        })
+      )
+    }
+  }, [])
+
   // Retroceder en el historial
   const goBack = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -306,6 +372,7 @@ export function useAndroidBackNavigation() {
     selectedTicketId,
     showExitToast,
     navigateTo,
+    navigateToRootWithSearch,
     goBack,
   }
 }
