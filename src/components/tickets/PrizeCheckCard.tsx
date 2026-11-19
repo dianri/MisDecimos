@@ -14,6 +14,7 @@ import {
   AlertCircle,
   BadgeCheck,
   CalendarClock,
+  CalendarOff,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -286,14 +287,14 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
       {/* Mensaje de feedback temporal */}
       {feedbackMsg && (
         <div
-          className={`p-3.5 rounded-2xl text-xs shadow-xs transition-all ${
+          className={`rounded-2xl shadow-xs transition-all ${
             feedbackMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-2.5 font-semibold'
+              ? 'p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-2.5 font-semibold text-xs'
               : feedbackMsg.type === 'historical_unavailable'
-              ? 'bg-slate-50 border border-slate-200/90 text-slate-800 flex items-start gap-2.5 font-medium'
+              ? 'p-4 bg-amber-50/90 border border-amber-300/80 text-amber-900 flex items-start gap-3 shadow-xs'
               : feedbackMsg.type === 'future' || feedbackMsg.type === 'in_progress'
-              ? 'bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2.5 font-medium'
-              : 'bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2 font-medium'
+              ? 'p-3.5 bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2.5 font-medium text-xs'
+              : 'p-3.5 bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2 font-medium text-xs'
           }`}
         >
           {feedbackMsg.type === 'success' ? (
@@ -303,10 +304,12 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
             </>
           ) : feedbackMsg.type === 'historical_unavailable' ? (
             <>
-              <CalendarClock className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <p className="font-bold text-slate-900">Histórico no disponible</p>
-                <p className="text-[11px] leading-relaxed text-slate-600">{feedbackMsg.text}</p>
+              <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200/80 flex items-center justify-center shrink-0 text-amber-700 shadow-xs mt-0.5">
+                <CalendarOff className="h-4.5 w-4.5 text-amber-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-amber-950">Histórico no disponible</p>
+                <p className="text-xs leading-relaxed text-amber-900/90">{feedbackMsg.text}</p>
               </div>
             </>
           ) : feedbackMsg.type === 'future' || feedbackMsg.type === 'in_progress' ? (
