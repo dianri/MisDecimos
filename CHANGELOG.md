@@ -5,6 +5,26 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.46] - 2026-11-19
+
+### Fixed
+- **Captura Global y Fiabilidad del Prompt de Instalación PWA (`src/main.tsx`, `usePwaInstall.ts`, `ProfilePage.tsx`, `vite.config.ts`, `manifest.webmanifest`):**
+  - **Captura Temprana Global en Arranque (`src/main.tsx`):**
+    - Registrado el listener `beforeinstallprompt` a nivel de módulo en `src/main.tsx` antes del renderizado de React, almacenando el evento nativo en `window.__deferredPwaPrompt` y emitiendo el evento personalizado `pwa-deferred-prompt-ready`.
+    - Garantiza que la oportunidad de instalación nativa no se pierda aunque el navegador dispare el evento mientras el usuario navega en `/` antes de acceder a la pantalla de Perfil.
+  - **Corrección de Falso Positivo Standalone tras Desinstalación en Android:**
+    - Erradicada la comprobación estática de `localStorage.getItem('misdecimos_pwa_installed') === 'true'` en `isStandaloneMode()`, la cual bloqueaba permanentemente la visibilidad del botón de instalación tras desinstalar la PWA y abrir Chrome móvil.
+    - La comprobación se fundamenta de forma estricta y dinámica en el modo de visualización real (`display-mode: standalone`, `navigator.standalone` y `document.referrer.startsWith('android-app://')`).
+  - **Comportamiento Mejorado en la Pantalla de Perfil (`ProfilePage.tsx`):**
+    - Si la aplicación está abierta en modo standalone nativo (`isStandalone === true`): Muestra el indicador *"Aplicación instalada en este dispositivo"* con check verde.
+    - Si la aplicación no está en modo standalone (`isStandalone === false`): Muestra de forma incondicional el botón interactivo *"Instalar aplicación en tu dispositivo"* (tanto en móviles como en ordenadores).
+    - **Lanzamiento Nativo o Fallback a Modal de Instrucciones:**
+      - Si `deferredPrompt` nativo está disponible: Lanza el diálogo oficial de instalación con un solo toque (`await deferredPrompt.prompt()`).
+      - Si `deferredPrompt` es `null` (periodo de enfriamiento de Chrome Android tras desinstalación o navegador iOS Safari): Despliega un modal accesible con instrucciones claras paso a paso adaptadas al dispositivo detectado (menú ⋮ en Android Chrome, botón Compartir en iOS Safari, o barra de direcciones en Escritorio), con integración al botón Atrás de Android vía `useModalBackHandler`.
+  - **Conformidad Estricta de Iconos en Manifiesto PWA (`vite.config.ts` y `manifest.webmanifest`):**
+    - Declarados explícitamente `purpose: 'any'` para `pwa-192x192.png` y `pwa-512x512.png`, y `purpose: 'maskable'` para `pwa-512x512.png`, superando todas las validaciones de instalabilidad de Google Chrome y Android.
+  - **Batería de Pruebas Unitarias (`pwaInstall.test.ts`):** 4 nuevos tests unitarios certificando la detección de modo standalone, clasificación de dispositivos (Android, iOS, Desktop), captura y limpieza de `window.__deferredPwaPrompt`, y activación de fallback modal ante ausencia de prompt nativo (84 tests unitarios totales superados).
+
 ## [1.0.45] - 2026-11-19
 
 ### Added

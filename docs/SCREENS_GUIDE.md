@@ -272,14 +272,19 @@ flowchart TD
    - Interruptor (*Toggle*) para activar/desactivar notificaciones nativas en el dispositivo. Al activarlo manualmente, se resetea automáticamente a 0 el contador de descartes del onboarding push.
    - Sincronización automática de suscripción en `public.web_push_subscriptions` y actualización reactiva de permisos.
    - Botón *"Enviar notificación de prueba"*: Verifica primero la concesión real de permisos en el sistema operativo (`Notification.permission === 'granted'`), resincroniza silenciosamente la suscripción actual antes del envío (`syncPushSubscription`), invoca la Edge Function `send-push` en modo test y muestra feedback preciso y transparente: confirma el número de dispositivos alcanzados (`sent > 0`) o reporta el error técnico exacto sin emitir falsos positivos.
-4. **Instalación de la PWA Multiplataforma (`PwaInstallBanner.tsx` y `usePwaInstallPrompt.ts`):**
-   - Modal flotante en `z-50` coordinado con `PushPermissionModal` y respetuoso con la navegación táctil y el botón Atrás.
-   - **Regla de 3 Intentos:** Si el usuario no tiene la aplicación instalada, se muestra de forma automática tras 2,5 segundos, con un límite máximo de 1 vez por sesión y un tope absoluto de 3 apariciones. Al descartar 3 veces, deja de mostrarse automáticamente.
-   - **En Android / Chromium:** Ofrece el botón verde principal *"Instalar aplicación"* que lanza directamente el diálogo nativo del sistema (`deferredPrompt.prompt()`), o las instrucciones para instalar desde el menú (⋮) si no está disponible.
-   - **En iOS / iPadOS:** Muestra una guía gráfica con badges numerados e iconos (`Share` y `PlusSquare`) para añadir el décimo a la pantalla de inicio desde Safari.
+4. **Instalación de la PWA Multiplataforma (`PwaInstallBanner.tsx`, `usePwaInstall.ts` y `usePwaInstallPrompt.ts`):**
+   - **Captura Global en Arranque (`src/main.tsx`):** Escucha `beforeinstallprompt` desde el montaje inicial y persiste el evento en `window.__deferredPwaPrompt`, evitando que la oportunidad de instalación nativa se pierda si el usuario navega entre pantallas antes de abrir el Perfil.
+   - **Detección Fidedigna de Modo Standalone:** Comprueba activamente el modo de visualización real (`display-mode: standalone`, `navigator.standalone` y `android-app://`), previniendo que flags caducados de instalaciones anteriores en `localStorage` oculten erróneamente el instalador tras una desinstalación en Chrome Android.
+   - **Comportamiento en la Pantalla de Perfil (`ProfilePage.tsx`):**
+     - **Si `isStandalone === true`:** Muestra un indicador discreto *"Aplicación instalada en este dispositivo"* con check verde.
+     - **Si `isStandalone === false`:** Muestra siempre el botón interactivo *"Instalar aplicación en tu dispositivo"* (tanto en móviles como en PC):
+       - Si `deferredPrompt` nativo está disponible: Lanza el diálogo nativo del sistema operativo en un solo toque mediante `prompt()`.
+       - Si `deferredPrompt` es `null` (periodo de enfriamiento de Chrome Android tras desinstalar o navegador iOS Safari): Abre un modal guiado con instrucciones directas adaptadas al dispositivo:
+         - **Android (Chrome):** *"1. Pulsa el menú ⋮ arriba a la derecha en Chrome · 2. Selecciona «Añadir a pantalla de inicio» o «Instalar aplicación» · 3. Confirma en «Instalar»."*
+         - **iPhone / iPad (Safari):** *"1. Pulsa el botón Compartir en la barra inferior · 2. Selecciona «Añadir a pantalla de inicio» · 3. Pulsa «Añadir» arriba a la derecha."*
+         - **Escritorio:** *"1. Pulsa el icono de instalación ⊕ en la barra de direcciones · 2. O abre el menú (⋮) y selecciona «Instalar MisDecimos»."*
+   - **Modal Flotante Automático (`PwaInstallBanner.tsx`):** Flotante en `z-50` coordinado con `PushPermissionModal` y respetuoso con la navegación táctil y el botón Atrás. Se muestra de forma automática tras 2,5 segundos si la app no está instalada, con un límite máximo de 1 vez por sesión y un tope absoluto de 3 apariciones.
    - **En macOS Safari:** Explica cómo anclar la aplicación al Dock mediante *Archivo → Añadir al Dock*.
-   - **En Otros Navegadores de Escritorio:** Guía para instalar desde la barra de direcciones o el menú de opciones del navegador.
-   - **Acceso Manual Siempre Disponible:** El botón *"Instalar aplicación en tu dispositivo"* en la pantalla de Perfil permanece siempre activo e ignora el límite de 3 avisos automáticos para permitir la instalación en cualquier momento.
 5. **Acceso al Centro de Auditoría:**
    - Tarjeta interactiva destacada con icono de escudo criptográfico (`ShieldCheck`), chevron indicador y texto explicativo *"Historial inmutable de movimientos, participaciones y premios"*. Al pulsar, navega fluidamente a `/auditoria`.
 6. **Cierre de Sesión:**
