@@ -27,14 +27,73 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'barcode_scanner_modal' })
 
+  // 1. Estabilizar callbacks en refs para que el ciclo de vida de la cámara dependa exclusivamente de isOpen
+  const onScanSuccessRef = useRef(onScanSuccess)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onScanSuccessRef.current = onScanSuccess
+  }, [onScanSuccess])
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [warningMsg, setWarningMsg] = useState<string | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
   const [isScanningFile, setIsScanningFile] = useState(false)
+
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const readerId = useRef(`reader-${Math.random().toString(36).substring(7)}`).current
+  const sessionGenerationRef = useRef(0)
+  const isTransitioningRef = useRef(false)
+  const readerId = useRef(`mc-scanner-${Math.random().toString(36).substring(7)}`).current
+
+  // 2. Limpieza profunda y definitiva del hardware de cámara (detención de Html5Qrcode + parada explícita de MediaStreamTracks)
+  const forceReleaseCamera = useCallback(async () => {
+    // A. Detener y limpiar instancia de Html5Qrcode
+    if (html5QrCodeRef.current) {
+      try {
+        if (html5QrCodeRef.current.isScanning) {
+          await html5QrCodeRef.current.stop()
+        }
+      } catch (err) {
+        console.warn('Aviso deteniendo instancia activa de Html5Qrcode:', err)
+      }
+      try {
+        html5QrCodeRef.current.clear()
+      } catch (err) {
+        console.warn('Aviso limpiando instancia de Html5Qrcode:', err)
+      }
+      html5QrCodeRef.current = null
+    }
+
+    // B. Recorrer y detener forzosamente todas las pistas MediaStream de cualquier elemento <video>
+    try {
+      const container = document.getElementById(readerId)
+      const videos = container
+        ? container.querySelectorAll('video')
+        : document.querySelectorAll(`#${readerId} video`)
+
+      videos.forEach((video) => {
+        const stream = (video as HTMLVideoElement).srcObject as MediaStream | null
+        if (stream) {
+          stream.getTracks().forEach((track) => {
+            try {
+              track.onended = null
+              track.onmute = null
+              track.stop()
+            } catch (e) {
+              console.warn('Aviso deteniendo MediaStreamTrack:', e)
+            }
+          })
+          ;(video as HTMLVideoElement).srcObject = null
+        }
+      })
+    } catch (err) {
+      console.warn('Aviso liberando pistas de video del DOM:', err)
+    }
+  }, [readerId])
 
   // Limpiar temporizador al desmontar
   useEffect(() => {
@@ -43,102 +102,188 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     }
   }, [])
 
-  // Manejar resultado del escaneo
-  const handleSuccess = useCallback((decodedText: string) => {
-    // 1. Clasificar polimórficamente el código leído
-    const classified = classifyScannedPayload(decodedText)
+  // 3. Manejar lectura exitosa con clasificación polimórfica y detención limpia
+  const handleSuccess = useCallback(
+    async (decodedText: string) => {
+      const classified = classifyScannedPayload(decodedText)
 
-    // Si no es un décimo ni una invitación reconocida, mostrar aviso inline y permitir seguir escaneando
-    if (classified.kind === 'UNKNOWN') {
-      setWarningMsg(classified.errorMessage)
+      // Si no es un décimo ni una invitación reconocida, mostrar aviso inline y permitir seguir escaneando
+      if (classified.kind === 'UNKNOWN') {
+        setWarningMsg(classified.errorMessage)
+        if (warningTimerRef.current) clearTimeout(warningTimerRef.current)
+        warningTimerRef.current = setTimeout(() => {
+          setWarningMsg(null)
+        }, 3500)
+        return
+      }
+
+      // Código válido (TICKET o INVITE): limpiar avisos y liberar cámara antes de invocar callback
+      setWarningMsg(null)
       if (warningTimerRef.current) clearTimeout(warningTimerRef.current)
-      warningTimerRef.current = setTimeout(() => {
-        setWarningMsg(null)
-      }, 3500)
-      return
-    }
 
-    // Código válido (TICKET o INVITE): limpiar avisos y detener cámara
-    setWarningMsg(null)
-    if (warningTimerRef.current) clearTimeout(warningTimerRef.current)
+      await forceReleaseCamera()
+      onScanSuccessRef.current(decodedText)
+    },
+    [forceReleaseCamera]
+  )
 
-    if (html5QrCodeRef.current?.isScanning) {
-      html5QrCodeRef.current.stop().then(() => {
-        onScanSuccess(decodedText)
-      }).catch(() => {
-        onScanSuccess(decodedText)
-      })
-    } else {
-      onScanSuccess(decodedText)
-    }
-  }, [onScanSuccess])
+  // 4. Arranque de cámara con reintento inteligente y suscripción a eventos de hardware
+  const startCamera = useCallback(
+    async (retryCount = 0): Promise<void> => {
+      const currentSession = ++sessionGenerationRef.current
+      isTransitioningRef.current = true
+      setIsInitializing(true)
+      setErrorMsg(null)
+      setWarningMsg(null)
 
-  // Iniciar cámara con Html5Qrcode habilitando siempre formatos 1D + QR
-  const startCamera = useCallback(async () => {
-    setIsInitializing(true)
-    setErrorMsg(null)
-    setWarningMsg(null)
+      try {
+        // Liberar cualquier stream previo antes de solicitar uno nuevo
+        await forceReleaseCamera()
+        if (currentSession !== sessionGenerationRef.current) return
 
-    try {
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode(readerId, {
+        // Esperar brevemente a que el DOM esté disponible para el contenedor
+        let container = document.getElementById(readerId)
+        if (!container) {
+          await new Promise((r) => setTimeout(r, 100))
+          container = document.getElementById(readerId)
+        }
+        if (!container || currentSession !== sessionGenerationRef.current) return
+
+        const scanner = new Html5Qrcode(readerId, {
           formatsToSupport: UNIFIED_SUPPORTED_FORMATS,
           verbose: false,
         })
-      }
+        html5QrCodeRef.current = scanner
 
-      // Guía visual unificada para abarcar tanto códigos de barras 1D horizontales como QR 2D
-      const qrbox = { width: 270, height: 160 }
+        const qrbox = { width: 270, height: 160 }
 
-      await html5QrCodeRef.current.start(
-        { facingMode: 'environment' },
-        {
-          fps: 15,
-          qrbox,
-          aspectRatio: 1.333333,
-        },
-        (decodedText) => {
-          handleSuccess(decodedText)
-        },
-        () => {
-          // Fallo frame a frame normal mientras busca código
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+            qrbox,
+            aspectRatio: 1.333333,
+          },
+          (decodedText) => {
+            handleSuccess(decodedText)
+          },
+          () => {
+            // Frame a frame sin detección (operación normal)
+          }
+        )
+
+        if (currentSession !== sessionGenerationRef.current) {
+          await forceReleaseCamera()
+          return
         }
-      )
-    } catch (err: unknown) {
-      console.warn('Error iniciando cámara para escaneo:', err)
-      setErrorMsg(
-        'No se pudo acceder a la cámara. Revisa los permisos del navegador o usa la opción de subir una foto.'
-      )
-    } finally {
-      setIsInitializing(false)
-    }
-  }, [readerId, handleSuccess])
 
-  // Iniciar / detener según isOpen
+        // Suscribirse a eventos de interrupción de hardware del sistema operativo
+        const activeVideo = container.querySelector('video') as HTMLVideoElement | null
+        if (activeVideo?.srcObject) {
+          const stream = activeVideo.srcObject as MediaStream
+          stream.getVideoTracks().forEach((track) => {
+            const handleInterruption = () => {
+              if (
+                document.visibilityState === 'visible' &&
+                !isTransitioningRef.current &&
+                currentSession === sessionGenerationRef.current
+              ) {
+                console.warn('MediaStreamTrack interrumpida por el SO, recuperando cámara...')
+                startCamera(0)
+              }
+            }
+            track.onended = handleInterruption
+            track.onmute = handleInterruption
+          })
+        }
+
+        setIsInitializing(false)
+      } catch (err: unknown) {
+        console.warn(`Error iniciando cámara (intento ${retryCount + 1}):`, err)
+        if (currentSession !== sessionGenerationRef.current) return
+
+        const errorName = err instanceof Error ? err.name : String(err)
+        const isPermissionError =
+          errorName === 'NotAllowedError' ||
+          errorName === 'PermissionDeniedError' ||
+          (err instanceof Error && /permission|denied|not allowed/i.test(err.message))
+
+        // Si no es fallo de permisos y quedan reintentos (hasta 2 reintentos, retryCount < 2)
+        if (!isPermissionError && retryCount < 2) {
+          await forceReleaseCamera()
+          await new Promise((resolve) => setTimeout(resolve, 450))
+          if (currentSession !== sessionGenerationRef.current) return
+          return startCamera(retryCount + 1)
+        }
+
+        // Reintentos agotados o permiso denegado: limpiar hardware y mostrar diagnóstico
+        await forceReleaseCamera()
+        setIsInitializing(false)
+
+        if (isPermissionError) {
+          setErrorMsg(
+            'Permiso de cámara denegado. Actívalo en los ajustes del navegador o sube una foto del décimo.'
+          )
+        } else {
+          setErrorMsg(
+            'La cámara se pausó al cambiar de aplicación. Pulsa reintentar para reactivarla.'
+          )
+        }
+      } finally {
+        isTransitioningRef.current = false
+      }
+    },
+    [readerId, forceReleaseCamera, handleSuccess]
+  )
+
+  // 5. Gestión de Segundo Plano / Primer Plano con visibilitychange
   useEffect(() => {
-    if (isOpen) {
-      // Breve espera para que el DOM monte el elemento readerId
-      const timer = setTimeout(() => {
-        startCamera()
-      }, 150)
-      return () => clearTimeout(timer)
-    } else {
-      if (html5QrCodeRef.current?.isScanning) {
-        html5QrCodeRef.current.stop().catch(() => {})
+    if (!isOpen) return
+
+    let resumeTimer: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden') {
+        if (resumeTimer) clearTimeout(resumeTimer)
+        // Segundo plano: liberar cámara de forma silenciosa sin error
+        await forceReleaseCamera()
+      } else if (document.visibilityState === 'visible') {
+        setErrorMsg(null)
+        setIsInitializing(true)
+        if (resumeTimer) clearTimeout(resumeTimer)
+        // Primer plano: esperar 350 ms para que Android reasigne el dispositivo y relanzar
+        resumeTimer = setTimeout(() => {
+          startCamera(0)
+        }, 350)
       }
     }
-  }, [isOpen, startCamera])
 
-  // Detener al desmontar
-  useEffect(() => {
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
-      if (html5QrCodeRef.current?.isScanning) {
-        html5QrCodeRef.current.stop().catch(() => {})
-      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (resumeTimer) clearTimeout(resumeTimer)
     }
-  }, [])
+  }, [isOpen, forceReleaseCamera, startCamera])
 
-  // Subir imagen desde galería/archivo para decodificar
+  // 6. Ciclo de vida principal dependiente exclusivamente de isOpen
+  useEffect(() => {
+    let mountTimer: NodeJS.Timeout | null = null
+
+    if (isOpen) {
+      mountTimer = setTimeout(() => {
+        startCamera(0)
+      }, 150)
+    } else {
+      forceReleaseCamera()
+    }
+
+    return () => {
+      if (mountTimer) clearTimeout(mountTimer)
+      forceReleaseCamera()
+    }
+  }, [isOpen, startCamera, forceReleaseCamera])
+
+  // 7. Subir imagen desde galería/archivo para decodificar
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -147,19 +292,15 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     setErrorMsg(null)
 
     try {
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode(readerId, {
-          formatsToSupport: UNIFIED_SUPPORTED_FORMATS,
-          verbose: false,
-        })
-      }
+      await forceReleaseCamera()
 
-      // Si la cámara estaba activa, pausar antes de analizar archivo
-      if (html5QrCodeRef.current.isScanning) {
-        await html5QrCodeRef.current.stop()
-      }
+      const scanner = new Html5Qrcode(readerId, {
+        formatsToSupport: UNIFIED_SUPPORTED_FORMATS,
+        verbose: false,
+      })
+      html5QrCodeRef.current = scanner
 
-      const decodedText = await html5QrCodeRef.current.scanFile(file, true)
+      const decodedText = await scanner.scanFile(file, true)
       handleSuccess(decodedText)
     } catch (err) {
       console.warn('Error decodificando código desde imagen:', err)
@@ -190,7 +331,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             </h3>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             className="rounded-lg p-1 text-gray-400 hover:bg-gray-800 hover:text-white transition"
           >
             <X className="h-5 w-5" />
@@ -199,10 +340,11 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
         {/* Visor de la Cámara */}
         <div className="relative bg-black flex items-center justify-center min-h-[300px] overflow-hidden">
-          <div id={readerId} className="w-full h-full" />
+          {/* El elemento de video del escáner se oculta visualmente si hay error activo para evitar mostrar imagen congelada */}
+          <div id={readerId} className={`w-full h-full ${errorMsg ? 'hidden' : 'block'}`} />
 
           {/* Banner de aviso inline si se escanea un código no reconocido */}
-          {warningMsg && (
+          {warningMsg && !errorMsg && (
             <div className="absolute top-4 inset-x-4 z-20 flex items-center gap-2 p-3 bg-amber-900/90 border border-amber-500/70 text-amber-100 text-xs rounded-xl shadow-xl backdrop-blur-xs animate-in fade-in slide-in-from-top-2 duration-200">
               <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
               <span className="flex-1">{warningMsg}</span>
@@ -218,7 +360,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           )}
 
           {/* Guía visual láser sobre el código */}
-          {!errorMsg && (
+          {!errorMsg && !isInitializing && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div
                 className={`relative border-2 border-lottery-400/90 rounded-2xl shadow-lg transition-all ${
@@ -237,22 +379,26 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           )}
 
           {/* Estado de carga */}
-          {isInitializing && (
-            <div className="absolute inset-0 bg-gray-900/90 flex flex-col items-center justify-center gap-2 text-xs text-gray-400">
+          {isInitializing && !errorMsg && (
+            <div className="absolute inset-0 bg-gray-900/90 flex flex-col items-center justify-center gap-2 text-xs text-gray-400 z-10">
               <RefreshCw className="h-6 w-6 animate-spin text-lottery" />
               <span>Iniciando cámara...</span>
             </div>
           )}
 
-          {/* Mensaje de error / alternativa */}
+          {/* Mensaje de error / diagnóstico con botón de reintento limpio */}
           {errorMsg && (
-            <div className="absolute inset-4 flex flex-col items-center justify-center text-center p-4 bg-gray-900/95 rounded-2xl border border-rose-900/50 space-y-3">
-              <AlertCircle className="h-8 w-8 text-rose-500" />
-              <p className="text-xs text-gray-300">{errorMsg}</p>
+            <div className="absolute inset-4 flex flex-col items-center justify-center text-center p-5 bg-gray-900/95 rounded-2xl border border-rose-900/50 space-y-3 z-30 animate-in fade-in zoom-in-95 duration-200">
+              <AlertCircle className="h-8 w-8 text-rose-500 shrink-0" />
+              <p className="text-xs text-gray-300 leading-relaxed max-w-xs">{errorMsg}</p>
               <button
                 type="button"
-                onClick={() => startCamera()}
-                className="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-white transition"
+                onClick={async () => {
+                  setErrorMsg(null)
+                  await forceReleaseCamera()
+                  startCamera(0)
+                }}
+                className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-white transition active:scale-95 shadow-sm"
               >
                 Reintentar cámara
               </button>
@@ -282,7 +428,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             className="px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-medium text-gray-400 transition"
           >
             Cancelar

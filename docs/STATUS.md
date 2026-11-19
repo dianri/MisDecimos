@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.24` (Producción Estable · Escáner de Cámara Unificado Polimórfico 1D y QR)  
+**Versión Actual:** `1.0.25` (Producción Estable · Ciclo de Vida y Recuperación de Cámara en Segundo Plano)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.24`)  
+**Rama de Producción:** `main` (Tag `v1.0.25`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
