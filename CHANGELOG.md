@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.20] - 2026-11-19
+
+### Fixed
+- **Estructura Exacta 2 + 3 + 2 + 3 + 6 + 4 en Código de Barras SELAE (`selaeBarcodeParser.ts`):**
+  - Implementado el desglose canónico oficial de 20 dígitos verificado en billetes físicos de Lotería Nacional:
+    - `Prefijo de juego (2 dígitos):` `51` (Navidad / El Niño) o `01` (estándar).
+    - `Código sorteo / año (3 dígitos, pos 2..5):` `drawYearCode` (ej. `026` → año 2026).
+    - `Fracción (2 dígitos, pos 5..7):` `fraction` / `fraccion` (ej. `07` → 7ª).
+    - `Serie (3 dígitos, pos 7..10):` `series` / `serie` (ej. `065` → 65ª).
+    - `Número del décimo (6 dígitos, pos 10..16):` número de 6 dígitos con 0 inicial, extrayendo los 5 últimos con `.slice(-5)` (ej. `002320` → `02320`, `087671` → `87671`).
+    - `Dígitos de control (4 dígitos, pos 16..20):` `checkDigits` (ej. `5830`, `9833`).
+  - Limpieza exhaustiva de caracteres no numéricos (`raw.replace(/\D/g, '')`), eliminando separadores como `>` o prefijos AIM GS1 (`]C1`).
+  - Actualizada la suite de pruebas unitarias (`selaeBarcodeParser.test.ts`) validando los dos códigos reales de producción (`5102607065>0023205830` y `51020101100876719833`).
+
 ## [1.0.19] - 2026-11-19
 
 ### Fixed
