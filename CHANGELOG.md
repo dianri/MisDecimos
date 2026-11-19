@@ -5,6 +5,19 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.18] - 2026-11-19
+
+### Fixed
+- **Prevención de Cierre en Cascada por Popstate (`useModalBackHandler.ts`):**
+  - Implementada una pila global de modales activos (`activeModalStack`) y un contador de llamadas programáticas (`programmaticBackCount`).
+  - Cuando un modal hijo (como `BarcodeScannerModal`) se cierra por código al escanear exitosamente o por interfaz, su `window.history.back()` es absorbido por el contador sin disparar eventos de cierre sobre el modal padre (`TicketFormModal`).
+  - Solo el modal situado en la cima de la pila (`activeModalStack`) responde a la pulsación física del botón 'Atrás' de Android.
+- **Handoff Completo desde Botón Rápido de Cámara (`TicketsPage.tsx` y `TicketFormModal.tsx`):**
+  - Al pulsar el botón cuadrado verde de cámara en `TicketsPage`, se abre de forma directa `BarcodeScannerModal` en modo `TICKET_BARCODE`.
+  - Al detectar el código, se cierra el escáner y se abre inmediatamente `TicketFormModal` en la pestaña de datos manuales (`initialTab="manual"`), pasándole la prop `initialScannedData`.
+  - Los campos (número, serie, fracción, sorteo y fecha) se rellenan automáticamente mostrando el banner verde *"Código leído correctamente — Verifica los datos antes de guardar"*.
+  - Si el usuario abre el escáner desde dentro de `TicketFormModal`, el modal permanece abierto en pantalla con todos los campos completados al finalizar la lectura.
+
 ## [1.0.17] - 2026-11-19
 
 ### Added

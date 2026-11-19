@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { parseSelaeBarcode } from '../../lib/selaeBarcodeParser'
+import { parseSelaeBarcode, type SelaeParsedTicket } from '../../lib/selaeBarcodeParser'
 import { BarcodeScannerModal } from './BarcodeScannerModal'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
@@ -21,6 +21,7 @@ type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
 export interface TicketFormModalProps {
   isOpen: boolean
   initialTab?: 'scanner' | 'manual'
+  initialScannedData?: SelaeParsedTicket | null
   onClose: () => void
   onCreated: (ticketId: string) => void
 }
@@ -28,6 +29,7 @@ export interface TicketFormModalProps {
 export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   isOpen,
   initialTab = 'manual',
+  initialScannedData = null,
   onClose,
   onCreated,
 }) => {
@@ -37,23 +39,51 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [scanSuccessBanner, setScanSuccessBanner] = useState<string | null>(null)
 
-  // Sincronizar pestaña inicial y escáner al abrir el modal
+  // Sincronizar pestaña inicial, escáner y datos escaneados al abrir el modal
   useEffect(() => {
     if (isOpen) {
-      if (initialTab === 'scanner') {
+      if (initialScannedData) {
+        setTab('manual')
+        setIsScannerOpen(false)
+        setBarcodeRaw(initialScannedData.barcodeRaw || null)
+        setOrigin('BARCODE_GS1')
+
+        if (initialScannedData.isValid) {
+          setScanSuccessBanner('Código leído correctamente — Verifica los datos antes de guardar')
+          setErrorMsg(null)
+
+          const ticketNum = initialScannedData.number || initialScannedData.ticketNumber
+          if (ticketNum) setNumber(ticketNum)
+          const ticketSerie = initialScannedData.serie || initialScannedData.series
+          if (ticketSerie) setSerie(ticketSerie)
+          const ticketFraccion = initialScannedData.fraccion || initialScannedData.fraction
+          if (ticketFraccion) setFraccion(ticketFraccion)
+          if (initialScannedData.drawType) handleDrawTypeChange(initialScannedData.drawType)
+          if (initialScannedData.drawDate) setDrawDate(initialScannedData.drawDate)
+          if (initialScannedData.ticketPrice) setTicketPrice(initialScannedData.ticketPrice.toFixed(2))
+        } else {
+          setScanSuccessBanner(null)
+          setErrorMsg(
+            initialScannedData.errorMessage ||
+              'Código de barras no reconocido como décimo de Lotería Nacional'
+          )
+        }
+      } else if (initialTab === 'scanner') {
         setTab('scan')
         setIsScannerOpen(true)
+        setErrorMsg(null)
+        setScanSuccessBanner(null)
       } else {
         setTab('manual')
         setIsScannerOpen(false)
+        setErrorMsg(null)
+        setScanSuccessBanner(null)
       }
-      setErrorMsg(null)
-      setScanSuccessBanner(null)
     } else {
       setIsScannerOpen(false)
       setScanSuccessBanner(null)
     }
-  }, [isOpen, initialTab])
+  }, [isOpen, initialTab, initialScannedData])
 
   // Campos del décimo
   const [number, setNumber] = useState('')
