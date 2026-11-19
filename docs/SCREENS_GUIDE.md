@@ -230,9 +230,12 @@ flowchart TD
 - **Storage:** Bucket Supabase Storage `avatars` con RLS por UID.
 
 ### Opciones y Controles:
-1. **Avatar de Usuario con Compresión en Cliente:**
-   - Selector de imagen con previsualización inmediata.
-   - Redimensiona automáticamente y convierte la imagen a formato **WebP** en el navegador para ahorrar ancho de banda.
+1. **Avatar de Usuario con Selector Dual (Cámara / Galería) y Compresión en Cliente:**
+   - Al pulsar sobre el avatar circular o la insignia verde de cámara, se abre un menú inferior (*Action Sheet / Bottom Sheet*) integrado en `z-50` con soporte del botón Atrás de Android (`useModalBackHandler`):
+     - **Hacer foto con la cámara:** Dispara el input nativo con `capture="user"` para abrir directamente la cámara del dispositivo móvil.
+     - **Elegir de la galería o archivos:** Dispara el explorador de archivos o álbum de fotos del sistema sin forzar la cámara.
+     - **Eliminar foto actual:** Disponible si ya existe un avatar registrado, restableciendo el avatar neutral por defecto.
+   - Redimensiona automáticamente a 512x512 y convierte la imagen a formato **WebP** en el navegador para ahorrar ancho de banda y optimizar la carga.
    - Sube el archivo al bucket seguro `avatars` en Supabase Storage bajo la carpeta del usuario `auth.uid()`.
 2. **Datos Personales Sanitizados:**
    - Campos de *Nombre a mostrar* y *Teléfono de contacto*, protegidos contra inyecciones XSS mediante `sanitizeText`.
