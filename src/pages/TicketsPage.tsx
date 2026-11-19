@@ -90,6 +90,37 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     return () => clearTimeout(timer)
   }, [claimToastMsg])
 
+  // Captura de mensajes informativos/toasts procedentes del historial (ej. renuncia de participación)
+  useEffect(() => {
+    const toastFromState =
+      typeof window !== 'undefined'
+        ? (window.history.state as { toastMsg?: string; claimToastMsg?: string } | null)?.toastMsg ||
+          (window.history.state as { toastMsg?: string; claimToastMsg?: string } | null)?.claimToastMsg
+        : undefined
+
+    if (toastFromState) {
+      setClaimToastMsg(toastFromState)
+      const nextState = { ...window.history.state }
+      delete nextState.toastMsg
+      delete nextState.claimToastMsg
+      window.history.replaceState(nextState, '', window.location.href)
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      const msg = e.state?.toastMsg || e.state?.claimToastMsg
+      if (msg) {
+        setClaimToastMsg(msg)
+        const nextState = { ...e.state }
+        delete nextState.toastMsg
+        delete nextState.claimToastMsg
+        window.history.replaceState(nextState, '', window.location.href)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
   // Manejar escaneo inteligente unificado (décimos 1D o invitaciones QR)
   const handleUnifiedBarcodeScanned = (rawCode: string) => {
     setIsTicketScannerOpen(false)

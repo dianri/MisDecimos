@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.49` (Producción Estable · Apertura Directa de Participación y Pestaña Participaciones)  
+**Versión Actual:** `1.0.50` (Producción Estable · Redirección y Protección tras Renuncia de Participación)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.49`)  
+**Rama de Producción:** `main` (Tag `v1.0.50`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -131,3 +131,4 @@
 - [x] v1.0.47: Armonización visual del aviso de histórico no disponible (`PrizeCheckCard.tsx`): sustitución del recuadro neutro en gris pizarra por el estilo de aviso corporativo en degradado ámbar/naranja (`bg-amber-50/90 border-amber-300/80`), icono `CalendarOff` dentro de caja suave `bg-amber-100 text-amber-600` y tipografía jerárquica (`text-amber-950` y `text-amber-900/90`), alineando estéticamente todos los banners informativos de la aplicación.
 - [x] v1.0.48: Compartición por WhatsApp con Unicode seguro y respaldo en escritorio (`src/lib/shareHelper.ts`, `ShareInviteModal.tsx`): erradicación de caracteres corruptos (`\uFFFD`) mediante escapes Unicode seguros (`\u{1F3AB}`, `\u{1F511}`, `\u{1F449}`), codificación URI limpia, copia preventiva automática del mensaje completo al portapapeles al pulsar "Enviar por WhatsApp", banner contextual informativo para WhatsApp Escritorio (macOS/Windows) para permitir pegado con ⌘V/Ctrl+V, y suite de tests unitarios (`whatsappShare.test.ts`).
 - [x] v1.0.49: Flujo unificado de reclamación de participaciones y navegación contextual (`src/services/inviteService.ts`, `InvitePage.tsx`, `TicketsPage.tsx`, `TicketDetailPage.tsx`): retorno garantizado de `ticket_id` en todos los flujos de aceptación (enlace `/invite/:id`, código PIN de 6 dígitos o escáner QR), reemplazo automático del historial a `/?tab=participaciones`, navegación inmediata a la ficha del billete reclamado (`/billetes/:id`) con banner de confirmación superior, y retorno blindado (botón Atrás UI y Android) a la pestaña **Participaciones** sin volver a la invitación consumida ni derivar a **Décimos**.
+- [x] v1.0.50: Redirección automática y protección de acceso tras renuncia de participación (`TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `TicketsPage.tsx`): salida inmediata hacia `/?tab=participaciones` con `replace: true` tras confirmar renuncia (voluntaria o aceptando requerimiento del custodio), banner de confirmación *"Has renunciado a la participación. El décimo se ha retirado de tus participaciones."*, bloqueo y redirección de reentradas directas a décimos renunciados con toast de aviso, e invariante de exclusión total en listado activo, archivados y métricas.
