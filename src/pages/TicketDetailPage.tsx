@@ -256,6 +256,19 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
   }, [ticketId, loadTicketDetails])
 
+  // Capturar toast de confirmación si se viene de reclamar una participación
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.history.state?.claimMessage) {
+      setStatusMsg({
+        type: 'success',
+        text: String(window.history.state.claimMessage),
+      })
+      const nextState = { ...window.history.state }
+      delete nextState.claimMessage
+      window.history.replaceState(nextState, '', window.location.href)
+    }
+  }, [])
+
   // Navegación hacia atrás respetando el historial o derivando según rol en entradas directas
   const handleBack = useCallback(() => {
     // 1. Si existe historial interno de navegación dentro de la app (idx > 0)
@@ -273,8 +286,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
 
     // 2. Si se abrió directamente sin historial previo (notificación Push o enlace directo)
+    const fromTab = historyState?.fromTab || historyState?.directFallbackTab
     const isParticipant = Boolean(ticket && user?.id && ticket.owner_id !== user.id)
-    const targetTab: 'decimos' | 'participaciones' = isParticipant ? 'participaciones' : 'decimos'
+    const targetTab: 'decimos' | 'participaciones' | 'archivados' =
+      fromTab === 'participaciones' || fromTab === 'archivados'
+        ? fromTab
+        : isParticipant
+        ? 'participaciones'
+        : 'decimos'
 
     if (onNavigateToRoot) {
       onNavigateToRoot(targetTab)
