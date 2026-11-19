@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.53] - 2026-11-19
+
+### Fixed
+- **Restauración de Emojis Ricos en Mensaje de Invitación de WhatsApp (`src/lib/shareHelper.ts`, `src/lib/__tests__/whatsappShare.test.ts`):**
+  - **Recuperación de los Emojis Originales (`🎟️`, `🔑`, `👉`):**
+    - En `buildWhatsAppShareMessage`, se sustituyen los símbolos planos BMP (`★`, `•`, `→`) restableciendo los emojis ricos mediante secuencias de escape Unicode explícitas en UTF-8:
+      - `\u{1F3AB}` para el décimo y porcentaje (🎟️).
+      - `\u{1F511}` para el código PIN de 6 dígitos (🔑).
+      - `\u{1F449}` para el enlace interactivo de reclamación (👉).
+    - Se recupera la apariencia visual colorida original en clientes móviles de mensajería (Android e iOS).
+    - Se mantiene la copia preventiva automática al portapapeles en escritorio para asegurar el pegado con formato íntegro en WhatsApp Desktop.
+  - **Pruebas Unitarias Actualizadas (`src/lib/__tests__/whatsappShare.test.ts`):**
+    - Validación de presencia de los tres emojis oficiales y ausencia total de caracteres de reemplazo corruptos `\uFFFD`.
+    - Total de 105 tests unitarios superados al 100%.
+
 ## [1.0.52] - 2026-11-19
 
 ### Fixed
