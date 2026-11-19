@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.38` (Producción Estable · Parser Oficial SELAE 20 Dígitos y Autodetección de Sorteo y Fecha)  
+**Versión Actual:** `1.0.39` (Producción Estable · Cabecera de Escritorio con Logotipo y Marca a la Izquierda)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.38`)  
+**Rama de Producción:** `main` (Tag `v1.0.39`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -120,3 +120,4 @@
 - [x] v1.0.36: Preservación de pestaña activa al retroceder desde el detalle de un décimo: sincronización en URL (`?tab=participaciones` y `?tab=archivados`) con `useSearchParams`, persistencia sin contaminar el historial (`{ replace: true }`), respaldo explícito `state: { fromTab: activeTab }` al abrir billetes y retorno unificado `handleBack` en `TicketDetailPage` (respetando la pestaña previa con historial `idx > 0` o derivando a `participaciones` en accesos directos de cotitulares).
 - [x] v1.0.37: Gráfico circular Donut SVG sólido (`OwnershipBreakdownCard.tsx` y `ownershipSegments.ts`): arcos continuos de alta precisión (`viewBox="0 0 160 160"`, `r = 62`, `strokeWidth = 15`) sin solapamientos, con círculo base gris para disponible y arcos proporcionales acumulados para Propietario (`#2E6146`), Cotitulares (`#2563EB`) y Pendientes (`#D97706`) con animación `duration-500`.
 - [x] v1.0.38: Parser oficial SELAE de 20 dígitos canónicos (`1 + 3 + 1 + 2 + 3 + 6 + 4`) con expresión regular `/(?:01)?5(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})/`, autodetección de tipo de sorteo (`102` Navidad, `002` El Niño) y fecha (`YYYY-12-22`, `YYYY-01-06`), resolución de fallo en billetes de El Niño (`5002...`), sincronización con `TicketFormModal.tsx` preservando fechas leídas sin sobrescritura y suite de pruebas unitarias con décimos reales de producción.
+- [x] v1.0.39: Cabecera superior adaptativa en escritorio (`>= 768px`): logotipo corporativo y marca **MisDecimos** a la izquierda enlazando a inicio (`/`), menú de navegación (**Billetes** y **Alertas**) y perfil de usuario compacto a la derecha separados por divisor sutil, preservando sin cambios la disposición móvil (`< 768px`).

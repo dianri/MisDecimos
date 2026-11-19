@@ -5,7 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-## [1.0.38] - 2026-11-19
+## [1.0.39] - 2026-11-19
+
+### Added
+- **Cabecera de Escritorio con Logotipo/Marca a la Izquierda y Perfil a la Derecha (`AppShell.tsx`):**
+  - **Identidad de Marca e Inicio en Escritorio (`>= 768px`):** Incorporado en la esquina superior izquierda un botón interactivo (`aria-label="Ir a la pantalla principal"`) compuesto por el isotipo corporativo en verde `#2E6146` (`w-9 h-9 rounded-xl` con icono de décimo en blanco) y el texto de marca **"MisDecimos"** (`text-lg font-bold tracking-tight text-gray-900`), que navega directamente a la pantalla principal (`/`) o ejecuta scroll suave hacia arriba si el usuario ya se encuentra en ella.
+  - **Reubicación de Navegación y Perfil a la Derecha en Escritorio:**
+    - Agrupación en horizontal a la derecha de los accesos principales **Billetes** y **Alertas** (con badge dinámico en tiempo real de notificaciones no leídas).
+    - Inclusión de un separador vertical sutil (`h-6 w-px bg-gray-200 mx-1`).
+    - Botón compacto de usuario (avatar circular de 32 px + nombre de usuario), conservando el anillo y fondo verde activo (`bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30`) cuando se navega a `/perfil` o `/auditoria`, y optimizando el espacio visual al omitir el correo en ordenadores.
+  - **Preservación Integral en Móvil (`< 768px`):** Mantenida intacta la disposición móvil con el bloque completo del usuario a la izquierda (avatar, nombre y correo) y la navegación centralizada en la barra inferior.
 
 ### Fixed
 - **Parser Oficial SELAE de 20 Dígitos y Autodetección de Sorteo y Fecha (`selaeBarcodeParser.ts`, `TicketFormModal.tsx`):**
