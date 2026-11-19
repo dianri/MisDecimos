@@ -6,12 +6,11 @@ import {
   subscribeUserToPush,
   unsubscribeUserFromPush,
   getNotificationPermissionState,
-  isStandaloneMode,
-  detectPlatform,
   syncPushSubscription,
   isPushSupported,
 } from '../services/push/pushSubscription'
 import { resetPushPromptDismissals } from '../hooks/usePushPermissionPrompt'
+import { usePwaInstall } from '../hooks/usePwaInstall'
 import { useModalBackHandler } from '../hooks/useModalBackHandler'
 import {
   Camera,
@@ -80,9 +79,21 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
   const [isSendingTestPush, setIsSendingTestPush] = useState(false)
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default')
 
-  // Plataforma y PWA
-  const platform = detectPlatform()
-  const isStandalone = isStandaloneMode()
+  // Plataforma y PWA (gestión integral y captura fiable de beforeinstallprompt)
+  const {
+    isStandalone,
+    platform: pwaPlatform,
+    installApp,
+    isInstructionModalOpen,
+    closeInstructionsModal,
+  } = usePwaInstall()
+
+  // Integración con botón Atrás de Android para el modal de instrucciones
+  useModalBackHandler({
+    isOpen: isInstructionModalOpen,
+    onClose: closeInstructionsModal,
+    modalKey: 'pwa_instructions_modal',
+  })
 
   useEffect(() => {
     if (profile) {
@@ -643,7 +654,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
         )}
 
         {/* Aviso especial para iOS si no está instalada */}
-        {platform === 'ios' && !isStandalone && (
+        {pwaPlatform === 'ios' && !isStandalone && (
           <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
             <p className="font-semibold flex items-center gap-1.5">
               <AlertCircle className="h-4 w-4 text-amber-600" /> Web Push en dispositivos iPhone / iPad
@@ -654,15 +665,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
           </div>
         )}
 
-        {/* Botón de instalación accesible desde el perfil */}
-        {!isStandalone && (
+        {/* Indicador o botón de instalación según modo standalone */}
+        {isStandalone ? (
+          <div className="flex items-center gap-2 py-2.5 px-3.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-medium">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span>Aplicación instalada en este dispositivo</span>
+          </div>
+        ) : (
           <div className="pt-1">
             <button
               type="button"
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('trigger-pwa-install'))
+              onClick={async () => {
+                await installApp()
               }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition active:scale-98"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition active:scale-98 cursor-pointer"
             >
               <Download className="h-4 w-4 text-lottery" />
               <span>Instalar aplicación en tu dispositivo</span>
@@ -803,6 +819,138 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
             >
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Instrucciones de Instalación PWA (Fallback cuando deferredPrompt es null) */}
+      {isInstructionModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pwa-instructions-title"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-5 animate-in slide-in-from-bottom-6 duration-200">
+            {/* Pestaña táctil móvil */}
+            <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto mt-2.5 sm:hidden" />
+
+            {/* Cabecera */}
+            <div className="p-5 pb-3 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#2E6146]/10 text-[#2E6146] shadow-xs">
+                  <Download className="h-5 w-5 text-[#2E6146]" />
+                </div>
+                <div>
+                  <h3 id="pwa-instructions-title" className="text-base font-bold text-gray-900 leading-tight">
+                    Cómo instalar MisDecimos
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {pwaPlatform === 'android'
+                      ? 'Navegador Chrome en Android'
+                      : pwaPlatform === 'ios'
+                      ? 'Navegador Safari en iPhone / iPad'
+                      : 'Navegador de Escritorio'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeInstructionsModal}
+                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition cursor-pointer"
+                title="Cerrar"
+                aria-label="Cerrar instrucciones"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Pasos de instalación según plataforma */}
+            <div className="p-5 pt-2 space-y-3">
+              {pwaPlatform === 'android' ? (
+                <div className="space-y-2.5 text-xs text-gray-700">
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      1
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      Pulsa el <strong>menú de opciones (⋮)</strong> arriba a la derecha en Chrome.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      2
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      Selecciona <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      3
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      Confirma en <strong>«Instalar»</strong> para tener MisDecimos como aplicación nativa en tu móvil.
+                    </p>
+                  </div>
+                </div>
+              ) : pwaPlatform === 'ios' ? (
+                <div className="space-y-2.5 text-xs text-gray-700">
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      1
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      Pulsa el botón <strong>Compartir</strong> (icono de cuadrado con flecha hacia arriba) en la barra inferior de Safari.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      2
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      Desplaza hacia abajo y selecciona <strong>«Añadir a pantalla de inicio»</strong>.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      3
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      Pulsa <strong>«Añadir»</strong> arriba a la derecha para completar la instalación.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2.5 text-xs text-gray-700">
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      1
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      En la barra de direcciones de Chrome o Edge, pulsa el icono de instalación <strong>⊕</strong> a la derecha.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2E6146] text-white font-bold text-xs">
+                      2
+                    </span>
+                    <p className="leading-snug pt-0.5">
+                      O abre el menú (<strong>⋮</strong> / <strong>…</strong>) y selecciona <strong>«Instalar MisDecimos»</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={closeInstructionsModal}
+                className="w-full mt-3 py-2.5 px-4 rounded-xl bg-[#2E6146] text-white font-bold text-xs hover:bg-[#25503a] transition active:scale-[0.98] cursor-pointer shadow-sm"
+              >
+                Entendido
+              </button>
+            </div>
           </div>
         </div>
       )}

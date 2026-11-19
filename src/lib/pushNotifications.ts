@@ -47,7 +47,6 @@ export function detectPlatform(): PlatformType {
 export function isStandaloneMode(): boolean {
   if (typeof window === 'undefined') return false
   return (
-    localStorage.getItem('misdecimos_pwa_installed') === 'true' ||
     window.matchMedia('(display-mode: standalone)').matches ||
     (navigator as unknown as { standalone?: boolean })?.standalone === true ||
     (typeof document !== 'undefined' && Boolean(document.referrer?.startsWith('android-app://')))
