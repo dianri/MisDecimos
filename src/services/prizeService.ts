@@ -77,3 +77,47 @@ export async function resetTicketPrizeSimulation(ticketId: string): Promise<Chec
     resetSimulation: true,
   })
 }
+
+export interface RequestPrizePayoutResult {
+  success: boolean
+  share_id: string
+  requested_at: string
+  proportional_prize_cents: number
+}
+
+export interface ConfirmPrizePayoutResult {
+  success: boolean
+  share_id: string
+  ticket_status: string
+  fully_liquidated: boolean
+}
+
+export async function requestPrizePayoutConfirmation(
+  shareId: string
+): Promise<RequestPrizePayoutResult> {
+  const { data, error } = await supabase.rpc('request_prize_payout_confirmation', {
+    p_share_id: shareId,
+  })
+
+  if (error) {
+    console.error('Error solicitando confirmación de cobro:', error)
+    throw new Error(error.message || 'Error al solicitar confirmación de cobro.')
+  }
+
+  return data as unknown as RequestPrizePayoutResult
+}
+
+export async function confirmPrizePayoutReceived(
+  shareId: string
+): Promise<ConfirmPrizePayoutResult> {
+  const { data, error } = await supabase.rpc('confirm_prize_payout_received', {
+    p_share_id: shareId,
+  })
+
+  if (error) {
+    console.error('Error confirmando cobro de premio:', error)
+    throw new Error(error.message || 'Error al confirmar la recepción del premio.')
+  }
+
+  return data as unknown as ConfirmPrizePayoutResult
+}

@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.43] - 2026-11-19
+
+### Added
+- **Flujo de Solicitud y Confirmación de Cobro de Premios por Cotitular (`OwnershipBreakdownCard.tsx`, `prizeService.ts`, `prizePayoutHelper.ts`, RPCs `request_prize_payout_confirmation` y `confirm_prize_payout_received`):**
+  - **Columnas de Seguimiento en Base de Datos:** `prize_payout_requested_at` y `prize_payout_requested_by` en `public.ownership_shares` aplicadas vía migración inmutable `20261119051800_prize_payout_confirmation_flow.sql` en Supabase Cloud (`xmdghpyfrblmtjtevtru`).
+  - **RPC Transaccional `request_prize_payout_confirmation`:** Valida que el invocador sea el custodio legal del décimo con premio, registra la fecha/hora de solicitud en la participación, emite el evento de auditoría inmutable `SOLICITUD_CONFIRMACION_COBRO` con metadatos del importe proporcional y envía una notificación con deep link en `public.notifications` (disparando Web Push nativo en Android).
+  - **RPC Transaccional `confirm_prize_payout_received`:** Permite al cotitular titular de la cuota confirmar la recepción de su parte del premio, actualizando `prize_paid_confirmed = true`, emitiendo `COBRO_PREMIO_CONFIRMADO`, notificando al custodio y liquidando de forma automática el décimo (`LIQUIDADO`) cuando todas las cuotas han confirmado.
+  - **Limpieza Automática en Simulaciones:** Actualizada la RPC `reset_ticket_prize_simulation` para reiniciar limpiamente `prize_payout_requested_at` y `prize_payout_requested_by`.
+  - **Recuperación del Menú Contextual de Tres Puntos (`MoreVertical`) para el Custodio:**
+    - Visible para el custodio en cada tarjeta de cotitular aceptada que figure como `PENDIENTE DE COBRO` en décimos premiados.
+    - Acción *"Solicitar confirmación de cobro"* (o *"Reenviar solicitud de cobro"* si ya se emitió).
+    - Banner informativo en ámbar suave: *"Solicitud de confirmación de cobro enviada. Esperando respuesta del participante."*
+  - **Confirmación con un Toque para el Cotitular:** Botón interactivo destacado en verde esmeralda *"Confirmar cobro recibido (X,XX €)"* visible para el participante en su tarjeta de cotitular.
+  - **Batería de Pruebas Unitarias (`prizePayoutConfirmation.test.ts`):** 6 nuevos tests unitarios validando la visibilidad del menú de cobro, la alternancia a *"Reenviar"*, la presencia del banner de espera, el botón de confirmación del cotitular y su ocultación tras liquidar (80 tests unitarios totales superados).
+
 ## [1.0.42] - 2026-11-19
 
 ### Added

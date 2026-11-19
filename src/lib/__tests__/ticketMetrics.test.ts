@@ -37,6 +37,8 @@ const mockShare = (partial: Partial<OwnershipShareRow>): OwnershipShareRow => ({
   status: 'ACEPTADA',
   prize_paid_confirmed: false,
   prize_paid_confirmed_at: null,
+  prize_payout_requested_at: null,
+  prize_payout_requested_by: null,
   waiver_requested: false,
   waiver_requested_at: null,
   created_at: '2026-11-01T10:00:00Z',
