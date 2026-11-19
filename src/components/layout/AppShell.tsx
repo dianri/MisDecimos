@@ -186,9 +186,13 @@ export const AppShell: React.FC = () => {
             title="Inicio · Mis Billetes Compartidos"
             className="flex items-center gap-2 sm:gap-2.5 rounded-xl p-1 -ml-1 hover:bg-black/[0.03] active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 shrink-0"
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#2E6146] text-white flex items-center justify-center shadow-sm shrink-0">
-              <Ticket className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
+            <img
+              src="/pwa-192x192.png"
+              alt="MisDecimos"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-contain shadow-xs shrink-0"
+              width={36}
+              height={36}
+            />
             <span className="text-base sm:text-lg font-bold tracking-tight text-gray-900">MisDecimos</span>
           </button>
 

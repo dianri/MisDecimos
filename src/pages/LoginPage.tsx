@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { VersionBadge } from '../components/common/VersionBadge'
-import { Ticket, Mail, ArrowRight, KeyRound, Loader2, RefreshCw, AlertCircle } from 'lucide-react'
+import { Mail, ArrowRight, KeyRound, Loader2, RefreshCw, AlertCircle } from 'lucide-react'
 
 export const LoginPage: React.FC = () => {
   const [step, setStep] = useState<'email' | 'otp'>('email')
@@ -148,9 +148,13 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 space-y-6">
         {/* Cabecera / Identidad */}
         <div className="text-center space-y-2">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 shadow-sm shadow-rose-100 mb-2">
-            <Ticket className="h-8 w-8 -rotate-12" />
-          </div>
+          <img
+            src="/pwa-192x192.png"
+            alt="MisDecimos"
+            className="h-16 w-16 rounded-2xl shadow-md shadow-[#2E6146]/10 object-contain mb-2 mx-auto"
+            width={64}
+            height={64}
+          />
           <h1 className="text-2xl font-extrabold text-lottery tracking-tight">MisDecimos</h1>
           <p className="text-xs font-medium text-gray-500">
             Custodia compartida y reparto de décimos de Lotería
