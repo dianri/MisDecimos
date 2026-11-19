@@ -58,16 +58,14 @@ flowchart TD
 - **Badge Anti-Caché:** [`src/components/common/VersionBadge.tsx`](../src/components/common/VersionBadge.tsx)
 
 ### Elementos de la Interfaz:
-1. **Cabecera Superior Fija con Safe-Area Dinámica y Acceso Rápido a Perfil:**
+1. **Cabecera Superior Fija con Safe-Area Dinámica y Navegación Adaptativa:**
    - **Padding y Área Segura:** Padding superior dinámico `pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6` que garantiza 14 px de aire vertical en escritorio y dispositivos sin notch, y absorbe fluidamente la zona del notch/isla dinámica en iOS y Android sin encajonar el contenido.
-   - **Identidad del Usuario como Acceso a Perfil:** El bloque interactivo (avatar circular de 40 px + nombre + correo) ocupa todo el ancho disponible (`w-full`), permitiendo navegar directamente a la pantalla de **Perfil** (`/perfil`) con un clic o realizar scroll suave hacia arriba si ya se está en dicha pantalla.
-   - **Centralización de Cierre de Sesión:** El botón de salida se ha eliminado de la cabecera para evitar pulsaciones accidentales en pantallas táctiles y se centraliza en la pantalla de **Perfil**.
-6. **Barra Inferior Móvil (`BottomNav`):**
-   - 4 accesos fijos adaptados a pantallas táctiles (con capa base `z-30` para permanecer siempre por debajo de cualquier modal o bottom sheet `z-50`):
-     - 🎟️ **Billetes:** Dashboard de décimos en custodia y participaciones.
-     - 🔔 **Alertas:** Centro de notificaciones con badge interactivo.
-     - 🛡️ **Auditoría:** Registro global de operaciones inmutables.
-     - 👤 **Perfil:** Configuración de cuenta, avatar y notificaciones Web Push.
+   - **Identidad del Usuario como Acceso a Perfil:** El bloque interactivo (avatar circular de 40 px + nombre + correo) permite navegar directamente a la pantalla de **Perfil** (`/perfil`) con un clic o realizar scroll suave hacia arriba si ya se está en dicha pantalla.
+   - **Navegación Superior en Escritorio (`>= 768px`):** En pantallas medianas y grandes (`md:flex`), la cabecera aloja un menú horizontal a la derecha con enlaces a las 4 secciones (`Billetes`, `Alertas`, `Auditoría`, `Perfil`), con iconos, etiquetas en línea, estado activo en verde corporativo `#2E6146` y contador dinámico de notificaciones sin leer.
+   - **Centralización de Cierre de Sesión:** El botón de salida se mantiene centralizado en la pantalla de **Perfil** para evitar clics accidentales.
+2. **Barra Inferior Móvil (`BottomNav`) y Respuesta Responsive:**
+   - En dispositivos móviles (`< 768px`), la navegación se realiza mediante la barra fija inferior (`md:hidden`), con 4 accesos optimizados para el pulgar y capa base `z-30`.
+   - En ordenadores y tabletas (`>= 768px`), la barra inferior se oculta automáticamente y el relleno inferior de la pantalla se reduce (`pb-24 md:pb-10`), posicionando los toasts flotantes de forma ergonómica (`bottom-20 md:bottom-6`).
    - **Historial Completo de Navegación:** El cambio de pestaña añade entradas al historial de navegación (sin `replace: true`), permitiendo que el botón o gesto "Atrás" de Android regrese naturalmente a la vista anterior.
 3. **Gestión del Botón Atrás de Android y Protección contra Cierre PWA (`useAndroidBackNavigation` y `useModalBackHandler`):**
    - **Cierre Natural de Modales y Sheets:** Al abrir cualquier diálogo (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal` o el modal de `<VersionBadge />`), pulsar el botón Atrás cierra limpiamente el modal sin abandonar la pantalla actual ni cerrar la aplicación.

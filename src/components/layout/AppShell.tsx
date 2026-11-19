@@ -17,6 +17,19 @@ import { Ticket, Bell, Shield, User as UserIcon, LogOut, BellOff, X } from 'luci
 
 export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 
+interface NavItem {
+  id: TabType
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { id: 'billetes', label: 'Billetes', icon: Ticket },
+  { id: 'alertas', label: 'Alertas', icon: Bell },
+  { id: 'auditoria', label: 'Auditoría', icon: Shield },
+  { id: 'perfil', label: 'Perfil', icon: UserIcon },
+]
+
 export const AppShell: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth()
   const {
@@ -104,10 +117,10 @@ export const AppShell: React.FC = () => {
   const userAvatar = safeImageUrl(profile?.avatar_url)
 
   return (
-    <div className="min-h-screen bg-cream text-gray-900 flex flex-col justify-between selection:bg-lottery selection:text-white pb-20">
+    <div className="min-h-screen bg-cream text-gray-900 flex flex-col justify-between selection:bg-lottery selection:text-white pb-24 md:pb-10">
       {/* 1. Cabecera Superior Fija */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto w-full flex items-center">
+        <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-6">
           <button
             type="button"
             onClick={() => {
@@ -119,7 +132,7 @@ export const AppShell: React.FC = () => {
             }}
             aria-label="Abrir mi perfil"
             title="Ir a mi perfil"
-            className="w-full flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all hover:bg-black/[0.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer"
+            className="flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all hover:bg-black/[0.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer"
           >
             <div className="w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs">
               {userAvatar ? (
@@ -135,6 +148,41 @@ export const AppShell: React.FC = () => {
               <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
             </div>
           </button>
+
+          {/* Menú de Navegación Horizontal en Escritorio (>= 768px) */}
+          <nav aria-label="Navegación de escritorio" className="hidden md:flex items-center gap-1.5 shrink-0">
+            {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+              const isActive = activeTab === id && !selectedTicketId
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => navigateTo({ tab: id, ticketId: null })}
+                  className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-[#2E6146]/10 text-[#2E6146] font-semibold'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-black/[0.04] font-medium'
+                  }`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <Icon className="w-4 h-4" />
+                    {id === 'alertas' && unreadAlertsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                      </span>
+                    )}
+                  </div>
+                  <span>{label}</span>
+                  {id === 'alertas' && unreadAlertsCount > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+                      {unreadAlertsCount}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </nav>
         </div>
       </header>
 
@@ -166,8 +214,8 @@ export const AppShell: React.FC = () => {
         {activeTab === 'perfil' && <ProfilePage />}
       </main>
 
-      {/* 4. Badge Anti-Caché flotante (por encima de la barra inferior) */}
-      <VersionBadge className="bottom-20 right-3" />
+      {/* 4. Badge Anti-Caché flotante (por encima de la barra inferior en móvil) */}
+      <VersionBadge className="bottom-20 md:bottom-6 right-3" />
 
       {/* 5. Modal de Solicitud Inteligente de Notificaciones Push */}
       <PushPermissionModal
@@ -192,7 +240,7 @@ export const AppShell: React.FC = () => {
       {showDismissToast && (
         <div
           role="status"
-          className="fixed bottom-20 inset-x-4 max-w-md mx-auto z-50 bg-gray-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-white/10 flex items-start justify-between gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200"
+          className="fixed bottom-20 md:bottom-6 inset-x-4 max-w-md mx-auto z-50 bg-gray-900/95 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-white/10 flex items-start justify-between gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
           <div className="flex items-start gap-2.5">
             <BellOff className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
@@ -225,109 +273,54 @@ export const AppShell: React.FC = () => {
         </div>
       )}
 
-      {/* 7. Toast flotante de confirmación de salida en Android (z-50 sobre BottomNav) */}
+      {/* 8. Toast flotante de confirmación de salida en Android */}
       {showExitToast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 inset-x-0 mx-auto max-w-xs z-50 px-4 py-2.5 bg-gray-900/95 text-white text-xs font-medium rounded-full shadow-2xl backdrop-blur-md border border-white/10 flex items-center justify-center gap-2 pointer-events-none select-none animate-in fade-in slide-in-from-bottom-3 duration-200"
+          className="fixed bottom-20 md:bottom-6 inset-x-0 mx-auto max-w-xs z-50 px-4 py-2.5 bg-gray-900/95 text-white text-xs font-medium rounded-full shadow-2xl backdrop-blur-md border border-white/10 flex items-center justify-center gap-2 pointer-events-none select-none animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
           <LogOut className="h-4 w-4 text-amber-400 shrink-0" />
           <span>Pulsa atrás de nuevo para cerrar la aplicación</span>
         </div>
       )}
 
-      {/* 8. Barra de Navegación Inferior Fija (BottomNav) */}
+      {/* 9. Barra de Navegación Inferior Fija Móvil (< 768px) */}
       <nav
-        aria-label="Navegación principal"
-        className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
+        aria-label="Navegación principal móvil"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
       >
         <div className="max-w-xl mx-auto px-2 h-16 flex items-center justify-around">
-          {/* Pestaña: Billetes */}
-          <button
-            type="button"
-            onClick={() => navigateTo({ tab: 'billetes', ticketId: null })}
-            className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
-              activeTab === 'billetes'
-                ? 'text-lottery font-bold'
-                : 'text-gray-400 hover:text-gray-600 font-medium'
-            }`}
-          >
-            <div
-              className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-                activeTab === 'billetes' ? 'bg-[#E6F0EB]' : 'bg-transparent'
-              }`}
-            >
-              <Ticket className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] mt-0.5">Billetes</span>
-          </button>
-
-          {/* Pestaña: Alertas */}
-          <button
-            type="button"
-            onClick={() => navigateTo({ tab: 'alertas', ticketId: null })}
-            className={`relative flex flex-col items-center justify-center w-16 py-1 transition-all ${
-              activeTab === 'alertas'
-                ? 'text-lottery font-bold'
-                : 'text-gray-400 hover:text-gray-600 font-medium'
-            }`}
-          >
-            <div
-              className={`relative flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-                activeTab === 'alertas' ? 'bg-[#E6F0EB]' : 'bg-transparent'
-              }`}
-            >
-              <Bell className="h-5 w-5" />
-              {unreadAlertsCount > 0 && (
-                <span className="absolute top-1 right-2 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] mt-0.5">Alertas</span>
-          </button>
-
-          {/* Pestaña: Auditoría */}
-          <button
-            type="button"
-            onClick={() => navigateTo({ tab: 'auditoria', ticketId: null })}
-            className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
-              activeTab === 'auditoria'
-                ? 'text-lottery font-bold'
-                : 'text-gray-400 hover:text-gray-600 font-medium'
-            }`}
-          >
-            <div
-              className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-                activeTab === 'auditoria' ? 'bg-[#E6F0EB]' : 'bg-transparent'
-              }`}
-            >
-              <Shield className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] mt-0.5">Auditoría</span>
-          </button>
-
-          {/* Pestaña: Perfil */}
-          <button
-            type="button"
-            onClick={() => navigateTo({ tab: 'perfil', ticketId: null })}
-            className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
-              activeTab === 'perfil'
-                ? 'text-lottery font-bold'
-                : 'text-gray-400 hover:text-gray-600 font-medium'
-            }`}
-          >
-            <div
-              className={`flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-                activeTab === 'perfil' ? 'bg-[#E6F0EB]' : 'bg-transparent'
-              }`}
-            >
-              <UserIcon className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] mt-0.5">Perfil</span>
-          </button>
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeTab === id
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => navigateTo({ tab: id, ticketId: null })}
+                className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
+                  isActive
+                    ? 'text-lottery font-bold'
+                    : 'text-gray-400 hover:text-gray-600 font-medium'
+                }`}
+              >
+                <div
+                  className={`relative flex items-center justify-center w-10 h-7 rounded-full transition-all ${
+                    isActive ? 'bg-[#E6F0EB]' : 'bg-transparent'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {id === 'alertas' && unreadAlertsCount > 0 && (
+                    <span className="absolute top-1 right-2 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] mt-0.5">{label}</span>
+              </button>
+            )
+          })}
         </div>
       </nav>
     </div>
