@@ -10,6 +10,7 @@ import {
   detectPlatform,
 } from '../services/push/pushSubscription'
 import { resetPushPromptDismissals } from '../hooks/usePushPermissionPrompt'
+import { useModalBackHandler } from '../hooks/useModalBackHandler'
 import {
   Camera,
   User,
@@ -23,6 +24,9 @@ import {
   Download,
   Smartphone,
   Send,
+  Image as ImageIcon,
+  Trash2,
+  X,
 } from 'lucide-react'
 
 export const ProfilePage: React.FC = () => {
@@ -34,9 +38,17 @@ export const ProfilePage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Subida de avatar
+  // Subida de avatar y selector de origen
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+
+  useModalBackHandler({
+    isOpen: isAvatarSheetOpen,
+    onClose: () => setIsAvatarSheetOpen(false),
+    modalKey: 'avatar_picker_sheet',
+  })
 
   // Notificaciones Push
   const [pushEnabled, setPushEnabled] = useState(profile?.push_enabled || false)
@@ -186,7 +198,39 @@ export const ProfilePage: React.FC = () => {
       })
     } finally {
       setIsUploadingAvatar(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
+      if (galleryInputRef.current) galleryInputRef.current.value = ''
+    }
+  }
+
+  // 2B. Eliminar foto de perfil actual
+  const handleRemoveAvatar = async () => {
+    if (!user?.id) return
+    setIsAvatarSheetOpen(false)
+    setIsUploadingAvatar(true)
+    setStatusMsg(null)
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      await refreshProfile()
+      setStatusMsg({ type: 'success', text: 'Foto de perfil eliminada correctamente.' })
+    } catch (err: unknown) {
+      console.error('Error eliminando avatar:', err)
+      setStatusMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Error al eliminar la foto de perfil.',
+      })
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }
 
@@ -289,10 +333,23 @@ export const ProfilePage: React.FC = () => {
 
       {/* Tarjeta de Avatar y Datos */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-6">
-        {/* Avatar Circular con Botón de Cámara */}
+        {/* Avatar Circular con Botón de Cámara y Menú de Selección */}
         <div className="flex flex-col items-center">
-          <div className="relative">
-            <div className="w-28 h-28 rounded-full border-4 border-lottery shadow-md overflow-hidden bg-gray-50 flex items-center justify-center">
+          <div
+            className="relative cursor-pointer group"
+            onClick={() => setIsAvatarSheetOpen(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setIsAvatarSheetOpen(true)
+              }
+            }}
+            aria-label="Cambiar foto de perfil"
+            title="Cambiar foto de perfil"
+          >
+            <div className="w-28 h-28 rounded-full border-4 border-lottery shadow-md overflow-hidden bg-gray-50 flex items-center justify-center transition group-hover:opacity-95">
               {avatarDisplay ? (
                 <img
                   src={avatarDisplay}
@@ -306,10 +363,14 @@ export const ProfilePage: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsAvatarSheetOpen(true)
+              }}
               disabled={isUploadingAvatar}
               className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-lottery text-white flex items-center justify-center shadow-md shadow-lottery/30 hover:bg-lottery-600 active:scale-95 transition disabled:opacity-50"
               title="Cambiar foto de perfil"
+              aria-label="Abrir selector de foto de perfil"
             >
               {isUploadingAvatar ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -318,16 +379,28 @@ export const ProfilePage: React.FC = () => {
               )}
             </button>
 
+            {/* Inputs ocultos para cámara y galería */}
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/*"
+              capture="user"
+              className="hidden"
+              onChange={handleAvatarSelect}
+            />
+
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
               className="hidden"
               onChange={handleAvatarSelect}
             />
           </div>
           <p className="mt-2 text-[11px] text-gray-400">
-            {isUploadingAvatar ? 'Comprimiendo y subiendo...' : 'Toca la cámara para subir tu foto'}
+            {isUploadingAvatar
+              ? 'Comprimiendo y subiendo...'
+              : 'Toca para hacerte una foto o elegir de la galería'}
           </p>
         </div>
 
@@ -528,6 +601,95 @@ export const ProfilePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Menú de Selección de Foto de Perfil (Action Sheet / Bottom Sheet) */}
+      {isAvatarSheetOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs p-4 sm:items-center animate-in fade-in duration-150">
+          <div
+            className="fixed inset-0 -z-10"
+            onClick={() => setIsAvatarSheetOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="w-full max-w-sm bg-white rounded-3xl p-4 shadow-2xl border border-gray-100 flex flex-col gap-2 pb-[calc(1.25rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-4 duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Cambiar foto de perfil"
+          >
+            <div className="flex items-center justify-between pb-2 px-1 border-b border-gray-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                Foto de perfil
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsAvatarSheetOpen(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                aria-label="Cerrar menú"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsAvatarSheetOpen(false)
+                cameraInputRef.current?.click()
+              }}
+              className="flex items-center gap-3 w-full p-3 rounded-2xl text-left font-semibold text-xs text-gray-800 hover:bg-lottery-50 hover:text-lottery transition active:scale-[0.98]"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-lottery-50 text-lottery shrink-0">
+                <Camera className="h-4.5 w-4.5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-900">Hacer foto con la cámara</span>
+                <span className="text-[10px] text-gray-400 font-normal">Abrir cámara del dispositivo</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsAvatarSheetOpen(false)
+                galleryInputRef.current?.click()
+              }}
+              className="flex items-center gap-3 w-full p-3 rounded-2xl text-left font-semibold text-xs text-gray-800 hover:bg-lottery-50 hover:text-lottery transition active:scale-[0.98]"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-lottery-50 text-lottery shrink-0">
+                <ImageIcon className="h-4.5 w-4.5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-900">Elegir de la galería o archivos</span>
+                <span className="text-[10px] text-gray-400 font-normal">Seleccionar una imagen guardada</span>
+              </div>
+            </button>
+
+            {profile?.avatar_url && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="flex items-center gap-3 w-full p-3 rounded-2xl text-left font-semibold text-xs text-rose-600 hover:bg-rose-50 transition active:scale-[0.98]"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 shrink-0">
+                  <Trash2 className="h-4.5 w-4.5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-rose-600">Eliminar foto actual</span>
+                  <span className="text-[10px] text-rose-400 font-normal">Restablecer avatar por defecto</span>
+                </div>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsAvatarSheetOpen(false)}
+              className="mt-1 w-full py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-600 transition active:scale-[0.98]"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
