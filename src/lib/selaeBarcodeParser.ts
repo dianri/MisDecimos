@@ -12,6 +12,7 @@ export interface SelaeParsedTicket {
   fraction: string
   drawCode?: string
   drawYearCode?: string
+  year?: number
   checkDigits?: string
   drawType: 'NAVIDAD' | 'EL_NINO'
   drawName: string
@@ -70,12 +71,13 @@ export function getUpcomingDraw(today: Date = new Date()): {
 
 /**
  * Normaliza y decodifica un código de barras de décimo de SELAE.
- * Estructura verificada en décimos físicos oficiales de SELAE (20 dígitos: 2 + 3 + 2 + 3 + 6 + 4):
- * [Prefijo 2d][Código Sorteo/Año 3d][Fracción 2d][Serie 3d][Número Décimo 6d (slice -5)][Control 4d]
+ * Estructura verificada en décimos físicos oficiales de SELAE (20 dígitos canónicos: 1 + 3 + 1 + 2 + 3 + 6 + 4):
+ * [Juego (1d=5)][Código Sorteo (3d)][Dígito Año (1d)][Fracción (2d)][Serie (3d)][Número Décimo (6d, slice -5)][Control (4d)]
  *
  * Ejemplos reales de producción:
- * - 5102607065>0023205830 -> Número: 02320, Fracción: 07, Serie: 065, Sorteo/Año: 026, Control: 5830
- * - 51020101100876719833 -> Número: 87671, Fracción: 10, Serie: 110, Sorteo/Año: 020, Control: 9833
+ * - 5102502115>0493073567 -> 5 (Lotería Nac.) + 102 (Navidad) + 5 (2025) + 02 (Fracc.) + 115 (Serie) + 049307 (Nº 49307) + 3567 (Control) -> Navidad, 2025-12-22
+ * - 5002001002>0880082456 -> 5 (Lotería Nac.) + 002 (El Niño) + 0 (2020) + 01 (Fracc.) + 002 (Serie) + 088008 (Nº 88008) + 2456 (Control) -> El Niño, 2020-01-06
+ * - 5102607065>0023205830 -> 5 (Lotería Nac.) + 102 (Navidad) + 6 (2026) + 07 (Fracc.) + 065 (Serie) + 002320 (Nº 02320) + 5830 (Control) -> Navidad, 2026-12-22
  */
 export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
   if (!rawInput) {
@@ -108,22 +110,45 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
 
   const upcoming = getUpcomingDraw()
 
-  // 3. Estructura estándar oficial SELAE (20 dígitos canónicos: 2 + 3 + 2 + 3 + 6 + 4)
-  // (51|01) -> Prefijo juego Lotería Nacional (2 dígitos)
-  // (\d{3}) -> Código sorteo / año (3 dígitos, pos 2..5, ej. 026 -> año 2026)
-  // (\d{2}) -> Fracción (2 dígitos, pos 5..7, ej. 07)
-  // (\d{3}) -> Serie (3 dígitos, pos 7..10, ej. 065)
-  // (\d{6}) -> Número de 6 dígitos con cero inicial (pos 10..16, ej. 002320 -> slice(-5) '02320')
-  // (\d{4}) -> Dígitos de control (4 dígitos, pos 16..20, ej. 5830)
-  const selae20Regex = /(?:51|01)(\d{3})(\d{2})(\d{3})(\d{6})(\d{4})/
+  // 3. Estructura estándar oficial SELAE (20 dígitos canónicos: 1 + 3 + 1 + 2 + 3 + 6 + 4)
+  // (?:01)?5 -> Prefijo juego Lotería Nacional (1 dígito '5', opcionalmente precedido de AI '01')
+  // (\d{3})  -> Código sorteo (3 dígitos: 102 = Navidad, 002 = El Niño)
+  // (\d{1})  -> Último dígito del año (1 dígito: 0..9 -> 2020 + d)
+  // (\d{2})  -> Fracción (2 dígitos: 01..10)
+  // (\d{3})  -> Serie (3 dígitos: 001..185)
+  // (\d{6})  -> Número de 6 dígitos con cero inicial (slice(-5))
+  // (\d{4})  -> Dígitos de control (4 dígitos)
+  const selae20Regex = /(?:01)?5(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})/
   const match20 = digitsOnly.match(selae20Regex)
 
   if (match20) {
-    const drawYearCode = match20[1]
-    const fraction = String(parseInt(match20[2], 10) || 1).padStart(2, '0')
-    const series = String(parseInt(match20[3], 10) || 1).padStart(3, '0')
-    const ticketNumber = match20[4].slice(-5)
-    const checkDigits = match20[5]
+    const drawCode = match20[1]
+    const yearDigit = match20[2]
+    const fullYear = 2020 + Number(yearDigit)
+    const fraction = String(parseInt(match20[3], 10) || 1).padStart(2, '0')
+    const series = String(parseInt(match20[4], 10) || 1).padStart(3, '0')
+    const rawNumber = match20[5]
+    const ticketNumber = rawNumber.slice(-5)
+    const checkDigits = match20[6]
+
+    let drawType: 'NAVIDAD' | 'EL_NINO' = 'NAVIDAD'
+    let drawDate = `${fullYear}-12-22`
+    let drawName = `Sorteo Extraordinario de Navidad ${fullYear}`
+
+    if (drawCode === '102') {
+      drawType = 'NAVIDAD'
+      drawDate = `${fullYear}-12-22`
+      drawName = `Sorteo Extraordinario de Navidad ${fullYear}`
+    } else if (drawCode === '002') {
+      drawType = 'EL_NINO'
+      drawDate = `${fullYear}-01-06`
+      drawName = `Sorteo Extraordinario de El Niño ${fullYear}`
+    } else {
+      // Sorteo ordinario
+      drawType = upcoming.drawType
+      drawDate = upcoming.drawDate
+      drawName = `Sorteo Ordinario ${drawCode} (${fullYear})`
+    }
 
     return {
       isValid: true,
@@ -133,27 +158,49 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
       series,
       fraccion: fraction,
       fraction,
-      drawCode: drawYearCode,
-      drawYearCode,
+      drawCode,
+      drawYearCode: drawCode,
+      year: fullYear,
       checkDigits,
-      drawType: upcoming.drawType,
-      drawName: upcoming.drawName,
-      drawDate: upcoming.drawDate,
-      ticketPrice: upcoming.ticketPrice,
+      drawType,
+      drawName,
+      drawDate,
+      ticketPrice: 20.0,
       barcodeRaw: rawInput,
       confidence: 'HIGH',
     }
   }
 
-  // 4. Variante de 20 dígitos exactos con prefijo genérico de 2 dígitos (2 + 3 + 2 + 3 + 6 + 4)
+  // 4. Variante de 20 dígitos exactos con prefijo genérico de 1 dígito (1 + 3 + 1 + 2 + 3 + 6 + 4)
   if (digitsOnly.length === 20) {
-    const alt20Match = digitsOnly.match(/^(\d{2})(\d{3})(\d{2})(\d{3})(\d{6})(\d{4})$/)
+    const alt20Match = digitsOnly.match(/^(\d{1})(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})$/)
     if (alt20Match) {
-      const drawYearCode = alt20Match[2]
-      const fraction = String(parseInt(alt20Match[3], 10) || 1).padStart(2, '0')
-      const series = String(parseInt(alt20Match[4], 10) || 1).padStart(3, '0')
-      const ticketNumber = alt20Match[5].slice(-5)
-      const checkDigits = alt20Match[6]
+      const drawCode = alt20Match[2]
+      const yearDigit = alt20Match[3]
+      const fullYear = 2020 + Number(yearDigit)
+      const fraction = String(parseInt(alt20Match[4], 10) || 1).padStart(2, '0')
+      const series = String(parseInt(alt20Match[5], 10) || 1).padStart(3, '0')
+      const rawNumber = alt20Match[6]
+      const ticketNumber = rawNumber.slice(-5)
+      const checkDigits = alt20Match[7]
+
+      let drawType: 'NAVIDAD' | 'EL_NINO' = 'NAVIDAD'
+      let drawDate = `${fullYear}-12-22`
+      let drawName = `Sorteo Extraordinario de Navidad ${fullYear}`
+
+      if (drawCode === '102') {
+        drawType = 'NAVIDAD'
+        drawDate = `${fullYear}-12-22`
+        drawName = `Sorteo Extraordinario de Navidad ${fullYear}`
+      } else if (drawCode === '002') {
+        drawType = 'EL_NINO'
+        drawDate = `${fullYear}-01-06`
+        drawName = `Sorteo Extraordinario de El Niño ${fullYear}`
+      } else {
+        drawType = upcoming.drawType
+        drawDate = upcoming.drawDate
+        drawName = `Sorteo Ordinario ${drawCode} (${fullYear})`
+      }
 
       return {
         isValid: true,
@@ -163,13 +210,14 @@ export function parseSelaeBarcode(rawInput: string): SelaeParsedTicket {
         series,
         fraccion: fraction,
         fraction,
-        drawCode: drawYearCode,
-        drawYearCode,
+        drawCode,
+        drawYearCode: drawCode,
+        year: fullYear,
         checkDigits,
-        drawType: upcoming.drawType,
-        drawName: upcoming.drawName,
-        drawDate: upcoming.drawDate,
-        ticketPrice: upcoming.ticketPrice,
+        drawType,
+        drawName,
+        drawDate,
+        ticketPrice: 20.0,
         barcodeRaw: rawInput,
         confidence: 'HIGH',
       }

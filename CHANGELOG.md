@@ -5,7 +5,27 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-## [1.0.37] - 2026-11-19
+## [1.0.38] - 2026-11-19
+
+### Fixed
+- **Parser Oficial SELAE de 20 Dígitos y Autodetección de Sorteo y Fecha (`selaeBarcodeParser.ts`, `TicketFormModal.tsx`):**
+  - **Estructura Canónica SELAE `1 + 3 + 1 + 2 + 3 + 6 + 4`:** Corregida la descomposición del código de barras de Lotería Nacional (Code-128 / GS1-128 / ITF) con la expresión regular `/(?:01)?5(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})/`:
+    - Dígito 1 (`5`): Identificador del juego oficial de Lotería Nacional en SELAE.
+    - Dígitos 2..4 (`drawCode`, 3 dígitos): Número de sorteo del año (`102` = Navidad, `002` = El Niño).
+    - Dígito 5 (`yearDigit`, 1 dígito): Último dígito del año, resolviendo el año completo en la década (`fullYear = 2020 + Number(yearDigit)`: `0` → `2020`, `5` → `2025`, `6` → `2026`, etc.).
+    - Dígitos 6..7 (`fraction` / `fraccion`, 2 dígitos): Fracción del décimo (`01`..`10`).
+    - Dígitos 8..10 (`series` / `serie`, 3 dígitos): Serie del décimo (`001`..`185`).
+    - Dígitos 11..16 (`rawNumber`, 6 dígitos): Número del décimo con cero inicial; extracción canónica de 5 dígitos mediante `slice(-5)` (`049307` → `49307`, `088008` → `88008`, `002320` → `02320`).
+    - Dígitos 17..20 (`checkDigits`, 4 dígitos): Dígitos de control y seguridad.
+  - **Autodetección Inteligente de Tipo y Fecha de Sorteo:**
+    - `drawCode === '102'`: Asignación automática de `drawType = 'NAVIDAD'`, `drawDate = `${fullYear}-12-22`` y `drawName = `Sorteo Extraordinario de Navidad ${fullYear}``.
+    - `drawCode === '002'`: Asignación automática de `drawType = 'EL_NINO'`, `drawDate = `${fullYear}-01-06`` y `drawName = `Sorteo Extraordinario de El Niño ${fullYear}`` (resolviendo el fallo previo en décimos de El Niño con prefijo `5002...`).
+    - Sorteos ordinarios: Preserva `drawCode` y año `fullYear` con fallback seguro sin bloquear el escaneo ni la confirmación visual.
+  - **Sincronización Total en `TicketFormModal.tsx`:**
+    - Actualización explícita y bidireccional tanto en la precarga externa (`initialScannedData`) como en el escaneo interno de cámara (`handleBarcodeScanned`).
+    - Ampliado `handleDrawTypeChange` con parámetros opcionales `(type, explicitDate, explicitName)` para preservar la fecha y denominación extraídas del código de barras sin que se sobrescriban con los valores por defecto del año en curso.
+    - Autocompletado simultáneo de `number`, `serie`, `fraccion`, `drawType` (botón Navidad / El Niño seleccionado activamente), `drawDate` y `ticketPrice` (20,00 €).
+  - **Batería de Pruebas Unitarias Exhaustiva (`selaeBarcodeParser.test.ts`):** Verificación de los tres décimos reales de producción (`5102502115>0493073567`, `5002001002>0880082456`, `5102607065>0023205830`), variantes con identificadores AIM GS1 (`]C1`) y prefijos alternativos.
 
 ### Fixed
 - **Gráfico Donut SVG Sólido con Arcos Continuos sin Solapamiento (`OwnershipBreakdownCard.tsx`, `ownershipSegments.ts`):**

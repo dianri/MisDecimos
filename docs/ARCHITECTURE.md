@@ -246,7 +246,7 @@ Para solventar la confusión habitual de los usuarios al utilizar el botón ráp
   - Códigos PIN alfanuméricos de 6 caracteres (mayúsculas y números legibles sin `0/O`, `1/I`).
   - Cargas útiles JSON con propiedades `inviteCode`, `token`, `pin` o `code`.
 - **`kind: 'TICKET'`**: Detecta décimos de Lotería Nacional:
-  - Estructura SELAE oficial de 20 dígitos (`51` o `01` + sorteo/año + fracción + serie + número) decodificada con confianza alta por `parseSelaeBarcode`.
+  - Estructura SELAE oficial canónica de 20 dígitos (`1 + 3 + 1 + 2 + 3 + 6 + 4`: juego `5` + sorteo `102`/`002` + año + fracción + serie + número + control) decodificada con confianza alta y autodetección de sorteo y fecha por `parseSelaeBarcode`.
   - Números de 5 dígitos introducidos o escaneados directamente.
 - **`kind: 'UNKNOWN'`**: Ante códigos o URLs ajenas, retorna un error comprensible y activa un aviso no intrusivo en el visor de cámara sin interrumpir el flujo del usuario.
 
@@ -265,25 +265,26 @@ Para solventar la confusión habitual de los usuarios al utilizar el botón ráp
   - **Supervisión de Pistas de Hardware (`track.onended` / `track.onmute`):** Suscripción a eventos de interrupción en las pistas de vídeo activas para detectar si el sistema operativo cortó el flujo, relanzando la cámara automáticamente.
   - **Reintentos Inteligentes y Diagnóstico Visual:** Hasta 2 reintentos con intervalo de 450 ms ante errores transitorios de hardware (`NotReadableError`, `AbortError`). Ocultación del visor de vídeo congelado ante errores y botón *"Reintentar cámara"* con liberación previa garantizada.
 
-- **Estructura Estándar Oficial Definitiva (20 Dígitos: `2 + 3 + 2 + 3 + 6 + 4`):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
+- **Estructura Estándar Oficial Definitiva (20 Dígitos: `1 + 3 + 1 + 2 + 3 + 6 + 4`):** Normaliza y decodifica con precisión matemática la secuencia numérica canónica presente en los billetes físicos de Lotería Nacional (Code-128, GS1-128, ITF):
 
-| Segmento | Longitud | Posiciones | Campo decodificado | Ejemplo 1 (`5102607065>0023205830`) | Ejemplo 2 (`51020101100876719833`) |
-| :--- | :---: | :---: | :--- | :--- | :--- |
-| **Prefijo de Juego** | 2 | 0..2 | Prefijo Lotería Nacional | `51` (Navidad/Niño) o `01` | `51` (Navidad/Niño) o `01` |
-| **Código Sorteo/Año** | 3 | 2..5 | `drawYearCode` / `drawCode` | `026` (Año 2026) | `020` |
-| **Fracción** | 2 | 5..7 | `fraction` / `fraccion` | `07` (Fracción 7ª) | `10` (Fracción 10ª) |
-| **Serie** | 3 | 7..10 | `series` / `serie` | `065` (Serie 65ª) | `110` (Serie 110ª) |
-| **Número (6 dígitos)** | 6 | 10..16 | `ticketNumber` (`match[4].slice(-5)`) | `002320` → **`02320`** | `087671` → **`87671`** |
-| **Control** | 4 | 16..20 | `checkDigits` | `5830` | `9833` |
+| Segmento | Longitud | Posiciones | Campo decodificado | Ejemplo 1 (`5102502115>0493073567`) | Ejemplo 2 (`5002001002>0880082456`) | Ejemplo 3 (`5102607065>0023205830`) |
+| :--- | :---: | :---: | :--- | :--- | :--- | :--- |
+| **Juego** | 1 | 0..1 | Identificador SELAE Lotería Nacional (`5`) | `5` | `5` | `5` |
+| **Código Sorteo** | 3 | 1..4 | `drawCode` (`102` = Navidad, `002` = El Niño) | `102` (Navidad) | `002` (El Niño) | `102` (Navidad) |
+| **Dígito Año** | 1 | 4..5 | `yearDigit` (`fullYear = 2020 + Number(d)`) | `5` → **`2025`** | `0` → **`2020`** | `6` → **`2026`** |
+| **Fracción** | 2 | 5..7 | `fraction` / `fraccion` | `02` (Fracción 2ª) | `01` (Fracción 1ª) | `07` (Fracción 7ª) |
+| **Serie** | 3 | 7..10 | `series` / `serie` | `115` (Serie 115ª) | `002` (Serie 2ª) | `065` (Serie 65ª) |
+| **Número (6 dígitos)** | 6 | 10..16 | `ticketNumber` (`match[5].slice(-5)`) | `049307` → **`49307`** | `088008` → **`88008`** | `002320` → **`02320`** |
+| **Control** | 4 | 16..20 | `checkDigits` | `3567` | `2456` | `5830` |
 
-- **Expresión Regular Canónica:** `/(?:51|01)(\d{3})(\d{2})(\d{3})(\d{6})(\d{4})/` extrayendo el número del décimo como los 5 últimos dígitos del grupo 4 (`match[4].slice(-5)`), la fracción en el grupo 2 y la serie en el grupo 3.
+- **Expresión Regular Canónica:** `/(?:01)?5(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})/` admitiendo opcionalmente prefijo GS1 `01` y con fallback de 20 dígitos genéricos `^(\d{1})(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})$`.
+- **Autodetección de Tipo y Fecha de Sorteo:**
+  - `drawCode === '102'`: Determina automáticamente `drawType = 'NAVIDAD'`, `drawDate = `${fullYear}-12-22`` y `drawName = `Sorteo Extraordinario de Navidad ${fullYear}``.
+  - `drawCode === '002'`: Determina automáticamente `drawType = 'EL_NINO'`, `drawDate = `${fullYear}-01-06`` y `drawName = `Sorteo Extraordinario de El Niño ${fullYear}``.
+  - Otros sorteos ordinarios: Preserva `drawCode` y `year`, asignando fallback sin bloquear el formulario.
 - **Normalización y Resiliencia OCR:** Eliminación previa de cualquier carácter no numérico (`raw.replace(/\D/g, '')`), incluyendo separadores como `>` y prefijos de simbología GS1 (ej. `]C1`), y sustitución de confusiones de caracteres comunes (`O->0`, `I/L->1`, `Z->2`, `S->5`, `B->8`).
 - **Compatibilidad de Nombres:** Retorna aliases duales (`number`/`ticketNumber`, `serie`/`series`, `fraccion`/`fraction`, `drawCode`/`drawYearCode`).
 - **Seguridad e Integridad:** Ante códigos ajenos a SELAE o no reconocidos, devuelve `isValid: false` y mensaje explicativo en `errorMessage`, sin inventar números ni recurrir a valores hardcoded ficticios.
-- **Deducción de Sorteo Próximo:**
-  - 1 a 6 de Enero: El Niño del año en curso.
-  - 7 de Enero a 22 de Diciembre: Navidad del año en curso.
-  - A partir del 23 de Diciembre: El Niño del año siguiente.
 
 ### Motor de Renderizado Híbrido (`<RealisticTicketCard />`)
 - **Modo Plantilla Oficial (`draw_templates`):** Cuando existe una plantilla oficial registrada en la base de datos con `template_image_url`, superpone dinámicamente el número registrado, serie, fracción, fecha e importe según las coordenadas porcentuales de `overlay_config`.
