@@ -202,9 +202,11 @@ flowchart TD
   - **Reparto Manual:** Especificando porcentaje (%) o importe en euros (€), con preconfiguración al 20%.
 - Al guardar, abre [`ShareInviteModal.tsx`](../src/components/tickets/ShareInviteModal.tsx), que genera:
   - Enlace web directo `https://misdecimos.dianrie.com/invite/<token>`
-  - Código numérico de 6 dígitos
-  - Código QR generado con `qrcode.react`
-  - Botón directo para compartir el mensaje oficial por **WhatsApp**.
+  - Código numérico de 6 dígitos (`short_code`)
+  - Código QR dinámico generado con `qrcode.react`
+  - Botón directo para compartir el mensaje oficial por **WhatsApp** y Web Share API:
+    - Centralizado en `src/lib/shareHelper.ts` (`buildWhatsAppShareMessage` y `buildWhatsAppShareUrl`) con secuencias Unicode seguras (`\u{1F3AB}`, `\u{1F511}`, `\u{1F449}`) para evitar caracteres corruptos (`\uFFFD`) en vistas previas y codificación URI.
+    - Mecanismo de respaldo (fallback) para WhatsApp Escritorio (macOS/Windows): al pulsar "Enviar por WhatsApp", el mensaje completo se copia automáticamente al portapapeles y se muestra un banner contextual indicando que el usuario puede usar *Pegar (Cmd+V / Ctrl+V)* en caso de que el cliente de escritorio descarte el cuerpo y solo pegue la URL.
 
 #### E) Auditoría del Décimo (`<TicketAuditTimeline />`)
 - Historial inmutable y cronológico de todas las mutaciones producidas sobre el décimo: creación, escaneos, cesión de porcentajes, invitaciones reclamadas, renuncias solicitadas/aceptadas y confirmaciones de cobro de premios.
