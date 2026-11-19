@@ -60,8 +60,8 @@ flowchart TD
 ### Elementos de la Interfaz:
 1. **Cabecera Superior Fija con Safe-Area Dinámica y Acceso Rápido a Perfil:**
    - **Padding y Área Segura:** Padding superior dinámico `pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6` que garantiza 14 px de aire vertical en escritorio y dispositivos sin notch, y absorbe fluidamente la zona del notch/isla dinámica en iOS y Android sin encajonar el contenido.
-   - **Identidad del Usuario como Acceso a Perfil:** El bloque izquierdo (avatar circular de 40 px + nombre + correo) está configurado como un control interactivo táctil accesible (`button[type="button"]` con `aria-label="Abrir mi perfil"`). Al pulsarlo, navega directamente a la pantalla de **Perfil** (`/perfil`) añadiendo entrada al historial (permitiendo volver atrás de forma natural), o realiza un scroll suave hacia la parte superior si el usuario ya se encuentra en `/perfil`.
-   - **Botón Salir Independiente:** Ubicado a la derecha fuera del bloque de usuario (`shrink-0 px-3 py-2 rounded-xl flex items-center gap-1.5`) para una interacción cómoda y libre de colisiones de evento.
+   - **Identidad del Usuario como Acceso a Perfil:** El bloque interactivo (avatar circular de 40 px + nombre + correo) ocupa todo el ancho disponible (`w-full`), permitiendo navegar directamente a la pantalla de **Perfil** (`/perfil`) con un clic o realizar scroll suave hacia arriba si ya se está en dicha pantalla.
+   - **Centralización de Cierre de Sesión:** El botón de salida se ha eliminado de la cabecera para evitar pulsaciones accidentales en pantallas táctiles y se centraliza en la pantalla de **Perfil**.
 6. **Barra Inferior Móvil (`BottomNav`):**
    - 4 accesos fijos adaptados a pantallas táctiles (con capa base `z-30` para permanecer siempre por debajo de cualquier modal o bottom sheet `z-50`):
      - 🎟️ **Billetes:** Dashboard de décimos en custodia y participaciones.
@@ -252,4 +252,4 @@ flowchart TD
    - **En Otros Navegadores de Escritorio:** Guía para instalar desde la barra de direcciones o el menú de opciones del navegador.
    - **Acceso Manual Siempre Disponible:** El botón *"Instalar aplicación en tu dispositivo"* en la pantalla de Perfil permanece siempre activo e ignora el límite de 3 avisos automáticos para permitir la instalación en cualquier momento.
 5. **Cierre de Sesión:**
-   - Botón *"Cerrar Sesión"* que ejecuta `supabase.auth.signOut()`, limpia el estado global y devuelve al usuario a la pantalla de Login.
+   - Botón *"Cerrar sesión"* con diseño accesible en rojo suave e icono `LogOut`, confirmación previa, estado de carga durante el proceso y ejecución de `signOut()`, limpiando el estado global y devolviendo al usuario a la pantalla de Login.
