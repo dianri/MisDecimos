@@ -22,6 +22,7 @@ import {
   Send,
   CheckCheck,
   Trash2,
+  ArrowLeft,
 } from 'lucide-react'
 
 type AuditEventRow = Database['public']['Tables']['audit_events']['Row'] & {
@@ -46,6 +47,7 @@ type AuditEventRow = Database['public']['Tables']['audit_events']['Row'] & {
 
 export interface AuditPageProps {
   onSelectTicket?: (ticketId: string) => void
+  onBack?: () => void
 }
 
 type FilterCategory = 'ALL' | 'TICKETS' | 'SHARES' | 'WAIVERS' | 'PRIZES'
@@ -183,7 +185,7 @@ const ACTION_CONFIGS: Record<
   },
 }
 
-export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket }) => {
+export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) => {
   const [events, setEvents] = useState<AuditEventRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -275,6 +277,20 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket }) => {
 
   return (
     <div className="space-y-5 pb-16 max-w-xl mx-auto">
+      {/* Botón de retorno a Perfil cuando se accede desde allí */}
+      {onBack && (
+        <div>
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-black/[0.04] transition active:scale-95 cursor-pointer -ml-1"
+          >
+            <ArrowLeft className="h-4 w-4 text-gray-500" />
+            <span>Volver a Perfil</span>
+          </button>
+        </div>
+      )}
+
       {/* 1. Cabecera y Sello de Garantía */}
       <div className="flex items-center justify-between gap-3">
         <div>

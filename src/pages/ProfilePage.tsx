@@ -28,9 +28,15 @@ import {
   Trash2,
   X,
   LogOut,
+  ShieldCheck,
+  ChevronRight,
 } from 'lucide-react'
 
-export const ProfilePage: React.FC = () => {
+export interface ProfilePageProps {
+  onNavigateToAudit?: () => void
+}
+
+export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) => {
   const { user, profile, signOut, refreshProfile } = useAuth()
 
   // Formulario
@@ -616,6 +622,36 @@ export const ProfilePage: React.FC = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* 2.5 Acceso al Centro de Auditoría */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 sm:p-5">
+        <button
+          type="button"
+          onClick={() => {
+            if (onNavigateToAudit) {
+              onNavigateToAudit()
+            } else {
+              window.location.pathname = '/auditoria'
+            }
+          }}
+          className="w-full flex items-center justify-between gap-3 text-left p-1 rounded-2xl hover:bg-gray-50 transition active:scale-[0.99] cursor-pointer"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2E6146]/10 text-[#2E6146] shrink-0">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex flex-col justify-center">
+              <h3 className="text-sm font-bold text-gray-900 leading-tight">
+                Centro de Auditoría
+              </h3>
+              <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">
+                Historial inmutable de movimientos, participaciones y premios
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-gray-400 shrink-0" />
+        </button>
       </div>
 
       {/* 3. Tarjeta de Cierre de Sesión */}
