@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.43` (Producción Estable · Solicitud y Confirmación de Cobro de Premios)  
+**Versión Actual:** `1.0.44` (Producción Estable · Cabecera Superior Unificada Móvil y Escritorio)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.43`)  
+**Rama de Producción:** `main` (Tag `v1.0.44`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -122,3 +122,7 @@
 - [x] v1.0.38: Parser oficial SELAE de 20 dígitos canónicos (`1 + 3 + 1 + 2 + 3 + 6 + 4`) con expresión regular `/(?:01)?5(\d{3})(\d{1})(\d{2})(\d{3})(\d{6})(\d{4})/`, autodetección de tipo de sorteo (`102` Navidad, `002` El Niño) y fecha (`YYYY-12-22`, `YYYY-01-06`), resolución de fallo en billetes de El Niño (`5002...`), sincronización con `TicketFormModal.tsx` preservando fechas leídas sin sobrescritura y suite de pruebas unitarias con décimos reales de producción.
 - [x] v1.0.39: Cabecera superior adaptativa en escritorio (`>= 768px`): logotipo corporativo y marca **MisDecimos** a la izquierda enlazando a inicio (`/`), menú de navegación (**Billetes** y **Alertas**) y perfil de usuario compacto a la derecha separados por divisor sutil, preservando sin cambios la disposición móvil (`< 768px`).
 - [x] v1.0.40: Validación estricta de año y gestión de históricos en el comprobador de premios (`check-prizes` v4): eliminación del falso positivo "sorteo en curso" en billetes de años anteriores (ej. 2020), código específico `HISTORICAL_UNAVAILABLE` con aviso informativo neutro en gris pizarra, tarjeta clara *"Sin premio en el sorteo oficial del DD/MM/AAAA"*, paso explícito de `drawDate` en `prizeService.ts` y suite de tests unitarios (`prizeCheckerValidation.test.ts`).
+- [x] v1.0.41: Flujo completo de premios, simulación controlada y trazabilidad transaccional (`check-prizes` v5, `prizeService.ts`, `TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, RPC `reset_ticket_prize_simulation`): soporte para simular premios oficiales, cálculo transaccional de cuotas con RPC `record_ticket_prize_check`, registro inmutable `PREMIO_REGISTRADO` en auditoría, notificaciones push a cotitulares, panel de diagnóstico para custodio y reparto proporcional en euros.
+- [x] v1.0.42: Diseño visual celebratorio para décimos premiados en el listado (`TicketListItemCard.tsx`, `ticketCardHelper.ts`, `TicketsPage.tsx`): fondo degradado dorado/esmeralda, borde acentuado con halo suave, badge dinámico **`¡PREMIADO!`** (o **`LIQUIDADO`**), recuadro con importe del usuario y premio total del billete, aplicado coherentemente en Décimos, Participaciones y Archivados.
+- [x] v1.0.43: Flujo de solicitud y confirmación de cobro de premios (`OwnershipBreakdownCard.tsx`, `prizePayoutHelper.ts`, RPCs `request_prize_payout_confirmation` y `confirm_prize_payout_received`): recuperación del menú de tres puntos para el custodio con *"Solicitar confirmación de cobro"*, banner en espera de confirmación, botón destacado con un toque para que el cotitular confirme cobro recibido y liquidación automática de décimos íntegramente pagados.
+- [x] v1.0.44: Unificación estética de la cabecera superior en móvil y escritorio (`AppShell.tsx`): logotipo e isotipo corporativo de **MisDecimos** en la esquina superior izquierda como enlace interactivo directo al inicio (`/`), y acceso al perfil de usuario reubicado en la esquina superior derecha en formato compacto (avatar de 32 px + nombre hasta 110 px sin email para evitar colisiones en pantallas estrechas), manteniendo la navegación por pestañas móvil en la barra inferior.
