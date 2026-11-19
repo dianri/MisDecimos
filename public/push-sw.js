@@ -15,14 +15,15 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || 'MisDecimos'
+  const actionUrl = data.url || (data.data && data.data.url) || data.actionUrl || '/alertas'
   const options = {
-    body: data.body || '',
+    body: data.body || 'Tienes una nueva notificación en MisDecimos',
     icon: data.icon || '/pwa-192x192.png',
-    badge: data.badge || '/badge-mono.png',
+    badge: data.badge || '/pwa-192x192.png',
     tag: data.tag || 'misdecimos-notification',
     data: {
-      url: data.url || data.actionUrl || '/',
-      metadata: data.metadata || {},
+      url: actionUrl,
+      metadata: data.metadata || (data.data && data.data.metadata) || {},
     },
     vibrate: [200, 100, 200],
     requireInteraction: false,
@@ -35,24 +36,23 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
   const targetUrl =
-    (event.notification.data &&
-      (event.notification.data.url || event.notification.data.actionUrl)) ||
-    '/'
+    (event.notification.data && event.notification.data.url) ||
+    '/alertas'
+
+  const resolvedTarget = new URL(targetUrl, self.location.origin).href
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Si ya hay una ventana abierta, enfocarla y navegar a la URL
       for (const client of windowClients) {
         if ('focus' in client) {
-          if ('navigate' in client && targetUrl) {
-            client.navigate(targetUrl)
+          if ('navigate' in client && client.url !== resolvedTarget) {
+            client.navigate(resolvedTarget)
           }
           return client.focus()
         }
       }
-      // Si no hay ventana abierta, abrir una nueva
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl)
+        return clients.openWindow(resolvedTarget)
       }
     })
   )

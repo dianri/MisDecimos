@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.32` (Producción Estable · Navegación Simplificada y Auditoría en Perfil)  
+**Versión Actual:** `1.0.33` (Producción Estable · Reparación Integral de Web Push en Android)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.32`)  
+**Rama de Producción:** `main` (Tag `v1.0.33`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -114,3 +114,4 @@
 - [x] v1.0.30: Supresión del botón duplicado de campana de alertas en la tarjeta de billetes compartidos (`TicketsPage.tsx`).
 - [x] v1.0.31: Navegación adaptativa híbrida en escritorio (`md:flex` en `<header>`) y móvil (`md:hidden` en barra inferior).
 - [x] v1.0.32: Simplificación de la navegación principal a dos secciones (**Billetes** y **Alertas**), indicador activo en el avatar de cabecera y reubicación de **Auditoría** dentro de la pantalla de **Perfil** con retorno directo.
+- [x] v1.0.33: Reparación integral del pipeline de entrega Web Push en Android: autenticación en trigger `pg_net` para evitar HTTP 401 en Supabase Kong, sincronización silenciosa de suscripciones al iniciar sesión en `AppShell.tsx`, blindaje de `push-sw.js`, feedback verídico sin falsos positivos en `ProfilePage.tsx` y despliegue de `send-push` v2.

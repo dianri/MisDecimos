@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
     let targetUserId = payload.userId
     let title = payload.title || 'MisDecimos'
     let body = payload.body || ''
-    let actionUrl = payload.actionUrl || payload.url || '/'
+    let actionUrl = payload.actionUrl || payload.url || '/alertas'
     const tag = payload.tag || 'misdecimos-alert'
     const metadata = payload.metadata || {}
 
@@ -43,7 +43,12 @@ Deno.serve(async (req: Request) => {
       const authHeader = req.headers.get('Authorization')
       if (!authHeader) {
         return new Response(
-          JSON.stringify({ error: 'Falta cabecera Authorization para prueba push' }),
+          JSON.stringify({
+            error: 'Falta cabecera Authorization para prueba push',
+            sent: 0,
+            failed: 1,
+            errors: ['Falta cabecera Authorization'],
+          }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -56,7 +61,12 @@ Deno.serve(async (req: Request) => {
 
       if (userErr || !user) {
         return new Response(
-          JSON.stringify({ error: 'Token inválido o expirado' }),
+          JSON.stringify({
+            error: 'Token inválido o expirado',
+            sent: 0,
+            failed: 1,
+            errors: ['Token de usuario inválido o expirado'],
+          }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -66,7 +76,7 @@ Deno.serve(async (req: Request) => {
       body = '¡Excelente! Las notificaciones Web Push están activadas y funcionando en este dispositivo.'
       actionUrl = '/perfil'
 
-      // Registrar notificación en la base de datos
+      // Registrar notificación en la base de datos (con type PUSH_TEST para que el trigger no duplique el envío)
       await supabase.from('notifications').insert({
         user_id: targetUserId,
         type: 'PUSH_TEST',
@@ -80,7 +90,12 @@ Deno.serve(async (req: Request) => {
 
     if (!targetUserId) {
       return new Response(
-        JSON.stringify({ error: 'Se requiere userId o testPush: true' }),
+        JSON.stringify({
+          error: 'Se requiere userId o testPush: true',
+          sent: 0,
+          failed: 1,
+          errors: ['Falta parámetro userId en la solicitud'],
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -97,7 +112,11 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           success: true,
           message: 'El usuario tiene las notificaciones push desactivadas en su perfil.',
+          sent: 0,
+          failed: 0,
+          errors: ['El usuario tiene push_enabled en false'],
           sentCount: 0,
+          totalSubscriptions: 0,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -113,7 +132,12 @@ Deno.serve(async (req: Request) => {
     if (subsError) {
       console.error('Error consultando web_push_subscriptions:', subsError)
       return new Response(
-        JSON.stringify({ error: 'Error consultando suscripciones push' }),
+        JSON.stringify({
+          error: 'Error consultando suscripciones push',
+          sent: 0,
+          failed: 1,
+          errors: [subsError.message],
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -123,14 +147,20 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           success: true,
           message: 'No hay dispositivos suscritos activos para este usuario.',
+          sent: 0,
+          failed: 0,
+          errors: ['Sin suscripción push activa registrada para este usuario'],
           sentCount: 0,
+          totalSubscriptions: 0,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     let sentCount = 0
+    let failedCount = 0
     let deactivatedCount = 0
+    const errors: string[] = []
 
     // Enviar a cada suscripción activa
     for (const sub of subscriptions) {
@@ -147,7 +177,7 @@ Deno.serve(async (req: Request) => {
         body,
         url: actionUrl,
         icon: '/pwa-192x192.png',
-        badge: '/badge-mono.png',
+        badge: '/pwa-192x192.png',
         tag,
         data: {
           url: actionUrl,
@@ -159,10 +189,13 @@ Deno.serve(async (req: Request) => {
         await webpush.sendNotification(pushSubscription, pushData)
         sentCount++
       } catch (err: unknown) {
+        failedCount++
         const errorStatus = (err as { statusCode?: number })?.statusCode
+        const errorMsg = (err as Error)?.message || String(err)
+        errors.push(`Endpoint ${sub.id} (HTTP ${errorStatus}): ${errorMsg}`)
         console.error(
           `Error enviando push al endpoint ${sub.id} (status ${errorStatus}):`,
-          (err as Error)?.message || err
+          errorMsg
         )
 
         // Si la suscripción ha sido revocada por el navegador o dispositivo (404 o 410 Gone)
@@ -179,6 +212,9 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
+        sent: sentCount,
+        failed: failedCount,
+        errors,
         sentCount,
         deactivatedCount,
         totalSubscriptions: subscriptions.length,
@@ -188,7 +224,12 @@ Deno.serve(async (req: Request) => {
   } catch (err: unknown) {
     console.error('Error inesperado en send-push:', err)
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'Error interno en Edge Function' }),
+      JSON.stringify({
+        error: err instanceof Error ? err.message : 'Error interno en Edge Function',
+        sent: 0,
+        failed: 1,
+        errors: [err instanceof Error ? err.message : 'Error interno'],
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
