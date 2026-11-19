@@ -16,14 +16,19 @@ export const PWA_DISMISSED_KEY = 'misdecimos_pwa_prompt_dismissed'
 let globalDeferredPrompt: BeforeInstallPromptEvent | null = null
 
 if (typeof window !== 'undefined') {
+  if (window.__deferredPwaPrompt) {
+    globalDeferredPrompt = window.__deferredPwaPrompt
+  }
   window.addEventListener('beforeinstallprompt', (e: Event) => {
     e.preventDefault()
     globalDeferredPrompt = e as BeforeInstallPromptEvent
+    window.__deferredPwaPrompt = e as BeforeInstallPromptEvent
     window.dispatchEvent(new CustomEvent('pwa-deferred-prompt-ready'))
   })
 
   window.addEventListener('appinstalled', () => {
     globalDeferredPrompt = null
+    window.__deferredPwaPrompt = null
     localStorage.setItem(PWA_INSTALLED_KEY, 'true')
     window.dispatchEvent(new CustomEvent('pwa-installed-event'))
   })
