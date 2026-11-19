@@ -142,12 +142,25 @@ flowchart TD
 ## 4. Detalle del Décimo y Gestión de Cuotas
 
 - **Página Principal:** [`src/pages/TicketDetailPage.tsx`](../src/pages/TicketDetailPage.tsx)
+- **Cuadro de Propiedad:** [`src/components/tickets/OwnershipBreakdownCard.tsx`](../src/components/tickets/OwnershipBreakdownCard.tsx)
+- **Línea Temporal de Auditoría:** [`src/components/tickets/TicketAuditTimeline.tsx`](../src/components/tickets/TicketAuditTimeline.tsx)
 - **Boleto Realista:** [`src/components/tickets/RealisticTicketCard.tsx`](../src/components/tickets/RealisticTicketCard.tsx)
 - **Comprobación de Premios:** [`src/components/tickets/PrizeCheckCard.tsx`](../src/components/tickets/PrizeCheckCard.tsx)
-- **Cuadro de Propiedad:** [`src/components/tickets/OwnershipBreakdownCard.tsx`](../src/components/tickets/OwnershipBreakdownCard.tsx)
 - **Reparto y Participaciones:** [`src/components/tickets/CreateParticipationSheet.tsx`](../src/components/tickets/CreateParticipationSheet.tsx)
 - **Modal de Compartición (QR / Link / WhatsApp):** [`src/components/tickets/ShareInviteModal.tsx`](../src/components/tickets/ShareInviteModal.tsx)
-- **Línea Temporal de Auditoría:** [`src/components/tickets/TicketAuditTimeline.tsx`](../src/components/tickets/TicketAuditTimeline.tsx)
+
+### Estructura Vertical y Jerarquía de Contenidos:
+1. **Cabecera Superior Fija:** Botón ergonómico de retroceso contextual (`<-`), título *"Detalles del Décimo"*, subtítulo con número y sorteo (`#número · Sorteo...`) e insignia de estado (`VALIDADO` / `PENDIENTE` / `¡PREMIADO!`).
+2. **Bloque Principal de Reparto e Historial (Cabecera de Contenido):**
+   - Selector de pestañas: **Propiedad y Reparto** (`Users`) e **Historial** (`Shield`).
+   - Vista **Propiedad y Reparto**: Gráfico Donut SVG de precisión, desglose de cotitulares con importes y estados, y botón de acción *"Añadir participación"*.
+   - Vista **Historial**: Línea cronológica inmutable de eventos de auditoría (`TicketAuditTimeline`).
+3. **Boleto Realista y Metadatos Técnicos:**
+   - Tarjeta visual completa del décimo (`RealisticTicketCard`) con sello digital interactivo (5 pulsaciones para panel de diagnóstico en custodios).
+   - Fila de metadatos inferiores (`FECHA SORTEO` y `ORIGEN: Escáner GS1-128 / Manual`).
+4. **Comprobador Oficial de Premios:** Tarjeta contextual de escrutinio (`PrizeCheckCard`) con bloqueo preventivo pre-sorteo, importes netos/brutos y confirmación de cobro.
+5. **Panel Diagnóstico de Simulación:** Panel desplegable púrpura para simular premios y restablecer estados de prueba.
+6. **Acciones de Gestión y Salvaguardas:** Botones de archivar/desarchivar y eliminar (si no hay terceros aceptados), junto con el aviso de seguridad de *Protección de cotitulares*.
 
 ### Módulos Integrados en el Detalle:
 
