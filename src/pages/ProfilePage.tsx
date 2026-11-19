@@ -27,10 +27,11 @@ import {
   Image as ImageIcon,
   Trash2,
   X,
+  LogOut,
 } from 'lucide-react'
 
 export const ProfilePage: React.FC = () => {
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, profile, signOut, refreshProfile } = useAuth()
 
   // Formulario
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
@@ -43,6 +44,21 @@ export const ProfilePage: React.FC = () => {
   const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
+
+  // Cierre de sesión
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleSignOut = async () => {
+    if (isLoggingOut) return
+    if (!confirm('¿Deseas cerrar la sesión en este dispositivo?')) return
+    setIsLoggingOut(true)
+    try {
+      await signOut()
+    } catch (err: unknown) {
+      console.error('Error al cerrar sesión:', err)
+      setIsLoggingOut(false)
+    }
+  }
 
   useModalBackHandler({
     isOpen: isAvatarSheetOpen,
@@ -600,6 +616,23 @@ export const ProfilePage: React.FC = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* 3. Tarjeta de Cierre de Sesión */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 sm:p-5">
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={isLoggingOut}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-rose-200 bg-rose-50/80 text-rose-700 text-xs font-bold hover:bg-rose-100 hover:border-rose-300 transition active:scale-98 disabled:opacity-50 shadow-xs cursor-pointer"
+        >
+          {isLoggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin text-rose-600" />
+          ) : (
+            <LogOut className="h-4 w-4 text-rose-600" />
+          )}
+          <span>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</span>
+        </button>
       </div>
 
       {/* Menú de Selección de Foto de Perfil (Action Sheet / Bottom Sheet) */}

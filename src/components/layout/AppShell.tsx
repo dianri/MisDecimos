@@ -18,7 +18,7 @@ import { Ticket, Bell, Shield, User as UserIcon, LogOut, BellOff, X } from 'luci
 export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 
 export const AppShell: React.FC = () => {
-  const { user, profile, signOut, refreshProfile } = useAuth()
+  const { user, profile, refreshProfile } = useAuth()
   const {
     activeTab,
     selectedTicketId,
@@ -107,7 +107,7 @@ export const AppShell: React.FC = () => {
     <div className="min-h-screen bg-cream text-gray-900 flex flex-col justify-between selection:bg-lottery selection:text-white pb-20">
       {/* 1. Cabecera Superior Fija */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-4">
+        <div className="max-w-2xl mx-auto w-full flex items-center">
           <button
             type="button"
             onClick={() => {
@@ -119,7 +119,7 @@ export const AppShell: React.FC = () => {
             }}
             aria-label="Abrir mi perfil"
             title="Ir a mi perfil"
-            className="flex items-center gap-3.5 min-w-0 flex-1 text-left rounded-xl p-1 -ml-1 transition-all hover:bg-black/[0.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer"
+            className="w-full flex items-center gap-3.5 min-w-0 text-left rounded-xl p-1 -ml-1 transition-all hover:bg-black/[0.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer"
           >
             <div className="w-10 h-10 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs">
               {userAvatar ? (
@@ -134,20 +134,6 @@ export const AppShell: React.FC = () => {
               </p>
               <p className="text-[10px] text-gray-400 font-mono truncate">{user?.email}</p>
             </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('¿Deseas cerrar la sesión en este dispositivo?')) {
-                signOut()
-              }
-            }}
-            className="shrink-0 px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
-            title="Cerrar sesión"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Salir</span>
           </button>
         </div>
       </header>
