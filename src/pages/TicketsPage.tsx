@@ -453,7 +453,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 bg-emerald-800 text-white text-xs font-semibold rounded-2xl shadow-2xl border border-emerald-600 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="fixed bottom-20 md:bottom-6 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 bg-emerald-800 text-white text-xs font-semibold rounded-2xl shadow-2xl border border-emerald-600 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
         >
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0" />
