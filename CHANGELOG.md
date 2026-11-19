@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.44] - 2026-11-19
+
+### Added
+- **Unificación de la Cabecera Superior en Dispositivos Móviles y Escritorio (`src/components/layout/AppShell.tsx`):**
+  - **Logotipo y Marca MisDecimos a la Izquierda (Común Móvil y Escritorio):**
+    - En todos los anchos de pantalla (`w-full flex items-center justify-between gap-2`), el logotipo corporativo (caja verde `#2E6146` con icono de décimo en blanco) y el texto `MisDecimos` se posicionan fijos arriba a la izquierda.
+    - Funciona como enlace interactivo directo al inicio (`/` / pestaña `billetes`), ejecutando `window.scrollTo({ top: 0, behavior: 'smooth' })` si el usuario ya se encuentra en la pantalla principal.
+  - **Acceso a Perfil Reubicado a la Esquina Superior Derecha en Móviles (`< 768px`):**
+    - Botón compacto con avatar circular (`w-8 h-8 rounded-full border border-lottery/30`) y nombre de usuario truncado (`max-w-[110px] sm:max-w-[140px]`), omitiendo la dirección de email en la cabecera móvil para evitar colisiones y desbordamientos en pantallas estrechas.
+    - Mantiene el anillo/fondo resaltado verde esmeralda (`bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30`) cuando el usuario está en las vistas de **Perfil** o **Auditoría**.
+  - **Cabecera de Escritorio (`>= 768px`):**
+    - Conserva intacto el menú horizontal a la derecha con accesos a **Billetes** y **Alertas** (con badge dinámico de notificaciones sin leer), separador vertical sutil (`h-6 w-px bg-gray-200`) y botón de perfil de escritorio.
+  - **Preservación de la Navegación Móvil Inferior (`md:hidden`):**
+    - La barra inferior (`BottomNav`) continúa sirviendo como navegación primaria ergonómica para el pulgar entre **Billetes** y **Alertas**.
+
 ## [1.0.43] - 2026-11-19
 
 ### Added
