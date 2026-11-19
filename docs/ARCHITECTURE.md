@@ -315,3 +315,26 @@ Para solventar la confusión habitual de los usuarios al utilizar el botón ráp
 - **Caché en Memoria (Edge Runtime):** Map con clave `${drawDate}:${drawType}:${number}` para aislar sorteos del mismo número en diferentes años. TTL de 24 horas para resultados finales (`listStatus === 'final'`) y 5 minutos para listas provisionales durante la celebración del sorteo.
 - **Refresco Forzado (`forceRefresh`):** Bypasea la caché cuando el usuario pulsa *"Comprobar de nuevo"*.
 - **Persistencia Transaccional:** La Edge Function invoca la RPC `record_ticket_prize_check` con la cabecera `Authorization` del llamante, garantizando RLS estricto e inserción inmutable de auditoría.
+
+---
+
+## 6. Sistema de Identidad Visual y Assets PWA / Mobile
+
+### Especificación de Marca y Composición del Isotipo
+La identidad gráfica de **MisDecimos** evoluciona hacia una estética de orfebrería y numismática de alta seguridad inspirada en los billetes de lotería tradicionales y los sellos de la Fábrica Nacional de Moneda y Timbre (FNMT):
+- **Contenedor Squircle Superelíptico (`n = 4.70`):** Gradiente verde esmeralda profundo (`#2E6146` a `#183E2C`) con micro-bisel superior de luz.
+- **Medallón de Orfebrería Perimetral:** Doble anillo exterior dorado con guilloché de eslabones y cenefas de seguridad concéntricas.
+- **Boleto Troquelado en Forma de 'D':** Cuerpo en degradado ámbar/oro (`#F59E0B` a `#C2410C`) con troquelado de perforaciones semicirculares en su margen izquierdo (matriz de billete de lotería) y dientes de engranaje en su arco derecho.
+- **Rosa de los Vientos / Estrella Náutica de 4 Puntas:** Emblema central facetado en relieve tridimensional (`#FFFFFF`, `#FEF3C7`, `#F59E0B`, `#78350F`) simbolizando la buena fortuna y la guía en la custodia compartida.
+
+### Catálogo de Recursos de Marca (`public/`)
+| Archivo | Dimensiones / Formato | Propósito y Tratamiento Específico |
+| :--- | :---: | :--- |
+| `pwa-192x192.png` | `192x192 px` · PNG (RGBA) | Icono primario PWA, isotipo de cabecera en `AppShell.tsx`, emblema en `LoginPage.tsx` e icono de notificación Web Push en Android. Incluye esquinas transparentes antialiased. |
+| `pwa-512x512.png` | `512x512 px` · PNG (RGBA) | Icono de alta definición para el manifiesto PWA, splash screen y lanzadores de escritorio. |
+| `apple-touch-icon.png` | `180x180 px` · PNG (RGB) | Icono específico para iOS Safari / iPadOS. Fondo verde esmeralda sólido (`#22573F`) en las 4 esquinas para evitar que el renderizador de SpringBoard rellene transparencias con negro. |
+| `favicon.ico` | Multi-tamaño (`16`, `32`, `48`, `64 px`) · ICO | Favicon clásico para pestañas y marcadores en navegadores de escritorio (Windows, macOS, Linux) con realce de contraste. |
+| `favicon.svg` | Vectorial escalable · SVG | Favicon moderno para navegadores compatibles con visualización nítida a cualquier factor de escala y densidad Retina. |
+| `masked-icon.svg` | Vectorial monocromo · SVG | Máscara de un solo canal en negro (#000000) requerida por Safari para Pinned Tabs en macOS. |
+| `badge-mono.png` | `192x192 px` · PNG (Alpha) | Plantilla monocroma de silueta para la barra de estado de notificaciones en Android 5+. |
+
