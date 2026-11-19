@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.27] - 2026-11-19
+
+### Fixed
+- **Ajuste Visual de la Cabecera de Billetes Compartidos (`TicketsPage.tsx`):**
+  - Eliminado el subtítulo redundante *"MisDecimos · Trazabilidad Asegurada"* de la tarjeta superior de la pantalla principal.
+  - Alineada verticalmente la fila del título *"Mis Billetes Compartidos"* y el botón de notificaciones (`flex items-center justify-between gap-3`), logrando un espaciado más limpio y compacto antes del panel de métricas.
+
 ## [1.0.26] - 2026-11-19
 
 ### Added
