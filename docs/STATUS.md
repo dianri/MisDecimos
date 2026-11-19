@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.36` (Producción Estable · Preservación de Pestaña Activa en Detalle y Atrás)  
+**Versión Actual:** `1.0.37` (Producción Estable · Gráfico Donut SVG Sólido con Arcos Continuos)  
 **Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.36`)  
+**Rama de Producción:** `main` (Tag `v1.0.37`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -118,3 +118,4 @@
 - [x] v1.0.34: Gráfico circular segmentado de alta precisión (`OwnershipBreakdownCard.tsx` y `ownershipSegments.ts`): anillo de 50 segmentos radiales discretos distribuidos uniformemente cada 7,2° sin solapamiento de trazos naranjas, con asignación continua y excluyente por cuotas (verde Propietario, azul Cotitulares, naranja Pendientes y gris Disponible).
 - [x] v1.0.35: Deep-linking directo al décimo desde Web Push en Android: inclusión de `ticket_id`, `notification_id` y ruta canónica `/billetes/:id` en trigger y Edge Function `send-push` (v3), soporte multiventana y arranque en frío en `push-sw.js`, listener de mensajes y marcado silencioso de lectura en `AppShell.tsx`, y resolución universal de alias en `useAndroidBackNavigation.ts`.
 - [x] v1.0.36: Preservación de pestaña activa al retroceder desde el detalle de un décimo: sincronización en URL (`?tab=participaciones` y `?tab=archivados`) con `useSearchParams`, persistencia sin contaminar el historial (`{ replace: true }`), respaldo explícito `state: { fromTab: activeTab }` al abrir billetes y retorno unificado `handleBack` en `TicketDetailPage` (respetando la pestaña previa con historial `idx > 0` o derivando a `participaciones` en accesos directos de cotitulares).
+- [x] v1.0.37: Gráfico circular Donut SVG sólido (`OwnershipBreakdownCard.tsx` y `ownershipSegments.ts`): arcos continuos de alta precisión (`viewBox="0 0 160 160"`, `r = 62`, `strokeWidth = 15`) sin solapamientos, con círculo base gris para disponible y arcos proporcionales acumulados para Propietario (`#2E6146`), Cotitulares (`#2563EB`) y Pendientes (`#D97706`) con animación `duration-500`.

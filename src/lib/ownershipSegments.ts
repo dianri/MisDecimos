@@ -25,6 +25,90 @@ export const TOTAL_RADIAL_SEGMENTS = 50
 export const INNER_RADIUS = 34
 export const OUTER_RADIUS = 42.5
 
+export const DONUT_RADIUS = 62
+export const DONUT_STROKE_WIDTH = 15
+export const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS
+
+export interface DonutSolidArc {
+  category: 'propietario' | 'cotitulares' | 'pendientes'
+  color: string
+  percent: number
+  length: number
+  offset: number
+}
+
+/**
+ * Calcula los arcos SVG sólidos y continuos para el anillo Donut.
+ * Centro (80, 80), radio r=62, grosor strokeWidth=15, rotados -90° para empezar a las 12 en punto.
+ * Cada categoría > 0 genera un tramo continuo con desplazamiento acumulado para evitar cualquier solapamiento.
+ */
+export function computeSolidDonutArcs(
+  ownerPercent: number,
+  coOwnersPercent: number,
+  pendingPercent: number,
+  radius: number = DONUT_RADIUS
+): {
+  circumference: number
+  arcs: DonutSolidArc[]
+  totalAllocated: number
+  availablePercent: number
+} {
+  const circumference = 2 * Math.PI * radius
+
+  const oPct = Math.max(0, Math.min(100, Number(ownerPercent) || 0))
+  const cPct = Math.max(0, Math.min(100 - oPct, Number(coOwnersPercent) || 0))
+  const pPct = Math.max(0, Math.min(100 - (oPct + cPct), Number(pendingPercent) || 0))
+
+  const arcs: DonutSolidArc[] = []
+  let accumulatedLength = 0
+
+  if (oPct > 0) {
+    const length = (oPct / 100) * circumference
+    arcs.push({
+      category: 'propietario',
+      color: SEGMENT_COLORS.propietario,
+      percent: oPct,
+      length,
+      offset: 0,
+    })
+    accumulatedLength += length
+  }
+
+  if (cPct > 0) {
+    const length = (cPct / 100) * circumference
+    arcs.push({
+      category: 'cotitulares',
+      color: SEGMENT_COLORS.cotitulares,
+      percent: cPct,
+      length,
+      offset: -accumulatedLength,
+    })
+    accumulatedLength += length
+  }
+
+  if (pPct > 0) {
+    const length = (pPct / 100) * circumference
+    arcs.push({
+      category: 'pendientes',
+      color: SEGMENT_COLORS.pendientes,
+      percent: pPct,
+      length,
+      offset: -accumulatedLength,
+    })
+    accumulatedLength += length
+  }
+
+  const totalAllocated = oPct + cPct + pPct
+  const availablePercent = Math.max(0, 100 - totalAllocated)
+
+  return {
+    circumference,
+    arcs,
+    totalAllocated,
+    availablePercent,
+  }
+}
+
 /**
  * Calcula 50 segmentos radiales discretos distribuidos uniformemente cada 7.2°
  * empezando a las 12 en punto (-90°).
