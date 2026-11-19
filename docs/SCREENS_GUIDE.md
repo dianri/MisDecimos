@@ -193,6 +193,13 @@ flowchart TD
 - **Renuncia Voluntaria Directa del Participante:**
   - En la tarjeta de participación del propio usuario autenticado (`share.user_id === user.id`), mientras el décimo no esté liquidado ni premiado pendiente de cobro, se muestra de forma permanente el botón *"Renunciar a mi participación"* con icono `LogOut`.
   - Al pulsarlo, abre un diálogo de confirmación (`z-50` sobre `BottomNav` con integración `useModalBackHandler`) indicando el porcentaje y su importe exacto en euros. Al confirmar, ejecuta la función transaccional `renounce_own_participation`, reintegrando el porcentaje íntegro al propietario, registrando la auditoría y notificando al custodio.
+- **Redirección Inmediata y Blindaje de Historial tras Renunciar:**
+  - Tanto al renunciar voluntariamente como al aceptar una solicitud de renuncia del custodio, la aplicación no permanece en la ficha del décimo:
+    - Redirige inmediatamente a la pestaña **Participaciones** (`/?tab=participaciones`) sustituyendo la entrada actual del historial (`replace: true`).
+    - Muestra un toast informativo en color esmeralda: *"Has renunciado a la participación. El décimo se ha retirado de tus participaciones."*.
+    - Al usar el botón Atrás de Android o del navegador, no se reabre el billete renunciado.
+- **Protección de Entrada Directa a Décimos Renunciados:**
+  - Si un usuario intenta acceder a `/billetes/:id` (por ejemplo, desde una notificación previa o historial antiguo) para un décimo donde ya no es propietario ni tiene participación activa (por haber renunciado), `TicketDetailPage` intercepta la carga, muestra el toast *"Ya no tienes acceso a este décimo porque renunciaste a tu participación."* y redirige de inmediato a `/?tab=participaciones` (`replace: true`).
 
 #### D) Reparto de Participaciones (`<CreateParticipationSheet />`)
 - **Arquitectura Móvil Flex con Scroll Interno y Pie Fijo:**

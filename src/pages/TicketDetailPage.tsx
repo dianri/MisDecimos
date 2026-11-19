@@ -40,7 +40,10 @@ type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
 export interface TicketDetailPageProps {
   ticketId: string
   onBack: () => void
-  onNavigateToRoot?: (tab?: 'decimos' | 'participaciones' | 'archivados') => void
+  onNavigateToRoot?: (
+    tab?: 'decimos' | 'participaciones' | 'archivados',
+    options?: { toastMsg?: string }
+  ) => void
 }
 
 export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
@@ -176,10 +179,37 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         .eq('ticket_id', ticketId)
 
       if (sharesErr) console.error('Error cargando participaciones:', sharesErr)
-      setShares((sharesData as unknown as OwnershipShare[]) || [])
+      const loadedShares = (sharesData as unknown as OwnershipShare[]) || []
+      setShares(loadedShares)
+
+      // Protección de acceso: si el usuario no es propietario, verificar que conserve participación activa
+      const isTicketOwner = ticketData.owner_id === user.id
+      if (!isTicketOwner) {
+        const myShare = loadedShares.find((s) => s.user_id === user.id)
+        const hasActiveShare = Boolean(
+          myShare &&
+          (myShare.status === 'ACEPTADA' || myShare.status === 'PENDIENTE') &&
+          Number(myShare.percentage) > 0
+        )
+
+        if (!hasActiveShare) {
+          const isRenounced = myShare?.status === 'RENUNCIADA'
+          const toastMsg = isRenounced
+            ? 'Ya no tienes acceso a este décimo porque renunciaste a tu participación.'
+            : 'Ya no tienes acceso a este décimo.'
+
+          if (onNavigateToRoot) {
+            onNavigateToRoot('participaciones', { toastMsg })
+          } else if (onBack) {
+            onBack()
+          } else if (typeof window !== 'undefined') {
+            window.location.replace('/?tab=participaciones')
+          }
+          return
+        }
+      }
 
       // 4. Cargar invitaciones pendientes (pending_invites) exclusivamente si el usuario es el propietario
-      const isTicketOwner = ticketData.owner_id === user.id
       if (isTicketOwner) {
         const { data: invitesData, error: invitesErr } = await supabase
           .from('pending_invites')
@@ -268,6 +298,19 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       window.history.replaceState(nextState, '', window.location.href)
     }
   }, [])
+
+  // Salida automática al renunciar a una participación
+  const handleShareRenounced = useCallback(() => {
+    const toastMsg =
+      'Has renunciado a la participación. El décimo se ha retirado de tus participaciones.'
+    if (onNavigateToRoot) {
+      onNavigateToRoot('participaciones', { toastMsg })
+    } else if (onBack) {
+      onBack()
+    } else if (typeof window !== 'undefined') {
+      window.location.replace('/?tab=participaciones')
+    }
+  }, [onNavigateToRoot, onBack])
 
   // Navegación hacia atrás respetando el historial o derivando según rol en entradas directas
   const handleBack = useCallback(() => {
@@ -633,6 +676,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             shares={shares}
             pendingInvites={pendingInvites}
             onRefresh={loadTicketDetails}
+            onRenounced={handleShareRenounced}
           />
         ) : (
           <TicketAuditTimeline
