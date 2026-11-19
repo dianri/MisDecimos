@@ -24,7 +24,8 @@ export interface PwaInstallBannerProps {
   platform?: PwaPlatform
   hasNativePrompt?: boolean
   onInstall?: () => Promise<boolean> | void
-  onDismiss?: () => void
+  onDismiss?: (permanent?: boolean) => void
+  onNeverShowAgain?: () => void
   isBlocked?: boolean
 }
 
@@ -34,6 +35,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
   hasNativePrompt: propHasNativePrompt,
   onInstall: propOnInstall,
   onDismiss: propOnDismiss,
+  onNeverShowAgain: propOnNeverShowAgain,
   isBlocked,
 }) => {
   // Hook interno de fallback si no se pasan props desde AppShell
@@ -44,6 +46,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
   const hasNativePrompt =
     propHasNativePrompt !== undefined ? propHasNativePrompt : hookPrompt.hasNativePrompt
   const onDismiss = propOnDismiss || hookPrompt.dismiss
+  const onNeverShowAgain = propOnNeverShowAgain || hookPrompt.neverShowAgain
   const onInstall = propOnInstall || hookPrompt.install
 
   const [isInstalling, setIsInstalling] = useState(false)
@@ -64,6 +67,14 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
     } finally {
       setIsInstalling(false)
     }
+  }
+
+  const handleUnderstood = () => {
+    onNeverShowAgain()
+  }
+
+  const handleNeverShowAgain = () => {
+    onNeverShowAgain()
   }
 
   return (
@@ -96,7 +107,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
 
           <button
             type="button"
-            onClick={onDismiss}
+            onClick={handleNeverShowAgain}
             className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
             title="Cerrar"
           >
@@ -244,38 +255,40 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
 
         {/* Botones de acción inferiores */}
         <div className="p-5 pt-3 border-t border-gray-100 flex flex-col gap-2">
-          {platform === 'chromium' && hasNativePrompt ? (
-            <button
-              type="button"
-              onClick={handleInstallClick}
-              disabled={isInstalling}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery hover:bg-lottery-600 text-white text-xs font-bold shadow-md shadow-lottery/20 transition active:scale-[0.98] disabled:opacity-50"
-            >
-              {isInstalling ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
-              ) : (
-                <Download className="h-4 w-4 text-white" />
-              )}
-              <span>Instalar aplicación</span>
-            </button>
+          {hasNativePrompt ? (
+            <>
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                disabled={isInstalling}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery hover:bg-lottery-600 text-white text-xs font-bold shadow-md shadow-lottery/20 transition active:scale-[0.98] disabled:opacity-50"
+              >
+                {isInstalling ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  <Download className="h-4 w-4 text-white" />
+                )}
+                <span>Instalar aplicación</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNeverShowAgain}
+                className="w-full text-center py-2 text-xs font-semibold text-gray-400 hover:text-gray-600 transition cursor-pointer"
+              >
+                No volver a mostrar
+              </button>
+            </>
           ) : (
             <button
               type="button"
-              onClick={onDismiss}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-lottery hover:bg-lottery-600 text-white text-xs font-bold shadow-sm shadow-lottery/20 transition active:scale-[0.98]"
+              onClick={handleUnderstood}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-lottery hover:bg-lottery-600 text-white text-xs font-bold shadow-sm shadow-lottery/20 transition active:scale-[0.98] cursor-pointer"
             >
               <CheckCircle2 className="h-4 w-4 text-white" />
               <span>Entendido</span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="w-full text-center py-2 text-xs font-semibold text-gray-400 hover:text-gray-600 transition"
-          >
-            Ahora no
-          </button>
         </div>
       </div>
     </div>

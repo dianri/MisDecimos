@@ -188,6 +188,7 @@ export const AppShell: React.FC = () => {
         hasNativePrompt={pwaPrompt.hasNativePrompt}
         onInstall={pwaPrompt.install}
         onDismiss={pwaPrompt.dismiss}
+        onNeverShowAgain={pwaPrompt.neverShowAgain}
       />
 
       {/* 7. Toast informativo al descartar notificaciones push (5s con enlace a Perfil) */}

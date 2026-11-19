@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
-import { X, KeyRound, Ticket, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { X, KeyRound, Ticket, Loader2, AlertCircle } from 'lucide-react'
 
 interface TicketPreview {
   valid: boolean
@@ -21,7 +21,8 @@ export interface InviteClaimModalProps {
   isOpen: boolean
   initialCode?: string | null
   onClose: () => void
-  onClaimed: (ticketId: string) => void
+  onClaimed: (ticketId: string, percentage?: number) => void
+  onRejected?: () => void
 }
 
 export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
@@ -29,16 +30,15 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   initialCode,
   onClose,
   onClaimed,
+  onRejected,
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'invite_claim_modal' })
 
   const [code, setCode] = useState(initialCode || '')
   const [preview, setPreview] = useState<TicketPreview | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isConfirming, setIsConfirming] = useState(false)
-  const [isRejecting, setIsRejecting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState<'claiming' | 'rejecting' | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (initialCode) {
@@ -47,7 +47,7 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
     } else {
       setPreview(null)
       setErrorMsg(null)
-      setSuccessMsg(null)
+      setIsSubmitting(null)
     }
   }, [initialCode, isOpen])
 
@@ -84,10 +84,10 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
     }
   }
 
-  // 3. Rechazar participación (reintegro al propietario)
+  // 2. Rechazar participación (reintegro al propietario)
   const handleRejectInvite = async () => {
-    if (!code.trim() || isRejecting) return
-    setIsRejecting(true)
+    if (!code.trim() || isSubmitting) return
+    setIsSubmitting('rejecting')
     setErrorMsg(null)
 
     try {
@@ -97,23 +97,26 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
 
       if (error) throw error
 
-      setSuccessMsg('Invitación rechazada. El porcentaje ha regresado a la cuota del propietario.')
-      setTimeout(() => {
-        onClose()
-      }, 1400)
+      // Cierre inmediato del modal sin esperas
+      onClose()
+      if (onRejected) {
+        onRejected()
+      }
     } catch (err: unknown) {
       console.error('Error rechazando invitación:', err)
       setErrorMsg(
         err instanceof Error ? err.message : 'Error al rechazar la invitación.'
       )
     } finally {
-      setIsRejecting(false)
+      setIsSubmitting(null)
     }
   }
-  const handleConfirmAccept = async () => {
-    if (!code.trim()) return
 
-    setIsConfirming(true)
+  // 3. Confirmar y reclamar participación (p_confirm = true)
+  const handleConfirmAccept = async () => {
+    if (!code.trim() || isSubmitting) return
+
+    setIsSubmitting('claiming')
     setErrorMsg(null)
 
     try {
@@ -124,21 +127,24 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
 
       if (error) throw error
 
-      const result = data as { success?: boolean; ticket_id?: string }
-      setSuccessMsg('¡Participación aceptada con éxito!')
-      setTimeout(() => {
-        if (result?.ticket_id) {
-          onClaimed(result.ticket_id)
-        }
-        onClose()
-      }, 1200)
+      const result = data as { success?: boolean; ticket_id?: string; percentage?: number }
+      const claimedTicketId = result?.ticket_id || preview?.ticket_id || ''
+      const claimedPercentage = result?.percentage ?? preview?.percentage
+
+      // Cierre inmediato del modal sin esperas ni setTimeouts
+      onClose()
+
+      // Lanzar actualización de datos en segundo plano
+      if (claimedTicketId) {
+        onClaimed(claimedTicketId, claimedPercentage)
+      }
     } catch (err: unknown) {
       console.error('Error aceptando participación:', err)
       setErrorMsg(
         err instanceof Error ? err.message : 'Error al confirmar la participación en el décimo.'
       )
     } finally {
-      setIsConfirming(false)
+      setIsSubmitting(null)
     }
   }
 
@@ -175,13 +181,6 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
             <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
               <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span>{successMsg}</span>
             </div>
           )}
 
@@ -277,21 +276,21 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setPreview(null)}
-                    disabled={isConfirming || isRejecting}
-                    className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                    disabled={isSubmitting !== null}
+                    className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition active:scale-98 disabled:opacity-50 cursor-pointer"
                   >
                     Volver
                   </button>
                   <button
                     type="button"
                     onClick={handleConfirmAccept}
-                    disabled={isConfirming || isRejecting}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-lottery text-white text-xs font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+                    disabled={isSubmitting !== null}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-lottery text-white text-xs font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50 cursor-pointer"
                   >
-                    {isConfirming ? (
+                    {isSubmitting === 'claiming' ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Confirmando...</span>
+                        <span>Reclamando...</span>
                       </>
                     ) : (
                       <span>Reclamar {preview.percentage}%</span>
@@ -302,10 +301,17 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                 <button
                   type="button"
                   onClick={handleRejectInvite}
-                  disabled={isConfirming || isRejecting}
-                  className="w-full py-2 px-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition active:scale-98 disabled:opacity-50"
+                  disabled={isSubmitting !== null}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition active:scale-98 disabled:opacity-50 cursor-pointer"
                 >
-                  {isRejecting ? 'Rechazando...' : 'Rechazar participación'}
+                  {isSubmitting === 'rejecting' ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Rechazando...</span>
+                    </>
+                  ) : (
+                    <span>Rechazar participación</span>
+                  )}
                 </button>
               </div>
             </div>
