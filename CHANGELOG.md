@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.52] - 2026-11-19
+
+### Fixed
+- **Símbolos Seguros del Plano BMP para Compartir por WhatsApp (`src/lib/shareHelper.ts`, `src/lib/__tests__/whatsappShare.test.ts`):**
+  - **Sustitución de Emojis de 4 Bytes por Símbolos BMP (3 Bytes, `<= 0xFFFF`):**
+    - En `buildWhatsAppShareMessage`, se sustituyen los emojis suplementarios de 4 bytes (`\u{1F3AB}`, `\u{1F511}`, `\u{1F449}`) por símbolos Unicode seguros del Plano Básico Multilingüe:
+      - `\u2605` (★) para destacar el décimo y el porcentaje cedido.
+      - `\u2022` (•) para el código PIN de 6 dígitos.
+      - `\u2192` (→) para el enlace web directo de reclamación.
+    - Se elimina de raíz la alteración que el servidor web `api.whatsapp.com/send` efectuaba al recibir caracteres de 4 bytes codificados en pares subrogados UTF-16, transformándolos erróneamente en el carácter de sustitución `\uFFFD` ().
+  - **Batería de Pruebas Unitarias Reforzada (`src/lib/__tests__/whatsappShare.test.ts`):**
+    - Nueva prueba que itera sobre cada unidad de código y punto de código del mensaje generado para verificar formalmente que ningún carácter excede `0xFFFF`, que no existen pares subrogados (`0xD800` a `0xDFFF`) y que no aparece `\uFFFD`.
+    - Total de 106 pruebas unitarias ejecutadas con 100% de éxito.
+
 ## [1.0.51] - 2026-11-19
 
 ### Fixed
