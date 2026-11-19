@@ -232,11 +232,15 @@ flowchart TD
 ### Funcionalidad y Controles:
 1. **Filtro de Estado:** Alternador entre *"Todas las alertas"* y *"Solo no leídas"*.
 2. **Formato Temporal:** Estampas temporales formateadas en `HH:mm - DD/MM` (ej. `14:35 - 22/12`).
-3. **Acciones Rápidas en la Alerta:**
-   - Si la alerta corresponde a una solicitud de renuncia de participación, ofrece directamente dos botones:
-     - ✅ **Aceptar Renuncia:** Ejecuta `respond_waiver(..., p_accept = true)`.
-     - ❌ **Rechazar:** Ejecuta `respond_waiver(..., p_accept = false)`.
-   - Clicar en cualquier alerta redirige automáticamente a la ficha del décimo correspondiente.
+3. **Acciones Rápidas y Protección de Acceso en la Alerta:**
+   - Si la alerta corresponde a una solicitud de renuncia de participación activa, ofrece directamente dos botones:
+     - ✅ **Aceptar Renuncia:** Ejecuta `respond_share_waiver(..., p_accept = true)`.
+     - ❌ **Rechazar:** Ejecuta `respond_share_waiver(..., p_accept = false)`.
+   - **Bloqueo de Décimos Renunciados:** Si el usuario ya ha renunciado a su participación en el billete al que apunta la alerta (`status === 'RENUNCIADA'`):
+     - La tarjeta de alerta y los botones de acción inhabilitan la navegación hacia `/billete/:id`.
+     - El enlace *"Ver billete"* se sustituye por la insignia deshabilitada `Participación renunciada · Sin acceso`.
+     - Al pulsar la alerta, esta se marca como leída y muestra un toast informativo (`Ya renunciaste a esta participación; no tienes acceso al décimo.`) sin permitir el acceso al billete.
+   - Para alertas con participación activa o de propietario, clicar en la alerta o en *"Ver billete"* redirige al detalle del décimo correspondiente.
 4. **Deep-Linking Directo desde Notificaciones Web Push (Android PWA):**
    - Al pulsar una notificación Web Push en Android, la aplicación se abre y navega directamente al detalle del billete (`/billetes/:id`) tanto en arranque en frío como con la app en segundo plano.
    - La notificación pulsada se marca automáticamente como leída en segundo plano en Supabase (`is_read = true`).

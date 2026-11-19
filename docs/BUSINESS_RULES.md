@@ -76,6 +76,8 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   - Si el usuario pulsa Atrás en Android o en el navegador, no podrá volver al décimo renunciado.
 - **Protección de Acceso a Décimos con Participación Renunciada:**
   - Si un usuario no propietario intenta acceder directamente a `/billetes/:id` de un billete cuya cuota fue renunciada (o no activa), la ficha bloquea la carga, muestra el toast *"Ya no tienes acceso a este décimo porque renunciaste a tu participación."* y redirige de inmediato a `/?tab=participaciones` (`replace: true`).
+  - Al confirmarse la renuncia (en la ficha o desde la bandeja de alertas), todas las notificaciones pendientes vinculadas a dicho billete para ese usuario se marcan atómicamente como leídas en Supabase (`is_read = true`).
+  - En la bandeja de Alertas (`AlertsPage.tsx`), las alertas asociadas a décimos con participación renunciada inhabilitan el acceso a la ficha, sustituyen el enlace *"Ver billete"* por la insignia `Participación renunciada · Sin acceso` y al pulsarse muestran el aviso informativo sin transferir navegación.
 
 ---
 

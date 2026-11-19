@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.51] - 2026-11-19
+
+### Fixed
+- **Bloqueo de Navegación y Marcado de Lectura para Décimos Renunciados en Alertas y Detalle (`AlertsPage.tsx`, `TicketDetailPage.tsx`, `renouncedAlerts.ts`):**
+  - **Inhabilitación de Navegación desde la Bandeja de Alertas (`AlertsPage.tsx`, `renouncedAlerts.ts`):**
+    - Carga reactiva de los `ticket_id` de participaciones con `status === 'RENUNCIADA'` (y `role !== 'PROPIETARIO'`) para el usuario autenticado.
+    - Extracción universal y tipada del identificador de décimo en notificaciones mediante `extractTicketIdFromNotification()` (vía `ticket_id`, `metadata.ticket_id` o `action_url` con soporte para `/billetes/`, `/billete/`, `/decimos/` y `/tickets/`).
+    - En alertas asociadas a décimos renunciados:
+      - Se suprime la navegación hacia `/billete/:id` al pulsar sobre la tarjeta o cualquier botón secundario.
+      - Se sustituye el enlace interactivo *"Ver billete"* por la insignia fija `Participación renunciada · Sin acceso` (`bg-gray-100 text-gray-500 border-gray-200/80` con icono `Ban`).
+      - Se ocultan los botones de acción de solicitud de renuncia (`isWaiverRequest`), impidiendo reinteracciones ambiguas en cuotas ya extinguidas.
+      - Al pulsar sobre la tarjeta de alerta, esta se marca como leída en Supabase (`is_read = true`) y muestra un toast informativo ámbar: *"Ya renunciaste a esta participación; no tienes acceso al décimo."*, manteniéndose en la pantalla de alertas sin transferir foco.
+  - **Marcado Automático de Notificaciones al Renunciar (`AlertsPage.tsx`, `TicketDetailPage.tsx`):**
+    - Al aceptar la renuncia desde la propia alerta (`respond_share_waiver`), se marcan atómicamente todas las notificaciones pendientes vinculadas a dicho décimo (`ticket_id`) para el usuario como leídas (`is_read = true`).
+    - Al renunciar voluntariamente desde el detalle del décimo (`TicketDetailPage.tsx`), se marcan como leídas todas las notificaciones del usuario para ese `ticket_id` antes de redirigir a `/?tab=participaciones`.
+    - Blindaje estricto del renderizado en `TicketDetailPage.tsx`: si un usuario no propietario no tiene participación activa (`status === 'ACEPTADA'` o `'PENDIENTE'` con porcentaje mayor a 0), se retorna un estado de carga mientras se ejecuta la redirección, evitando cualquier parpadeo o visualización accidental del billete.
+  - **Batería de Pruebas Unitarias (`src/lib/__tests__/renouncedAlerts.test.ts`):**
+    - 6 nuevos tests unitarios verificando la extracción de `ticket_id` (directo, metadata y patrones de URL), detección precisa de décimos renunciados y bloqueo selectivo de navegación en `canNavigateToTicketFromAlert()` (total de 105 tests unitarios en la suite general, todos aprobados al 100%).
+
 ## [1.0.50] - 2026-11-19
 
 ### Fixed
