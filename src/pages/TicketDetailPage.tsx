@@ -492,28 +492,29 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   }
 
   return (
-    <div className="space-y-6 pb-16 max-w-xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 pb-16 max-w-xl mx-auto">
       {/* 1. Cabecera */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={handleBack}
-            className="p-2 rounded-2xl bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 active:scale-95 transition shadow-xs"
+            aria-label="Volver atrás"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 active:scale-95 transition shadow-xs shrink-0"
             title="Volver"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div>
-            <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight truncate">
               Detalles del Décimo
             </h2>
-            <p className="text-[11px] text-gray-500">#{ticket.number} · {ticket.draw_name}</p>
+            <p className="text-[11px] text-gray-500 truncate">#{ticket.number} · {ticket.draw_name}</p>
           </div>
         </div>
 
         <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider ${getStatusBadgeStyle(
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider shrink-0 ${getStatusBadgeStyle(
             ticket.status
           )}`}
         >
@@ -539,19 +540,19 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       )}
 
       {/* 2. Pestañas de PROPIEDAD e HISTORIAL */}
-      <div className="space-y-4">
-        <div className="flex border-b border-gray-200">
+      <div className="space-y-2.5 sm:space-y-4">
+        <div className="grid grid-cols-2 border-b border-gray-200">
           <button
             type="button"
             onClick={() => setActiveTab('propiedad')}
-            className={`flex items-center gap-1.5 pb-2.5 px-4 text-xs font-bold border-b-2 transition ${
+            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition ${
               activeTab === 'propiedad'
                 ? 'border-lottery text-lottery'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <Users className="h-3.5 w-3.5" />
-            <span>
+            <Users className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">
               Propiedad y Reparto ({shares.length + pendingInvites.length})
             </span>
           </button>
@@ -559,14 +560,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('historial')}
-            className={`flex items-center gap-1.5 pb-2.5 px-4 text-xs font-bold border-b-2 transition ${
+            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition ${
               activeTab === 'historial'
                 ? 'border-lottery text-lottery'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <Shield className="h-3.5 w-3.5" />
-            <span>Historial ({auditEvents.length})</span>
+            <Shield className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Historial ({auditEvents.length})</span>
           </button>
         </div>
 
@@ -592,7 +593,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       </div>
 
       {/* 3. Tarjeta Realista del Boleto y Metadatos */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-2.5 sm:space-y-3 pt-0 sm:pt-2">
         <RealisticTicketCard
           ticket={ticket}
           template={template}

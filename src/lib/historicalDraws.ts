@@ -135,12 +135,12 @@ export const EL_NINO_DRAWS: Record<string, HistoricalElNinoDraw> = {
   },
 }
 
-function prevNum(nStr: string): string {
+export function prevNum(nStr: string): string {
   const n = parseInt(nStr, 10)
   return String(n === 0 ? 99999 : n - 1).padStart(5, '0')
 }
 
-function nextNum(nStr: string): string {
+export function nextNum(nStr: string): string {
   const n = parseInt(nStr, 10)
   return String(n === 99999 ? 0 : n + 1).padStart(5, '0')
 }
@@ -159,7 +159,14 @@ export function evaluateHistoricalDraw(
   drawType: string,
   ticketNumber: string
 ): HistoricalEvaluationResult {
-  const cleanNumber = String(ticketNumber || '').trim().padStart(5, '0')
+  const trimmed = String(ticketNumber ?? '').trim()
+  if (!/^\d{1,5}$/.test(trimmed)) {
+    return {
+      found: false,
+      prizePerDecimoCents: 0,
+    }
+  }
+  const cleanNumber = trimmed.padStart(5, '0')
 
   const isNavidad =
     drawType === 'NAVIDAD' ||
@@ -185,7 +192,7 @@ export function evaluateHistoricalDraw(
   }
 }
 
-function evaluateNavidadDraw(
+export function evaluateNavidadDraw(
   num: string,
   draw: HistoricalNavidadDraw
 ): HistoricalEvaluationResult {
@@ -283,7 +290,7 @@ function evaluateNavidadDraw(
   }
 }
 
-function evaluateElNinoDraw(
+export function evaluateElNinoDraw(
   num: string,
   draw: HistoricalElNinoDraw
 ): HistoricalEvaluationResult {

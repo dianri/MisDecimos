@@ -150,9 +150,9 @@ flowchart TD
 - **Modal de Compartición (QR / Link / WhatsApp):** [`src/components/tickets/ShareInviteModal.tsx`](../src/components/tickets/ShareInviteModal.tsx)
 
 ### Estructura Vertical y Jerarquía de Contenidos:
-1. **Cabecera Superior Fija:** Botón ergonómico de retroceso contextual (`<-`), título *"Detalles del Décimo"*, subtítulo con número y sorteo (`#número · Sorteo...`) e insignia de estado (`VALIDADO` / `PENDIENTE` / `¡PREMIADO!`).
+1. **Cabecera Superior Fija:** Botón ergonómico de retroceso contextual (`<-`, área táctil accesible `>= 44×44 px` con `aria-label="Volver atrás"`), título *"Detalles del Décimo"*, subtítulo con número y sorteo (`#número · Sorteo...`) e insignia de estado (`VALIDADO` / `PENDIENTE` / `¡PREMIADO!`).
 2. **Bloque Principal de Reparto e Historial (Cabecera de Contenido):**
-   - Selector de pestañas: **Propiedad y Reparto** (`Users`) e **Historial** (`Shield`).
+   - Selector de pestañas simétrico (`grid-cols-2`, altura táctil `>= 44 px`) con espaciado vertical compacto en móvil para mantener el décimo visible en el primer pliegue: **Propiedad y Reparto** (`Users`) e **Historial** (`Shield`).
    - Vista **Propiedad y Reparto**: Gráfico Donut SVG de precisión, desglose de cotitulares con importes y estados, y botón de acción *"Añadir participación"*.
    - Vista **Historial**: Línea cronológica inmutable de eventos de auditoría (`TicketAuditTimeline`).
 3. **Boleto Realista y Metadatos Técnicos:**

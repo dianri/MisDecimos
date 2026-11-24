@@ -1,6 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { evaluateHistoricalDraw } from '../historicalDraws.ts'
+import {
+  evaluateHistoricalDraw,
+  evaluateNavidadDraw,
+  evaluateElNinoDraw,
+  prevNum,
+  nextNum,
+} from '../historicalDraws.ts'
 import { HISTORICAL_TICKETS_FIXTURES } from '../__fixtures__/historicalTickets.ts'
 
 test('Navidad 2025 - El Gordo (79432) otorga 400.000 € por décimo', () => {
@@ -101,4 +107,87 @@ test('Sorteo no registrado devuelve found: false', () => {
   const res = evaluateHistoricalDraw('2026-12-22', 'NAVIDAD', '79432')
   assert.equal(res.found, false)
   assert.equal(res.prizePerDecimoCents, 0)
+})
+
+test('Aproximaciones circulares en extremos (00000 <-> 99999)', () => {
+  assert.equal(prevNum('00000'), '99999')
+  assert.equal(nextNum('00000'), '00001')
+  assert.equal(prevNum('99999'), '99998')
+  assert.equal(nextNum('99999'), '00000')
+
+  const drawZero = {
+    first: '00000',
+    second: '99999',
+    third: '50000',
+    fourths: ['11111', '22222'],
+    fifths: ['33333', '44444', '55555', '66666', '77777', '88888', '12345', '54321'],
+  }
+
+  const approxZeroPrev = evaluateNavidadDraw('99999', drawZero)
+  // 99999 is the 2nd prize itself here, so test 00000 as first with separate second prize
+  const drawExtremeFirst = { ...drawZero, second: '40000' }
+  const res99999 = evaluateNavidadDraw('99999', drawExtremeFirst)
+  const res00001 = evaluateNavidadDraw('00001', drawExtremeFirst)
+  assert.equal(res99999.prizePerDecimoCents, 200_000)
+  assert.equal(res99999.prizeCategory, 'Aproximación 1.º Premio')
+  assert.equal(res00001.prizePerDecimoCents, 200_000)
+  assert.equal(res00001.prizeCategory, 'Aproximación 1.º Premio')
+
+  const drawExtremeSecond = { ...drawZero, first: '30000', second: '99999' }
+  const res99998 = evaluateNavidadDraw('99998', drawExtremeSecond)
+  const res00000 = evaluateNavidadDraw('00000', drawExtremeSecond)
+  assert.equal(res99998.prizePerDecimoCents, 125_000)
+  assert.equal(res99998.prizeCategory, 'Aproximación 2.º Premio')
+  assert.equal(res00000.prizePerDecimoCents, 125_000)
+  assert.equal(res00000.prizeCategory, 'Aproximación 2.º Premio')
+  assert.equal(approxZeroPrev.prizePerDecimoCents, 12_500_000)
+})
+
+test('Normalización de entradas atípicas (espacios, >5 dígitos, cadena vacía)', () => {
+  // Espacios alrededor de un número válido
+  const withSpaces = evaluateHistoricalDraw('2025-12-22', 'NAVIDAD', ' 00002 ')
+  assert.equal(withSpaces.found, true)
+  assert.equal(withSpaces.prizePerDecimoCents, 2_000)
+  assert.equal(withSpaces.prizeCategory, 'Reintegro')
+
+  // Longitud mayor de 5 dígitos debe rechazarse
+  const tooLong = evaluateHistoricalDraw('2025-12-22', 'NAVIDAD', '123456')
+  assert.equal(tooLong.found, false)
+  assert.equal(tooLong.prizePerDecimoCents, 0)
+
+  // Cadena vacía debe rechazarse (no convertirse en 00000)
+  const empty = evaluateHistoricalDraw('2025-12-22', 'NAVIDAD', '')
+  assert.equal(empty.found, false)
+  assert.equal(empty.prizePerDecimoCents, 0)
+})
+
+test('Acumulación válida vs absorción de reintegro en Navidad y no solapamiento en El Niño', () => {
+  // Navidad 2025: 1º = 79432 (centena 794), 2º = 70048 (últimas 2 cifras 48)
+  // El número 79448 acumula Centena 1.º (100 €) + Dos últimas cifras 2.º (100 €) = 200 €
+  const accumulated = evaluateHistoricalDraw('2025-12-22', 'NAVIDAD', '79448')
+  assert.equal(accumulated.found, true)
+  assert.equal(accumulated.prizePerDecimoCents, 20_000)
+  assert.ok(accumulated.prizeCategory?.includes('Centena 1.º Premio'))
+  assert.ok(accumulated.prizeCategory?.includes('Dos últimas cifras 2.º Premio'))
+
+  // Navidad 2025: 11132 coincide en 2 últimas cifras del Gordo (32) -> 100 €, absorbe el reintegro de 20 € (NO 120 €)
+  const absorbed = evaluateHistoricalDraw('2025-12-22', 'NAVIDAD', '11132')
+  assert.equal(absorbed.found, true)
+  assert.equal(absorbed.prizePerDecimoCents, 10_000)
+  assert.equal(absorbed.prizeCategory, 'Dos últimas cifras 1.º Premio')
+
+  // El Niño: extracciones de 4 y 2 cifras no se solapan ni duplican premio
+  const syntheticNino = {
+    first: '78908',
+    second: '06766',
+    third: '66777',
+    fourDigits: ['1234'],
+    threeDigits: ['234'],
+    twoDigits: ['34'],
+    reintegros: ['4'],
+  }
+  const ninoOverlap = evaluateElNinoDraw('01234', syntheticNino)
+  assert.equal(ninoOverlap.found, true)
+  assert.equal(ninoOverlap.prizePerDecimoCents, 35_000)
+  assert.equal(ninoOverlap.prizeCategory, 'Terminación 4 cifras')
 })
