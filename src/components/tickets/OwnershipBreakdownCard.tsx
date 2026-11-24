@@ -377,7 +377,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 sm:space-y-5">
       {/* 1. Header con Título y Refresh */}
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
@@ -414,8 +414,8 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       )}
 
       {/* 2. Gráfico Donut SVG Sólido */}
-      <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
-        <div className="relative w-44 h-44 flex items-center justify-center">
+      <div className="bg-white rounded-3xl p-3.5 sm:p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+        <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
           <svg
             className="w-full h-full"
             viewBox="0 0 160 160"
@@ -466,7 +466,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         </div>
 
         {/* Leyenda Visual */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-4 text-[11px] font-medium text-gray-600">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-2.5 sm:mt-4 text-[11px] font-medium text-gray-600">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#2E6146]" />
             <span>Propietario ({ownerPct}%)</span>

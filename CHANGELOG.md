@@ -5,6 +5,23 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.56] - 2026-11-25
+
+### Added
+- **Batería de Pruebas Unitarias para Casos Límite (`historicalDraws.test.ts`, `prizeDistribution.test.ts`):**
+  - **Premios SELAE:** Validación de aproximaciones circulares en extremos (`00000` ↔ `99999`), normalización de entradas atípicas (espacios, >5 dígitos, cadena vacía), acumulación válida (centena 1.º + 2 últimas cifras 2.º = `200 €`), absorción de reintegro en Navidad (`100 €` sin duplicar `20 €`) y no solapamiento de extracciones de 4 y 2 cifras en El Niño.
+  - **Reparto y Métricas:** Verificación de reparto exacto con decimales periódicos (`33.33%`, `33.33%`, `33.34%`) sin pérdida de céntimos por redondeo, exclusión estricta de estados `PENDIENTE`, `CANCELADA` y `RENUNCIADA` en contadores activos/premios, y cálculo fraccionado para el custodio (`40%` de `1.000 €` = `400 €`).
+
+### Fixed
+- **Validación Estricta de Número de Décimo (`src/lib/historicalDraws.ts`, `supabase/functions/check-prizes/historicalDraws.ts`):**
+  - Rechazo seguro de entradas vacías (`""`), no numéricas o mayores de 5 dígitos (`!/^\d{1,5}$/`) devolviendo `found: false` y `0` céntimos en lugar de rellenar con ceros erróneamente, con redespliegue de `check-prizes` en Supabase.
+
+### Changed
+- **Ergonomía Táctil y Primer Pliegue Móvil (`src/pages/TicketDetailPage.tsx`, `src/components/tickets/OwnershipBreakdownCard.tsx`):**
+  - Ampliado el botón de retroceso (`handleBack`) a un área táctil mínima accesible (`min-h-[44px] min-w-[44px]`) con `aria-label="Volver atrás"`.
+  - Selector de pestañas (**Propiedad y Reparto** / **Historial**) maquetado en `grid grid-cols-2` simétrico con altura táctil `min-h-[44px]`.
+  - Espaciado vertical compactado en viewports móviles (`< 640px`) en el bloque de reparto y gráfico Donut (`w-36 h-36 sm:w-44 sm:h-44`) para mantener visible la tarjeta del décimo (`RealisticTicketCard`) en el primer pantallazo.
+
 ## [1.0.55] - 2026-11-24
 
 ### Added
