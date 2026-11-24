@@ -65,6 +65,21 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
+  const [autoOpenCreateShare, setAutoOpenCreateShare] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return Boolean((window.history.state as { openCreateShare?: boolean } | null)?.openCreateShare)
+    }
+    return false
+  })
+
+  const handleAutoOpenHandled = useCallback(() => {
+    setAutoOpenCreateShare(false)
+    if (typeof window !== 'undefined' && window.history.state?.openCreateShare) {
+      const nextState = { ...window.history.state }
+      delete nextState.openCreateShare
+      window.history.replaceState(nextState, '', window.location.href)
+    }
+  }, [])
 
   // Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 toques consecutivos en el sello digital)
   const [showSimulationPanel, setShowSimulationPanel] = useState(
@@ -583,6 +598,8 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             pendingInvites={pendingInvites}
             onRefresh={loadTicketDetails}
             onRenounced={handleShareRenounced}
+            autoOpenCreateShare={autoOpenCreateShare}
+            onAutoOpenHandled={handleAutoOpenHandled}
           />
         ) : (
           <TicketAuditTimeline
@@ -692,12 +709,12 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           {isArchived ? (
             <>
               <ArchiveRestore className="h-4 w-4 text-lottery" />
-              <span>Desarchivar billete</span>
+              <span>Desarchivar décimo</span>
             </>
           ) : (
             <>
               <Archive className="h-4 w-4 text-lottery" />
-              <span>Archivar billete</span>
+              <span>Archivar décimo</span>
             </>
           )}
         </button>

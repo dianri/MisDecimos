@@ -88,7 +88,7 @@ flowchart TD
 
 ---
 
-## 3. Dashboard Principal: Mis Billetes Compartidos
+## 3. Dashboard Principal: Mis Décimos Compartidos
 
 - **Página:** [`src/pages/TicketsPage.tsx`](../src/pages/TicketsPage.tsx)
 - **Tarjeta de Listado:** [`src/components/tickets/TicketListItemCard.tsx`](../src/components/tickets/TicketListItemCard.tsx)
@@ -99,9 +99,9 @@ flowchart TD
 
 ### Pestañas del Dashboard y Cuadro de Mando:
 - **Cuadro de Mando Superior:**
-  - **Mis Billetes Compartidos:** Cabecera limpia y minimalista alineada directamente sobre el panel de métricas. El acceso a las notificaciones y su indicador dinámico de no leídas se centralizan exclusivamente en la pestaña fija **Alertas** de la barra de navegación inferior.
-  - **Billetes Activos:** Cuenta los billetes propios y participaciones activas aceptadas (`percentage > 0` y `status = 'ACEPTADA'`). Las participaciones a las que el usuario ha renunciado (`status = 'RENUNCIADA'`) quedan estrictamente excluidas de este contador.
-  - **Total Premios:** Agrega la parte proporcional ganada por el usuario de los premios en billetes activos propios y participaciones activas aceptadas.
+  - **Mis Décimos Compartidos:** Cabecera limpia y minimalista alineada directamente sobre el panel de métricas. El acceso a las notificaciones y su indicador dinámico de no leídas se centralizan exclusivamente en la pestaña fija **Alertas** de la barra de navegación inferior.
+  - **Décimos Activos:** Cuenta los décimos propios y participaciones activas aceptadas (`percentage > 0` y `status = 'ACEPTADA'`). Las participaciones a las que el usuario ha renunciado (`status = 'RENUNCIADA'`) quedan estrictamente excluidas de este contador.
+  - **Total Premios:** Agrega la parte proporcional ganada por el usuario de los premios en décimos activos propios y participaciones activas aceptadas.
 - **Pestañas de Filtrado y Sincronización en URL (`?tab=...`):**
   - **Mis Décimos (`/` o `/?tab=decimos`):** Muestra los décimos donde el usuario actual es el custodio legal y propietario registrador (`owner_id = user.id`).
   - **Mis Participaciones (`/?tab=participaciones`):** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`status = 'ACEPTADA'` y `percentage > 0`). Las participaciones renunciadas no se muestran aquí.
@@ -115,10 +115,13 @@ flowchart TD
     - **Banner de Premio Integrado:** Recuadro destacado verde esmeralda (`bg-emerald-600/10 border border-emerald-500/25 rounded-2xl`) con icono `Trophy` que resalta con gran jerarquía el importe personal del usuario (ej. **`750,00 € tuyos`**) y el premio total del décimo (`Décimo: 1.000,00 €`). En caso de participación renunciada previa, muestra de forma transparente `Cuota: Renunciada (0,00 €)`.
     - **Consistencia Total:** Se aplica con idéntico diseño en las pestañas **Décimos**, **Participaciones** y **Archivados**.
 
-### Botones y Acciones:
-1. **Fila "Añadir un Décimo" (Botón Principal Manual + Botón Rápido de Cámara Polimórfico):**
-   - **Botón Principal Manual (`Añadir décimo manual`):** Con fondo blanco, borde doble verde corporativo (`#2E6146`), altura táctil ergonómica (`min-h-[54px]`) e icono de billete (`Ticket`), abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) directamente en la pestaña de **Datos Manuales** (`initialTab="manual"`), permitiendo seleccionar sorteo (**Navidad** o **El Niño**), número (5 dígitos), serie y fracción.
-   - **Botón Cuadrado Verde de Cámara (Escáner Inteligente Polimórfico):** Con tamaño ergonómico de 54x54 px (`w-[54px] min-h-[54px]`), fondo verde sólido `#2E6146` e icono `Camera` en **blanco puro** de 24 px (`size={24}`, `strokeWidth={2.2}`), abre de forma instantánea la cámara trasera mediante [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx) con soporte simultáneo para códigos 1D (SELAE) y 2D (QR de invitaciones).
+### Acciones en Tarjetas y Botones Principales:
+- **Acciones Rápidas en Cada Tarjeta (`<TicketListItemCard />`):**
+  - **Botón `Compartir`:** Situado a la derecha de la fecha del sorteo (con `e.stopPropagation()`). Si el décimo no tiene participaciones ni invitaciones pendientes, navega al detalle abriendo automáticamente el modal de nueva participación (`openCreateShare: true`); si ya tiene participaciones, abre el detalle para elegir cuál compartir.
+  - **Botón `Comprobar sorteo`:** Situado en la esquina inferior izquierda (con `e.stopPropagation()`). Si la fecha del sorteo es futura (`draw_date > hoy`), muestra un aviso claro sin invocar red; si ya se celebró (`draw_date <= hoy`), ejecuta la Edge Function `check-prizes`, actualiza el estado del décimo y notifica el resultado en un toast.
+1. **Botón Único Centrado `Añadir` (Escáner Inteligente + Acceso Manual):**
+   - Botón único verde corporativo centrado (`bg-emerald-700 hover:bg-emerald-800 text-white`) que abre instantáneamente la cámara trasera mediante [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx).
+   - Dentro del visor de cámara, el botón inferior **"Añadir décimo manual"** cierra el escáner y abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) directamente en el formulario manual.
      - **Enrutamiento y Autocompletado Inteligente:** Si el usuario enfoca un décimo físico de SELAE, el parser descompone la estructura canónica `1 + 3 + 1 + 2 + 3 + 6 + 4` (juego `5`, sorteo `102` Navidad / `002` El Niño, año `2020 + d`, fracción, serie, número de 5 cifras y control), autoselecciona de inmediato el **Tipo de Sorteo** (**Navidad** o **El Niño**), la **Fecha del Sorteo** (`YYYY-12-22` o `YYYY-01-06`), número, serie, fracción y precio oficial (20 €), abriendo [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) en la pestaña `'manual'` con el banner verde esmeralda: *"Código leído correctamente — Verifica los datos antes de guardar"*. Si por el contrario el usuario enfoca un código QR de invitación o participación, el escáner lo detecta de forma inteligente y abre directamente [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx) con el código precargado y verificado.
      - **Tolerancia y Aviso Inline:** Si se lee un código desconocido, se muestra un aviso visual en la parte superior del visor sin interrumpir la cámara ni cerrar el modal, permitiendo corregir el encuadre.
      - **Recuperación Automática de Segundo Plano (`visibilitychange`):** Al cambiar de aplicación o apagar la pantalla, la cámara libera limpiamente sus pistas para evitar el bloqueo del hardware en Android. Al regresar a la PWA, tras 350 ms de estabilización, el escáner se reactiva automáticamente. Cuenta con hasta 2 reintentos silenciosos ante errores transitorios y oculta el fotograma congelado en caso de requerir intervención del usuario.

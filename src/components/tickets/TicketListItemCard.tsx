@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Database } from '../../types/database.types'
-import { Ticket, Archive, Calendar, Users, Trophy, Sparkles } from 'lucide-react'
+import { Ticket, Archive, Calendar, Trophy, Sparkles, Share2, Search, Loader2 } from 'lucide-react'
 import { resolveTicketCardPresentation } from '../../lib/ticketCardHelper'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -9,18 +9,26 @@ export interface TicketListItemCardProps {
   ticket: TicketRow
   userPercentage: number
   participantsCount: number
+  hasParticipations?: boolean
   isArchived?: boolean
   isRenounced?: boolean
+  isCheckingPrize?: boolean
   onClick: (ticketId: string) => void
+  onShareClick?: (ticketId: string, hasParticipations: boolean) => void
+  onCheckPrizeClick?: (ticket: TicketRow) => void
 }
 
 export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   ticket,
   userPercentage,
   participantsCount,
+  hasParticipations,
   isArchived = false,
   isRenounced = false,
+  isCheckingPrize = false,
   onClick,
+  onShareClick,
+  onCheckPrizeClick,
 }) => {
   const {
     isPrized,
@@ -175,37 +183,43 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
       )}
 
       {/* Pie de Tarjeta */}
-      <div className="space-y-2 pt-1 border-t border-gray-100 text-xs">
-        <div className="flex items-center justify-between text-gray-500 text-[11px]">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-gray-400" />
-            <span>Sorteo: {ticket.draw_date}</span>
+      <div className="space-y-2 pt-1.5 border-t border-gray-100 text-xs">
+        <div className="flex items-center justify-between gap-2 text-gray-500 text-[11px]">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="truncate">Sorteo: {ticket.draw_date}</span>
           </div>
-          <div>
-            {!isPrized ? (
-              ticket.status === 'PENDIENTE' ? (
-                <span className="text-gray-400 font-medium">Sorteo pendiente</span>
-              ) : (
-                <span className="text-rose-600 font-medium">No premiado</span>
-              )
-            ) : (
-              <span className="text-emerald-700 font-bold flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                <span>Boleto premiado</span>
-              </span>
-            )}
-          </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onShareClick?.(ticket.id, hasParticipations ?? participantsCount > 1)
+            }}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-[11px] font-bold transition active:scale-95 shrink-0"
+          >
+            <Share2 className="w-3.5 h-3.5 text-emerald-700" />
+            <span>Compartir</span>
+          </button>
         </div>
 
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
-            <Users className="w-3.5 h-3.5 text-gray-400" />
-            <span>
-              {participantsCount === 1
-                ? 'Solo tú'
-                : `Compartido con ${participantsCount} personas`}
-            </span>
-          </div>
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <button
+            type="button"
+            disabled={isCheckingPrize}
+            onClick={(e) => {
+              e.stopPropagation()
+              onCheckPrizeClick?.(ticket)
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900 hover:bg-amber-100 text-[11px] font-bold transition active:scale-95 disabled:opacity-60 shrink-0"
+          >
+            {isCheckingPrize ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-700" />
+            ) : (
+              <Search className="w-3.5 h-3.5 text-amber-700" />
+            )}
+            <span>{isCheckingPrize ? 'Comprobando...' : 'Comprobar sorteo'}</span>
+          </button>
 
           <span
             className={`px-2.5 py-0.5 rounded-full border text-xs font-bold font-mono ${

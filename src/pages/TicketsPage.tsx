@@ -11,7 +11,14 @@ import { useSearchParams } from '../hooks/useSearchParams'
 import {
   classifyUserTickets,
   type UserTicketListsAndMetrics,
+  type TicketRow,
 } from '../lib/ticketMetrics'
+import {
+  resolveShareButtonNavigation,
+  evaluateQuickPrizeCheckPrecondition,
+  formatQuickPrizeCheckToast,
+} from '../lib/cardQuickActions'
+import { checkTicketPrize } from '../services/prizeService'
 import {
   Ticket,
   KeyRound,
@@ -21,13 +28,21 @@ import {
   Loader2,
   Camera,
   CheckCircle2,
+  CalendarClock,
   X,
 } from 'lucide-react'
 
 export interface TicketsPageProps {
   onSelectTicket?: (
     ticketId: string,
-    options?: { state?: { fromTab?: string; claimMessage?: string; [key: string]: unknown } }
+    options?: {
+      state?: {
+        fromTab?: string
+        claimMessage?: string
+        openCreateShare?: boolean
+        [key: string]: unknown
+      }
+    }
   ) => void
 }
 
@@ -80,6 +95,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [claimInitialCode, setClaimInitialCode] = useState<string | null>(null)
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
   const [claimToastMsg, setClaimToastMsg] = useState<string | null>(null)
+  const [toastVariant, setToastVariant] = useState<'success' | 'warning'>('success')
+  const [pendingInviteTicketIds, setPendingInviteTicketIds] = useState<Set<string>>(new Set())
+  const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
 
   // Auto-cierre del toast de confirmación tras 5 segundos
   useEffect(() => {
@@ -174,11 +192,21 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
       if (sharesErr) throw sharesErr
 
-      // Cargar billetes archivados por el usuario
+      // Cargar décimos archivados por el usuario
       const { data: hidesData } = await supabase
         .from('ticket_archive_hides')
         .select('ticket_id')
         .eq('user_id', user.id)
+
+      // Cargar invitaciones pendientes para saber si el décimo ya tiene participaciones creadas
+      const { data: pendingInvitesData } = await supabase
+        .from('pending_invites')
+        .select('ticket_id')
+        .eq('status', 'PENDIENTE')
+
+      setPendingInviteTicketIds(
+        new Set((pendingInvitesData || []).map((inv) => inv.ticket_id))
+      )
 
       const archivedTicketIds = new Set((hidesData || []).map((h) => h.ticket_id))
 
@@ -235,13 +263,60 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const handleQuickShare = (ticketId: string, hasParticipations: boolean) => {
+    if (!onSelectTicket) return
+    const target = resolveShareButtonNavigation({
+      ticketId,
+      hasParticipations,
+      fromTab: activeTab,
+    })
+    onSelectTicket(target.ticketId, { state: target.state })
+  }
+
+  const handleQuickPrizeCheck = async (ticket: TicketRow) => {
+    const pre = evaluateQuickPrizeCheckPrecondition(ticket.draw_date)
+    if (!pre.canCheck) {
+      setToastVariant('warning')
+      setClaimToastMsg(pre.message || `El sorteo del ${pre.shortDate} aún no se ha celebrado.`)
+      return
+    }
+
+    setCheckingTicketId(ticket.id)
+    try {
+      const res = await checkTicketPrize({
+        ticketId: ticket.id,
+        number: ticket.number,
+        drawType: ticket.draw_type,
+        drawDate: ticket.draw_date,
+        ticketPrice: Number(ticket.ticket_price),
+        forceRefresh: !!ticket.last_checked_at,
+      })
+
+      const toast = formatQuickPrizeCheckToast(res, pre.shortDate)
+      setToastVariant(toast.type)
+      setClaimToastMsg(toast.text)
+
+      if (res.ok !== false) {
+        await loadTickets()
+      }
+    } catch (err: unknown) {
+      console.error('Error comprobando sorteo desde tarjeta:', err)
+      setToastVariant('warning')
+      setClaimToastMsg(
+        err instanceof Error ? err.message : 'Error al consultar resultados oficiales.'
+      )
+    } finally {
+      setCheckingTicketId(null)
+    }
+  }
+
   return (
     <div className="space-y-6 pb-12 max-w-xl mx-auto">
       {/* 1. Tarjeta Resumen Superior */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 space-y-4">
         <div>
           <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
-            Mis Billetes Compartidos
+            Mis Décimos Compartidos
           </h2>
         </div>
 
@@ -249,7 +324,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-[#F7F9F7] p-3.5 border border-gray-200/50 space-y-1">
             <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-              Billetes Activos
+              Décimos Activos
             </span>
             <p className="text-2xl font-extrabold font-mono text-lottery">
               {totalActivosCount}
@@ -273,37 +348,20 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
       {/* 2. Bloques de Acción */}
       <div className="space-y-3">
-        {/* Sección: AÑADIR UN DÉCIMO */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase px-1">
-            Añadir un Décimo
-          </span>
-          <div className="flex items-stretch gap-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                setAddTicketInitialTab('manual')
-                setIsAddTicketOpen(true)
-              }}
-              className="flex-1 min-h-[54px] flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl bg-white border-2 border-lottery text-lottery hover:bg-lottery-50 active:scale-[0.98] transition font-bold text-xs shadow-xs"
-            >
-              <Ticket className="h-4.5 w-4.5 text-lottery shrink-0" />
-              <span>Añadir décimo manual</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setScannedTicketData(null)
-                setIsTicketScannerOpen(true)
-              }}
-              aria-label="Escanear décimo con cámara"
-              title="Escanear décimo con cámara"
-              className="w-[54px] min-h-[54px] aspect-square shrink-0 flex items-center justify-center rounded-2xl bg-[#2E6146] hover:bg-[#244d37] active:scale-[0.98] text-white shadow-md shadow-lottery/25 transition"
-            >
-              <Camera className="w-6 h-6 text-white" size={24} strokeWidth={2.2} />
-            </button>
-          </div>
+        {/* Sección: AÑADIR UN DÉCIMO (Botón único centrado) */}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setScannedTicketData(null)
+              setIsTicketScannerOpen(true)
+            }}
+            aria-label="Añadir décimo"
+            className="mx-auto min-h-[48px] px-8 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-900/15 transition"
+          >
+            <Camera className="w-4.5 h-4.5 text-white shrink-0" />
+            <span>Añadir</span>
+          </button>
         </div>
 
         {/* Sección: AÑADIR UNA PARTICIPACIÓN */}
@@ -401,8 +459,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                   ticket={item.ticket}
                   userPercentage={item.userPercentage}
                   participantsCount={item.participantsCount}
+                  hasParticipations={
+                    item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
+                  }
                   isArchived={item.isArchived}
+                  isCheckingPrize={checkingTicketId === item.ticket.id}
                   onClick={handleTicketClick}
+                  onShareClick={handleQuickShare}
+                  onCheckPrizeClick={handleQuickPrizeCheck}
                 />
               ))}
             </div>
@@ -426,8 +490,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                   ticket={item.ticket}
                   userPercentage={item.userPercentage}
                   participantsCount={item.participantsCount}
+                  hasParticipations={
+                    item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
+                  }
                   isArchived={item.isArchived}
+                  isCheckingPrize={checkingTicketId === item.ticket.id}
                   onClick={handleTicketClick}
+                  onShareClick={handleQuickShare}
+                  onCheckPrizeClick={handleQuickPrizeCheck}
                 />
               ))}
             </div>
@@ -437,7 +507,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           misArchivados.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
               <Archive className="mx-auto w-10 h-10 text-gray-300" />
-              <h3 className="text-sm font-bold text-gray-800">Sin billetes archivados</h3>
+              <h3 className="text-sm font-bold text-gray-800">Sin décimos archivados</h3>
               <p className="text-xs text-gray-400 max-w-xs mx-auto">
                 Los décimos que decidas ocultar u archivar se mostrarán aquí.
               </p>
@@ -450,8 +520,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                   ticket={item.ticket}
                   userPercentage={item.userPercentage}
                   participantsCount={item.participantsCount}
+                  hasParticipations={
+                    item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
+                  }
                   isArchived={true}
+                  isCheckingPrize={checkingTicketId === item.ticket.id}
                   onClick={handleTicketClick}
+                  onShareClick={handleQuickShare}
+                  onCheckPrizeClick={handleQuickPrizeCheck}
                 />
               ))}
             </div>
@@ -478,12 +554,18 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         }}
       />
 
-      {/* Escáner de décimo abierto desde el botón rápido verde */}
+      {/* Escáner de décimo abierto desde el botón único Añadir */}
       <BarcodeScannerModal
         isOpen={isTicketScannerOpen}
         mode="TICKET_BARCODE"
         onClose={() => setIsTicketScannerOpen(false)}
         onScanSuccess={handleUnifiedBarcodeScanned}
+        onManualEntry={() => {
+          setIsTicketScannerOpen(false)
+          setScannedTicketData(null)
+          setAddTicketInitialTab('manual')
+          setIsAddTicketOpen(true)
+        }}
       />
 
       <InviteClaimModal
@@ -555,21 +637,29 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         onScanSuccess={handleUnifiedBarcodeScanned}
       />
 
-      {/* Toast informativo al reclamar o rechazar participación */}
+      {/* Toast informativo de acciones rápidas o reclamaciones */}
       {claimToastMsg && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 md:bottom-6 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 bg-emerald-800 text-white text-xs font-semibold rounded-2xl shadow-2xl border border-emerald-600 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className={`fixed bottom-20 md:bottom-6 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 text-white text-xs font-semibold rounded-2xl shadow-2xl border flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200 ${
+            toastVariant === 'warning'
+              ? 'bg-amber-800 border-amber-600'
+              : 'bg-emerald-800 border-emerald-600'
+          }`}
         >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0" />
+            {toastVariant === 'warning' ? (
+              <CalendarClock className="h-4 w-4 text-amber-300 shrink-0" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0" />
+            )}
             <span>{claimToastMsg}</span>
           </div>
           <button
             type="button"
             onClick={() => setClaimToastMsg(null)}
-            className="p-1 text-emerald-200 hover:text-white transition cursor-pointer"
+            className="p-1 text-white/80 hover:text-white transition cursor-pointer"
             title="Cerrar aviso"
           >
             <X className="h-3.5 w-3.5" />
