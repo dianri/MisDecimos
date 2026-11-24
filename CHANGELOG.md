@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.57] - 2026-11-25
+
+### Changed
+- **Terminología Unificada a "Décimos" en Toda la Interfaz (`AppShell.tsx`, `TicketsPage.tsx`, `TicketDetailPage.tsx`, `AlertsPage.tsx`, `inviteService.ts`):**
+  - Sustituida la palabra **"billetes" / "billete"** por **"décimos" / "décimo"** en toda la UI visible: pestaña de navegación **Décimos**, cabecera **Mis Décimos Compartidos**, KPI **Décimos Activos**, estado vacío **Sin décimos archivados**, botones **Archivar décimo / Desarchivar décimo**, enlace **Ver décimo** en alertas y mensajes de error, manteniendo intactas las rutas internas (`/billete/:id`, `/billetes/:id`) para compatibilidad de enlaces y Web Push.
+- **Botón Único Centrado `Añadir` y Acceso Manual en Escáner (`TicketsPage.tsx`, `BarcodeScannerModal.tsx`):**
+  - Unificados los botones de alta en un único botón verde corporativo centrado (**`Añadir`**, `bg-emerald-700 hover:bg-emerald-800 text-white`) que abre directamente el escáner de cámara.
+  - Sustituido dentro del modal de cámara (`TICKET_BARCODE`) el botón inferior *"Subir foto del código"* por **"Añadir décimo manual"**, cerrando la cámara y abriendo el formulario manual al instante.
+- **Acciones Rápidas en Cada Tarjeta de Décimo (`TicketListItemCard.tsx`, `TicketsPage.tsx`, `TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `cardQuickActions.ts`):**
+  - **Botón `Compartir`:** Reemplaza el texto derecho de la fila de fecha; si el décimo no tiene participaciones ni invitaciones pendientes navega con `openCreateShare: true` abriendo directamente el modal de crear participación, y si ya tiene participaciones abre la ficha del décimo.
+  - **Botón `Comprobar sorteo`:** Reemplaza el texto inferior izquierdo (*"Solo tú"* / *"Compartido con..."*); valida si el sorteo ya se ha celebrado (`draw_date <= hoy` en `Europe/Madrid`) o ejecuta la Edge Function `check-prizes` con estado de carga y toast informativo.
+
+### Added
+- **Tests Unitarios de Acciones Rápidas (`src/lib/__tests__/cardQuickActions.test.ts`):**
+  - Cobertura de navegación del botón `Compartir` (con y sin participaciones previas), validación de fecha de `Comprobar sorteo` y formateo de respuestas (premiado, `0 €` sin premio y no disponible).
+
 ## [1.0.56] - 2026-11-25
 
 ### Added

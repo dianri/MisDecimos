@@ -420,7 +420,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                     ) : (
                       targetTicketId && (
                         <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-lottery">
-                          <span>Ver billete</span>
+                          <span>Ver décimo</span>
                           <ExternalLink className="h-3 w-3" />
                         </div>
                       )

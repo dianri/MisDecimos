@@ -40,7 +40,7 @@ export async function previewInvite(codeOrToken: string): Promise<InvitePreviewR
 
   const result = data as unknown as InvitePreviewResult
   if (!result?.ticket_id) {
-    throw new Error('La invitación no devolvió un billete válido.')
+    throw new Error('La invitación no devolvió un décimo válido.')
   }
 
   return result
