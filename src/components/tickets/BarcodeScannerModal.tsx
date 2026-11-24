@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { classifyScannedPayload } from '../../lib/scanPayloadClassifier'
-import { X, Camera, Upload, AlertCircle, RefreshCw } from 'lucide-react'
+import { X, Camera, Upload, AlertCircle, RefreshCw, Ticket } from 'lucide-react'
 
 export interface BarcodeScannerModalProps {
   isOpen: boolean
   mode: 'TICKET_BARCODE' | 'INVITE_QR'
   onClose: () => void
   onScanSuccess: (decodedText: string) => void
+  onManualEntry?: () => void
 }
 
 const UNIFIED_SUPPORTED_FORMATS = [
@@ -24,6 +25,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   mode,
   onClose,
   onScanSuccess,
+  onManualEntry,
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'barcode_scanner_modal' })
 
@@ -408,23 +410,38 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
         {/* Barra de opciones inferior (shrink-0) */}
         <div className="p-4 bg-gray-900/90 border-t border-gray-800 flex items-center justify-between gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileUpload}
-          />
+          {onManualEntry ? (
+            <button
+              type="button"
+              onClick={() => {
+                onManualEntry()
+              }}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition active:scale-98"
+            >
+              <Ticket className="h-4 w-4 text-lottery-300" />
+              <span>Añadir décimo manual</span>
+            </button>
+          ) : (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isScanningFile}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition active:scale-98 disabled:opacity-50"
-          >
-            <Upload className="h-4 w-4 text-lottery-300" />
-            <span>{isScanningFile ? 'Analizando...' : 'Subir foto del código'}</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isScanningFile}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition active:scale-98 disabled:opacity-50"
+              >
+                <Upload className="h-4 w-4 text-lottery-300" />
+                <span>{isScanningFile ? 'Analizando...' : 'Subir foto del código'}</span>
+              </button>
+            </>
+          )}
 
           <button
             type="button"

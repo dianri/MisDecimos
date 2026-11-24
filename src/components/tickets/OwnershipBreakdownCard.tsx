@@ -49,6 +49,8 @@ interface OwnershipBreakdownCardProps {
   pendingInvites: PendingInvite[]
   onRefresh: () => Promise<void>
   onRenounced?: () => void
+  autoOpenCreateShare?: boolean
+  onAutoOpenHandled?: () => void
 }
 
 import {
@@ -68,6 +70,8 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   pendingInvites,
   onRefresh,
   onRenounced,
+  autoOpenCreateShare = false,
+  onAutoOpenHandled,
 }) => {
   const { user } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -88,6 +92,14 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
     onClose: () => setRenouncingShare(null),
     modalKey: 'voluntary_waiver_modal',
   })
+
+  // Apertura automática del modal de nueva participación si viene de la acción rápida "Compartir"
+  useEffect(() => {
+    if (autoOpenCreateShare && isOwner) {
+      setShowCreateSheet(true)
+      onAutoOpenHandled?.()
+    }
+  }, [autoOpenCreateShare, isOwner, onAutoOpenHandled])
 
   // Cerrar menú al hacer clic o tocar fuera
   useEffect(() => {
