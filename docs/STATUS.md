@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.54` (Producción Estable · Reordenación de Reparto en Detalle de Décimo)  
-**Última Actualización:** 2026-11-19  
-**Rama de Producción:** `main` (Tag `v1.0.54`)  
+**Versión Actual:** `1.0.55` (Producción Estable · Motor Histórico Oficial de Sorteos 2020–2025)  
+**Última Actualización:** 2026-11-24  
+**Rama de Producción:** `main` (Tag `v1.0.55`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -136,3 +136,4 @@
 - [x] v1.0.52: Símbolos seguros del plano BMP para compartir por WhatsApp (`shareHelper.ts`, `whatsappShare.test.ts`): sustitución de emojis de 4 bytes por símbolos seguros Unicode del Plano Básico Multilingüe (`\u2605` ★, `\u2022` •, `\u2192` →, `<= 0xFFFF`) erradicando la corrupción a `\uFFFD` producida por `api.whatsapp.com/send` ante pares subrogados, con suite de pruebas unitarias verificando la conformidad estricta BMP.
 - [x] v1.0.53: Restauración de emojis ricos originales en mensaje de WhatsApp (`shareHelper.ts`, `whatsappShare.test.ts`): recuperación de los emojis oficiales (`🎟️` `\u{1F3AB}`, `🔑` `\u{1F511}`, `👉` `\u{1F449}`) mediante secuencias de escape Unicode explícitas en UTF-8, garantizando la apariencia visual rica original en dispositivos móviles mientras se preserva el respaldo automático al portapapeles en escritorio.
 - [x] v1.0.54: Reordenación de la estructura vertical en el detalle del décimo (`TicketDetailPage.tsx`): reubicación prioritaria del bloque de **Propiedad y Reparto** / **Historial** a la primera posición debajo de la cabecera superior, situando a continuación el boleto visual realista (`RealisticTicketCard`), metadatos técnicos, comprobador oficial de premios (`PrizeCheckCard`), panel de simulación de diagnóstico y botones de gestión, optimizando la visibilidad de cotitulares y cuotas en dispositivos móviles y escritorio.
+- [x] v1.0.55: Motor histórico oficial de sorteos 2020–2025 (Navidad y El Niño): base de datos oficial integrada con escrutinio completo SELAE (premios mayores, aproximaciones, centenas, terminaciones y reintegros), arquitectura híbrida de 3 niveles en Edge Function `check-prizes` desplegada en Supabase, fixtures y suite de pruebas unitarias (`historicalDraws.test.ts` con 116 tests totales superados), y visualización de categorías oficiales y resultado verificado de 0 € en `PrizeCheckCard.tsx`.

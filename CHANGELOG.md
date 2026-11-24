@@ -5,6 +5,30 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.55] - 2026-11-24
+
+### Added
+- **Motor Histórico Oficial de Sorteos 2020–2025 (`supabase/functions/check-prizes/historicalDraws.ts`, `src/lib/historicalDraws.ts`):**
+  - **Base de Datos Oficial Histórica (2020–2025):** Integración de todos los resultados oficiales escrutados por SELAE para el Sorteo Extraordinario de Navidad (22 de diciembre) y Sorteo de El Niño (6 de enero) desde 2020 hasta 2025 inclusive.
+  - **Motor Matemático Oficial de Escrutinio (`evaluateHistoricalDraw`):**
+    - Evaluación exhaustiva de premios mayores: El Gordo / 1.º premio, 2.º premio, 3.º premio, 4.º premios (Navidad), 5.º premios (Navidad).
+    - Aproximaciones anterior y posterior (±1) al 1.º y 2.º premio.
+    - Centenas completas (primeros 3 dígitos) de los premios mayores (1.º, 2.º, 3.º y 4.º en Navidad; 1.º y 2.º en El Niño).
+    - Terminaciones de 4 cifras, 3 cifras y 2 cifras (con reglas oficiales de acumulación y no-solapamiento de SELAE).
+    - Reintegros oficiales (última cifra del 1.º premio en Navidad; 3 reintegros oficiales en El Niño).
+  - **Arquitectura Híbrida de 3 Niveles en Edge Function `check-prizes`:**
+    - *Nivel 1 (Simulación controlada):* Exclusivo para el propietario custodio en entorno de pruebas.
+    - *Nivel 2 (Archivo Histórico Integrado 2020–2025):* Escrutinio exacto e inmediato mediante el motor oficial integrado, persistiendo el resultado en `public.tickets` (`status = 'VALIDADO'`), registrando evento inmutable en `public.audit_events` y despachando notificaciones Web Push.
+    - *Nivel 3 (Sorteos en directo y futuros 2026+):* Control temporal mediante `DRAW_NOT_HELD_YET` y consulta a API oficial en directo.
+  - **Fixtures Estandarizados y Batería de Tests Unitarios (`src/lib/__fixtures__/historicalTickets.ts`, `src/lib/__tests__/historicalDraws.test.ts`):**
+    - 11 casos de prueba cubriendo premios mayores (El Gordo 79432 en 2025 y 72897 en 2020, 2.º premio 70048 y 06766, 1.º premio de El Niño 78908), aproximaciones, centenas, dos últimas cifras, reintegros, boletos no premiados (0 €) y normalización de números.
+
+### Changed
+- **Visualización de Resultados y Categorías en la Interfaz (`src/components/tickets/PrizeCheckCard.tsx`):**
+  - Muestra la categoría oficial del premio (ej. *"Resultado Oficial · El Gordo (1.º premio)"*, *"Resultado Oficial · Reintegro"*) tanto en tiempo real tras la comprobación como de forma persistente al cargar el billete.
+  - Confirmación nítida para billetes no premiados (*"Comprobado · Sin premio en el sorteo oficial del DD/MM/AAAA"*), identificando la fuente como *"Archivo Oficial Histórico"*.
+  - Mantenimiento del banner de aviso ámbar exclusivamente para sorteos con escrutinio no disponible (`HISTORICAL_UNAVAILABLE`).
+
 ## [1.0.54] - 2026-11-19
 
 ### Changed

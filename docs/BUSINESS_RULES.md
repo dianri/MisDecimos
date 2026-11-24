@@ -139,13 +139,25 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
 
 ---
 
-## 9. Simulación Controlada de Premios y Diagnóstico de Custodio
+## 10. Motor Histórico Oficial (2020–2025) y Reglas de Escrutinio SELAE
 
-- **Objetivo y Seguridad:** Para permitir pruebas de integración y verificación del flujo completo de liquidación, cobro y notificaciones Web Push sin esperar a la celebración oficial del sorteo, la Edge Function `check-prizes` y la base de datos proporcionan una tubería de simulación controlada:
-  1. **Simulación de Premio:** El custodio propietario (`ticket.owner_id === auth.uid()`) puede simular un premio oficial (ej. 1.000 €). La Edge Function invoca la RPC transaccional `record_ticket_prize_check`, que:
-     - Asigna el importe en céntimos a `tickets.prize_amount_cents` y el estado a `VALIDADO`.
-     - Calcula el desglose proporcional en euros y céntimos exclusivamente entre las cuotas en estado `ACEPTADA` (`shares_breakdown`).
-     - Inserta el evento inmutable `PREMIO_REGISTRADO` en `public.audit_events` con el desglose en sus metadatos.
-     - Dispara notificaciones en `public.notifications` con `action_url` para todos los cotitulares aceptados, activando el trigger de envío Web Push nativo.
-  2. **Restablecimiento de Décimo:** El propietario puede invocar `reset_ticket_prize_simulation(p_ticket_id)` vía la Edge Function `check-prizes` (`resetSimulation: true`), que devuelve atómicamente el décimo a `prize_amount_cents = 0`, estado `PENDIENTE`, anula las confirmaciones de cobro de participaciones y registra el evento de auditoría `SIMULACION_PREMIO_RESTABLECIDA`.
-  3. **Activación en Interfaz (`TicketDetailPage.tsx`):** El panel **"Modo Prueba de Premio"** se activa automáticamente en entornos de desarrollo (`import.meta.env.DEV`) o pulsando 5 veces consecutivas sobre el componente `"MISDECIMOS SELLO DIGITAL"` en el décimo realista, manteniéndose restringido exclusivamente al custodio propietario del billete.
+- **Base de Datos Histórica Integrada:**
+  - Cubre todos los sorteos oficiales de Lotería de Navidad (22 de diciembre) y El Niño (6 de enero) de los años 2020, 2021, 2022, 2023, 2024 y 2025.
+- **Reglas Oficiales de Escrutinio Matemático:**
+  1. **Lotería de Navidad (`NAVIDAD`):**
+     - **Premios Mayores:** 1.º premio / El Gordo (400.000 €/décimo), 2.º premio (125.000 €), 3.º premio (50.000 €), 4.º premios (20.000 € c/u), 5.º premios (6.000 € c/u).
+     - **Aproximaciones (±1):** Anterior y posterior al 1.º premio (2.000 €); anterior y posterior al 2.º premio (1.250 €).
+     - **Centenas (Primeros 3 dígitos):** Centena del 1.º, 2.º, 3.º y 4.º premios (100 € por décimo). Pueden acumular con terminaciones de premios distintos.
+     - **Dos Últimas Cifras:** Coincidencia con las 2 últimas cifras del 1.º, 2.º o 3.º premio (100 € por décimo). La coincidencia con las 2 últimas cifras del Gordo subsume el reintegro de 20 € (no suma 120 €).
+     - **Reintegro:** Coincidencia de la última cifra con el Gordo (20 € por décimo), aplicable si no ha ganado ya la terminación de 2 cifras del Gordo.
+  2. **Sorteo de El Niño (`EL_NINO`):**
+     - **Premios Mayores:** 1.º premio (200.000 €/décimo), 2.º premio (75.000 €), 3.º premio (25.000 €).
+     - **Aproximaciones (±1):** Anterior y posterior al 1.º premio (1.200 €); anterior y posterior al 2.º premio (610 €).
+     - **Extracciones y Terminaciones Especiales:**
+       - Extracciones de 4 cifras (350 €/décimo).
+       - Extracciones de 3 cifras y centenas (100 €/décimo).
+       - Extracciones de 2 cifras (40 €/décimo).
+       - Reintegros especiales (3 reintegros oficiales: última cifra del 1.º premio + 2 números adicionales, 20 €/décimo).
+     - **Regla de No-Solapamiento de Terminaciones:** Los premios mayores tienen prioridad absoluta sobre terminaciones. Las extracciones de 4, 3, 2 cifras y reintegros se evalúan por sufijo de mayor a menor sin acumulación sobre el mismo sufijo.
+- **Persistencia Transaccional y Confirmación 0 €:**
+  - Para billetes históricos no premiados (0 €), el sistema registra el billete como `VALIDADO` con fuente `historico_oficial` y muestra confirmación nítida sin banners de error.

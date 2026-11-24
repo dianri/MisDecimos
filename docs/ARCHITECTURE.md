@@ -298,18 +298,25 @@ Para solventar la confusión habitual de los usuarios al utilizar el botón ráp
 
 ## 5. Motor de Comprobación Oficial y Edge Function `check-prizes`
 
-### Orígenes de Datos y Motores
-1. **Lotería de Navidad (`NAVIDAD`):** Endpoint oficial JSONP de El País (`https://api.elpais.com/ws/LoteriaNavidadPremiados?n={numero}`). Limpieza de prefijo `busqueda=`, conversión de euros a céntimos y estado `provisional` o `final` (`status === 4`).
-2. **Sorteo de El Niño (`EL_NINO`):** Endpoint oficial JSONP de El País (`https://api.elpais.com/ws/LoteriaNinoPremiados?n={numero}`).
-3. **Sorteos Semanales y Ordinarios (`JUEVES`, `SABADO`, `ESPECIAL`):** API de SELAE con fallback mediante `loteriasapi.com` autenticado por `LOTERIAS_API_KEY`.
-4. **Validación Estricta de Fecha, Hora y Año (`Europe/Madrid`):**
-   - La Edge Function recupera de la base de datos la fecha canónica del sorteo (`draw_date`) y su modalidad (`draw_type`).
-   - Calcula el inicio oficial del sorteo en CET (`Europe/Madrid`, UTC+1): 09:00 para `NAVIDAD` y 12:00 para `EL_NINO`.
-   - **Sorteos Futuros (`draw_date > today` o antes del inicio oficial):** Devuelve `{ ok: false, code: 'DRAW_NOT_HELD_YET', message: 'Este sorteo se celebrará el DD/MM/AAAA. Aún no hay resultados oficiales.' }` sin mutar el décimo ni registrar auditorías erróneas.
-   - **Sorteo en Celebración (`draw_date === today` tras el inicio):** Si la API indica que el sorteo sigue en curso (`error === 1` o `status === 0`), devuelve `{ ok: false, code: 'DRAW_IN_PROGRESS', message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.' }` sin marcar el billete como validado.
-   - **Sorteos Históricos de Años Anteriores (`draw_date < today`):**
-     - Si la consulta al proveedor corresponde a un año distinto al de la temporada activa o devuelve `status === 0` / `error === 1` para una fecha pasada, **nunca** devuelve "sorteo en curso". En su lugar, devuelve el código específico `{ ok: false, code: 'HISTORICAL_UNAVAILABLE', message: 'No hay resultados históricos disponibles en el proveedor oficial para el sorteo del DD/MM/AAAA.' }`.
-     - Si el proveedor oficial dispone de escrutinio verificado para ese año y fecha (premio de `0 €` o `> 0 €`), persiste el resultado mediante `record_ticket_prize_check`, marca el décimo como `VALIDADO`, registra el evento en `audit_events` y, si `prize_amount_cents > 0`, dispara notificaciones a todos los cotitulares con cuota aceptada.
+### Arquitectura Híbrida de 3 Niveles (3-Tier Hybrid Architecture)
+Debido a que `loteriasyapuestas.es` bloquea peticiones server-side con código HTTP 403 (Akamai Bot Manager) y `api.elpais.com` solo cubre la edición en curso devolviendo `busqueda={"error":1}` fuera de temporada sin archivo histórico, `check-prizes` implementa una arquitectura híbrida de 3 niveles:
+
+1. **Nivel 1 — Simulación Controlada (Entorno de Pruebas):**
+   - Exclusivo para el propietario custodio del décimo (`simulatedPrizePerDecimo` / `resetSimulation`).
+   - Permite verificar el comportamiento de la UI, el cálculo de cuotas y las notificaciones en cualquier momento.
+2. **Nivel 2 — Motor Histórico Oficial Integrado (2020–2025):**
+   - Base de datos histórica oficial (`historicalDraws.ts`) con todos los sorteos de **Lotería de Navidad** (22 de diciembre) y **Sorteo de El Niño** (6 de enero) desde 2020 hasta 2025 inclusive.
+   - Evaluación matemática oficial (`evaluateHistoricalDraw`):
+     - **Premios mayores:** El Gordo / 1.º premio, 2.º premio, 3.º premio, 4.º premios (Navidad), 5.º premios (Navidad).
+     - **Aproximaciones:** Número anterior y posterior (±1) al 1.º premio (2.000 € en Navidad, 1.200 € en El Niño) y al 2.º premio (1.250 € en Navidad, 610 € en El Niño).
+     - **Centenas:** Coincidencia en las tres primeras cifras con los premios mayores (100 € por décimo).
+     - **Terminaciones (Últimas cifras):** Coincidencia en las 2 últimas cifras del 1.º, 2.º y 3.º premio (100 € en Navidad); extracciones de 4 cifras (350 €), 3 cifras (100 €) y 2 cifras (40 €) en El Niño.
+     - **Reintegros:** Última cifra del Gordo (20 € en Navidad); 3 reintegros oficiales (20 € en El Niño).
+   - Invocación atómica a `record_ticket_prize_check` con `p_check_source = 'historico_oficial'`, actualización de `status = 'VALIDADO'`, inserción en `audit_events` y despacho de Web Push a cotitulares.
+3. **Nivel 3 — Sorteos en Directo y Futuros (2026+):**
+   - **Sorteos Futuros (`draw_date > today` o antes de la hora peninsular oficial):** Devuelve `{ ok: false, code: 'DRAW_NOT_HELD_YET', message: 'Este sorteo se celebrará el DD/MM/AAAA. Aún no hay resultados oficiales.' }`.
+   - **Sorteo en Directo (`draw_date === today`):** Consulta a `api.elpais.com` (`NAVIDAD` y `EL_NINO`). Si está en escrutinio (`status === 0`), devuelve `DRAW_IN_PROGRESS`.
+   - **Sorteos Pasados no Soportados:** Si el sorteo no figura en el histórico ni en el proveedor activo, devuelve `{ ok: false, code: 'HISTORICAL_UNAVAILABLE' }`.
 
 ### Estrategia de Caché y Persistencia Atómica
 - **Caché en Memoria (Edge Runtime):** Map con clave `${drawDate}:${drawType}:${number}` para aislar sorteos del mismo número en diferentes años. TTL de 24 horas para resultados finales (`listStatus === 'final'`) y 5 minutos para listas provisionales durante la celebración del sorteo.

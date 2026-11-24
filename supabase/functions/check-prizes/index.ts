@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "jsr:@supabase/supabase-js@2"
+import { evaluateHistoricalDraw } from "./historicalDraws.ts"
 
 // Encabezados CORS
 const corsHeaders = {
@@ -102,11 +103,11 @@ Deno.serve(async (req: Request) => {
     const effectiveDrawDate = ticketRow.draw_date || drawDate || new Date().toISOString().split('T')[0]
     const effectiveDrawType = ticketRow.draw_type || drawType || 'NAVIDAD'
     const ticketNumber = ticketRow.number || number
-    const cleanNumber = String(ticketNumber || '00000').padStart(5, '0')
+    const cleanNumber = String(ticketNumber || '00000').trim().padStart(5, '0')
     const cacheKey = `${effectiveDrawDate}:${effectiveDrawType}:${cleanNumber}`
 
     // -------------------------------------------------------------------------
-    // FLUJO ESPECIAL: Restablecer simulación de premio
+    // NIVEL 1 — Simulación controlada (prioridad máxima)
     // -------------------------------------------------------------------------
     if (resetSimulation === true) {
       if (ticketRow.owner_id !== user.id) {
@@ -147,9 +148,6 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // -------------------------------------------------------------------------
-    // FLUJO ESPECIAL: Simulación de premio para el propietario
-    // -------------------------------------------------------------------------
     if (typeof simulatedPrizePerDecimo === 'number' && simulatedPrizePerDecimo > 0) {
       if (ticketRow.owner_id !== user.id) {
         return new Response(
@@ -160,7 +158,6 @@ Deno.serve(async (req: Request) => {
 
       const prizeAmountCents = Math.round(simulatedPrizePerDecimo * 100)
 
-      // Ejecuta exactamente la misma tubería oficial mediante record_ticket_prize_check
       const { data: recordData, error: rpcError } = await supabase.rpc(
         'record_ticket_prize_check',
         {
@@ -204,7 +201,64 @@ Deno.serve(async (req: Request) => {
     }
 
     // -------------------------------------------------------------------------
-    // FLUJO ESTÁNDAR: Consulta oficial de resultados
+    // NIVEL 2 — Histórico Oficial Integrado (2020–2025)
+    // -------------------------------------------------------------------------
+    const histResult = evaluateHistoricalDraw(effectiveDrawDate, effectiveDrawType, cleanNumber)
+    if (histResult.found) {
+      const prizeAmountCents = histResult.prizePerDecimoCents
+      const checkSource = 'historico_oficial'
+      const listStatus = 'final'
+
+      // Registrar resultado oficial en BD vía record_ticket_prize_check
+      const { data: recordData, error: rpcError } = await supabase.rpc(
+        'record_ticket_prize_check',
+        {
+          p_ticket_id: ticketId,
+          p_prize_amount_cents: prizeAmountCents,
+          p_check_source: checkSource,
+          p_list_status: listStatus,
+        }
+      )
+
+      if (rpcError) {
+        console.error('[check-prizes] Error registrando escrutinio histórico en RPC:', rpcError)
+        return new Response(
+          JSON.stringify({ error: rpcError.message || 'Error registrando comprobación en BD' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const formattedPrize = (prizeAmountCents / 100).toLocaleString('es-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + ' €'
+
+      cache.set(cacheKey, {
+        prizeAmountCents,
+        checkSource,
+        listStatus,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      })
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          success: true,
+          prizeAmountCents,
+          formattedPrize,
+          prizeCategory: histResult.prizeCategory,
+          checkSource,
+          listStatus,
+          checkedAt: new Date().toISOString(),
+          drawDate: effectiveDrawDate,
+          recordData,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // -------------------------------------------------------------------------
+    // NIVEL 3 — Sorteos Futuros y en Vivo (2026+)
     // -------------------------------------------------------------------------
     if (!ticketNumber) {
       return new Response(
@@ -232,10 +286,9 @@ Deno.serve(async (req: Request) => {
     const curD = madridParts.find((p) => p.type === 'day')?.value || String(now.getDate()).padStart(2, '0')
     const todayStr = `${curY}-${curM}-${curD}`
 
-    // Validación Defensiva de Inicio del Sorteo
+    // Validación defensiva: sorteo futuro
     const isFuture = effectiveDrawDate > todayStr || (effectiveDrawDate === todayStr && now.getTime() < drawStart.getTime())
     if (isFuture) {
-      console.log(`[check-prizes] Intento de comprobación prematuro bloqueado para billete ${ticketId}. Inicio: ${drawStart.toISOString()}, Ahora: ${now.toISOString()}`)
       return new Response(
         JSON.stringify({
           ok: false,
@@ -248,184 +301,135 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    let prizeAmountCents = 0
-    let checkSource = 'oficial'
-    let listStatus = 'provisional'
-
     // Comprobar caché si no se fuerza refresco
     const cached = cache.get(cacheKey)
     if (!forceRefresh && cached && Date.now() < cached.expiresAt) {
-      prizeAmountCents = cached.prizeAmountCents
-      checkSource = cached.checkSource
-      listStatus = cached.listStatus
-    } else {
-      const isPastDraw = effectiveDrawDate < todayStr
-      const isCurrentEdition = drawYear === curY
-      const loteriasApiKey = Deno.env.get('LOTERIAS_API_KEY')
-      let providerResolved = false
-
-      // Intentar Loterías API con fecha explícita si la clave está disponible
-      if (loteriasApiKey) {
-        try {
-          const res = await fetch(
-            `https://api.loteriasapi.com/api/v1/results/nacional/check?numbers=${cleanNumber}&date=${effectiveDrawDate}`,
-            {
-              headers: {
-                'x-api-key': loteriasApiKey,
-                'User-Agent': 'MisDecimos/1.0.40',
-              },
-            }
-          )
-          if (res.ok) {
-            const data = await res.json()
-            if (data?.additionalData?.decimos && data.additionalData.decimos.length > 0) {
-              const decimoPrize = data.additionalData.decimos[0].prize ?? 0
-              prizeAmountCents = Math.round(Number(decimoPrize) * 100)
-              checkSource = 'loteriasapi'
-              listStatus = data?.listStatus || 'final'
-              providerResolved = true
-            }
-          }
-        } catch (err) {
-          console.warn('[check-prizes] Error consultando Loterias API con fecha:', err)
-        }
-      }
-
-      // Consulta a El País (solo aplicable a la temporada actual)
-      if (!providerResolved) {
-        if (isCurrentEdition) {
-          const numInt = parseInt(cleanNumber, 10)
-          const endpointUrl =
-            effectiveDrawType === 'EL_NINO' || effectiveDrawDate.includes('-01-06')
-              ? `https://api.elpais.com/ws/LoteriaNinoPremiados?n=${numInt}`
-              : `https://api.elpais.com/ws/LoteriaNavidadPremiados?n=${numInt}`
-
-          try {
-            const res = await fetch(endpointUrl, {
-              headers: { 'User-Agent': 'MisDecimos/1.0.40' },
-            })
-            if (res.ok) {
-              const rawText = await res.text()
-              const jsonText = rawText.replace(/^busqueda=/, '').replace(/;$/, '').trim()
-              const data = JSON.parse(jsonText)
-
-              if (data.error === 1 || data.status === 0 || data.status === '0') {
-                if (effectiveDrawDate === todayStr) {
-                  return new Response(
-                    JSON.stringify({
-                      ok: false,
-                      code: 'DRAW_IN_PROGRESS',
-                      message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
-                      drawDate: effectiveDrawDate,
-                    }),
-                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                  )
-                } else {
-                  return new Response(
-                    JSON.stringify({
-                      ok: false,
-                      code: 'HISTORICAL_UNAVAILABLE',
-                      message: `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
-                      drawDate: effectiveDrawDate,
-                    }),
-                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                  )
-                }
-              }
-
-              const premioEuros = Number(data.premio || 0)
-              prizeAmountCents = Math.round(premioEuros * 100)
-              checkSource = 'elpais'
-              listStatus = data.status === 4 || data.status === '4' ? 'final' : 'provisional'
-              providerResolved = true
-            }
-          } catch (err) {
-            console.error('[check-prizes] Error consultando El País:', err)
-          }
-        } else {
-          console.log(`[check-prizes] Sorteo histórico ${effectiveDrawDate} (año ${drawYear} != ${curY}) sin proveedor de archivo`)
-          return new Response(
-            JSON.stringify({
-              ok: false,
-              code: 'HISTORICAL_UNAVAILABLE',
-              message: `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
-              drawDate: effectiveDrawDate,
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-      }
-
-      // Si ningún proveedor pudo resolver el escrutinio
-      if (!providerResolved) {
-        if (isPastDraw) {
-          return new Response(
-            JSON.stringify({
-              ok: false,
-              code: 'HISTORICAL_UNAVAILABLE',
-              message: `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
-              drawDate: effectiveDrawDate,
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        } else {
-          return new Response(
-            JSON.stringify({
-              ok: false,
-              code: 'DRAW_IN_PROGRESS',
-              message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
-              drawDate: effectiveDrawDate,
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-      }
-
-      // Guardar en caché en memoria si hay resultado legítimo
-      const ttl = listStatus === 'final' ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000
-      cache.set(cacheKey, {
-        prizeAmountCents,
-        checkSource,
-        listStatus,
-        expiresAt: Date.now() + ttl,
-      })
-    }
-
-    // Persistencia Atómica vía Supabase RPC record_ticket_prize_check
-    const { data: recordData, error: rpcError } = await supabase.rpc(
-      'record_ticket_prize_check',
-      {
-        p_ticket_id: ticketId,
-        p_prize_amount_cents: prizeAmountCents,
-        p_check_source: checkSource,
-        p_list_status: listStatus,
-      }
-    )
-
-    if (rpcError) {
-      console.error('Error registrando comprobación en RPC:', rpcError)
       return new Response(
-        JSON.stringify({ error: rpcError.message || 'Error registrando comprobación en BD' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          ok: true,
+          success: true,
+          prizeAmountCents: cached.prizeAmountCents,
+          formattedPrize: (cached.prizeAmountCents / 100).toLocaleString('es-ES', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }) + ' €',
+          checkSource: cached.checkSource,
+          listStatus: cached.listStatus,
+          checkedAt: new Date().toISOString(),
+          drawDate: effectiveDrawDate,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const formattedPrize = (prizeAmountCents / 100).toLocaleString('es-ES', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }) + ' €'
+    // Consulta en vivo (para sorteos 2026+ en día de sorteo o celebrados)
+    if (drawYear >= 2026) {
+      const numInt = parseInt(cleanNumber, 10)
+      const endpointUrl =
+        effectiveDrawType === 'EL_NINO' || effectiveDrawDate.includes('-01-06')
+          ? `https://api.elpais.com/ws/LoteriaNinoPremiados?n=${numInt}`
+          : `https://api.elpais.com/ws/LoteriaNavidadPremiados?n=${numInt}`
 
+      try {
+        const res = await fetch(endpointUrl, {
+          headers: { 'User-Agent': 'MisDecimos/1.0.55' },
+        })
+
+        if (res.ok) {
+          const rawText = await res.text()
+          const jsonText = rawText.replace(/^busqueda=/, '').replace(/;$/, '').trim()
+          const data = JSON.parse(jsonText)
+
+          if (data.error === 1 || data.status === 0 || data.status === '0') {
+            if (effectiveDrawDate === todayStr) {
+              return new Response(
+                JSON.stringify({
+                  ok: false,
+                  code: 'DRAW_IN_PROGRESS',
+                  message: 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
+                  drawDate: effectiveDrawDate,
+                }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              )
+            } else {
+              return new Response(
+                JSON.stringify({
+                  ok: false,
+                  code: 'RESULTS_UNAVAILABLE',
+                  message: `No hay resultados disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`,
+                  drawDate: effectiveDrawDate,
+                }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              )
+            }
+          }
+
+          const premioEuros = Number(data.premio || 0)
+          const prizeAmountCents = Math.round(premioEuros * 100)
+          const checkSource = 'elpais'
+          const listStatus = data.status === 4 || data.status === '4' ? 'final' : 'provisional'
+
+          const { data: recordData, error: rpcError } = await supabase.rpc(
+            'record_ticket_prize_check',
+            {
+              p_ticket_id: ticketId,
+              p_prize_amount_cents: prizeAmountCents,
+              p_check_source: checkSource,
+              p_list_status: listStatus,
+            }
+          )
+
+          if (rpcError) {
+            console.error('[check-prizes] Error registrando comprobación en RPC:', rpcError)
+            return new Response(
+              JSON.stringify({ error: rpcError.message || 'Error registrando comprobación en BD' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+
+          const formattedPrize = (prizeAmountCents / 100).toLocaleString('es-ES', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }) + ' €'
+
+          const ttl = listStatus === 'final' ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000
+          cache.set(cacheKey, {
+            prizeAmountCents,
+            checkSource,
+            listStatus,
+            expiresAt: Date.now() + ttl,
+          })
+
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              success: true,
+              prizeAmountCents,
+              formattedPrize,
+              checkSource,
+              listStatus,
+              checkedAt: new Date().toISOString(),
+              drawDate: effectiveDrawDate,
+              recordData,
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      } catch (err) {
+        console.error('[check-prizes] Error consultando feed en vivo:', err)
+      }
+    }
+
+    // Fallback para sorteos no cubiertos
+    const isPastDraw = effectiveDrawDate < todayStr
     return new Response(
       JSON.stringify({
-        ok: true,
-        success: true,
-        prizeAmountCents,
-        formattedPrize,
-        checkSource,
-        listStatus,
-        checkedAt: new Date().toISOString(),
+        ok: false,
+        code: isPastDraw ? 'HISTORICAL_UNAVAILABLE' : 'DRAW_IN_PROGRESS',
+        message: isPastDraw
+          ? `No hay resultados históricos disponibles en el proveedor oficial para el sorteo del ${formattedDrawDate}.`
+          : 'El sorteo está en curso o aún no hay resultados oficiales publicados.',
         drawDate: effectiveDrawDate,
-        recordData,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
