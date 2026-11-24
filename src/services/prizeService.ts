@@ -5,6 +5,7 @@ export interface CheckPrizeResult {
   success: boolean
   prizeAmountCents: number
   formattedPrize: string
+  prizeCategory?: string
   checkSource: string
   listStatus: string
   checkedAt: string

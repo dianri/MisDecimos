@@ -41,7 +41,7 @@
 | **Perfil y Ajustes** | [`src/pages/ProfilePage.tsx`](./src/pages/ProfilePage.tsx) | Edición de perfil, avatar WebP, interruptor Push y test de notificación. |
 | **Servicio Web Push** | [`src/services/push/pushSubscription.ts`](./src/services/push/pushSubscription.ts) · [`public/push-sw.js`](./public/push-sw.js) | Suscripción VAPID y manejador de notificaciones del Service Worker. |
 | **Instalador PWA** | [`src/components/pwa/PwaInstallBanner.tsx`](./src/components/pwa/PwaInstallBanner.tsx) | Prompt nativo en Android y tutorial guiado en iOS Safari. |
-| **Edge Functions** | [`supabase/functions/check-prizes/index.ts`](./supabase/functions/check-prizes/index.ts) · [`supabase/functions/send-push/index.ts`](./supabase/functions/send-push/index.ts) | Comprobación de lotería y envío asíncrono de notificaciones Web Push. |
+| **Edge Functions y Motor** | [`supabase/functions/check-prizes/`](./supabase/functions/check-prizes/) · [`src/lib/historicalDraws.ts`](./src/lib/historicalDraws.ts) · [`send-push/`](./supabase/functions/send-push/index.ts) | Comprobación oficial con motor histórico 2020-2025 y Web Push asíncrono. |
 | **Migraciones SQL** | [`supabase/migrations/`](./supabase/migrations/) | Migraciones PostgreSQL (tablas, RLS, triggers y RPCs transaccionales). |
 
 ---

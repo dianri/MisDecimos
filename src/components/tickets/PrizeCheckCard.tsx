@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { checkTicketPrize } from '../../services/prizeService'
+import { evaluateHistoricalDraw } from '../../lib/historicalDraws'
 import type { Database } from '../../types/database.types'
 import type { OwnershipShare } from './OwnershipBreakdownCard'
 import {
@@ -35,6 +36,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
 }) => {
   const [isChecking, setIsChecking] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
+  const [prizeCategory, setPrizeCategory] = useState<string | null>(null)
   const [feedbackMsg, setFeedbackMsg] = useState<{
     type: 'success' | 'error' | 'historical_unavailable' | 'future' | 'in_progress'
     text: string
@@ -121,14 +123,18 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
       }
 
       if (res.prizeAmountCents > 0) {
+        setPrizeCategory(res.prizeCategory || null)
         setFeedbackMsg({
           type: 'success',
-          text: `¡Comprobación finalizada! Premio registrado: ${res.formattedPrize}`,
+          text: `¡Comprobación finalizada! Premio registrado: ${res.formattedPrize}${
+            res.prizeCategory ? ` (${res.prizeCategory})` : ''
+          }`,
         })
       } else {
+        setPrizeCategory(null)
         setFeedbackMsg({
           type: 'success',
-          text: `Comprobación finalizada. El décimo no tiene premio registrado en el sorteo del ${shortDrawDate}.`,
+          text: `Comprobación finalizada. Sin premio en el sorteo oficial del ${shortDrawDate}.`,
         })
       }
 
@@ -246,6 +252,18 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
     maximumFractionDigits: 2,
   })
 
+  // Categoría de premio registrada (desde estado tras comprobar o evaluada de histórico oficial)
+  const displayPrizeCategory = useMemo(() => {
+    if (prizeCategory) return prizeCategory
+    if (ticket.prize_amount_cents > 0 && ticket.check_source === 'historico_oficial') {
+      const evalRes = evaluateHistoricalDraw(ticket.draw_date, ticket.draw_type, ticket.number)
+      if (evalRes?.found && evalRes.prizeCategory) {
+        return evalRes.prizeCategory
+      }
+    }
+    return null
+  }, [prizeCategory, ticket.prize_amount_cents, ticket.check_source, ticket.draw_date, ticket.draw_type, ticket.number])
+
   return (
     <div className="space-y-3">
       {/* 1. Botón Principal Dorado/Ámbar */}
@@ -354,10 +372,14 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
             /* CASO A: Sin Premio */
             <div className="bg-[#F3F4F6] border border-gray-200/80 p-4 text-center space-y-1.5">
               <p className="text-sm font-extrabold text-gray-900 tracking-tight">
-                Sin premio en el sorteo oficial del {shortDrawDate}
+                Comprobado · Sin premio en el sorteo oficial del {shortDrawDate}
               </p>
               <p className="text-[10px] text-gray-500 font-medium">
-                Fuente: {ticket.check_source || 'oficial'} · Datos orientativos, verifica en{' '}
+                Fuente:{' '}
+                {ticket.check_source === 'historico_oficial'
+                  ? 'Archivo Oficial Histórico'
+                  : ticket.check_source || 'oficial'}{' '}
+                · Datos orientativos, verifica en{' '}
                 <a
                   href="https://www.loteriasyapuestas.es"
                   target="_blank"
@@ -378,7 +400,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
                 </div>
                 <div>
                   <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-800 font-mono">
-                    Resultado Oficial
+                    Resultado Oficial{displayPrizeCategory ? ` · ${displayPrizeCategory}` : ''}
                   </span>
                   <h4 className="text-base sm:text-lg font-black text-emerald-950 tracking-tight">
                     ¡Premiado con {formattedTotalPrize} €!
@@ -495,7 +517,11 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
 
               {/* Nota legal oficial */}
               <p className="text-[10px] text-emerald-800/80 font-medium text-center">
-                Fuente: {ticket.check_source || 'elpais'} · Datos orientativos, verifica en{' '}
+                Fuente:{' '}
+                {ticket.check_source === 'historico_oficial'
+                  ? 'Archivo Oficial Histórico'
+                  : ticket.check_source || 'elpais'}{' '}
+                · Datos orientativos, verifica en{' '}
                 <a
                   href="https://www.loteriasyapuestas.es"
                   target="_blank"
