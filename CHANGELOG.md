@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.74] - 2026-11-25
+
+### Fixed
+- **Rewrite SPA en Vercel y Limpieza de Caché sin 404 (`vercel.json`, `VersionBadge.tsx`, `versionPurge.ts`):**
+  - Configurado `rewrites` estándar (`"/(.*)" -> "/index.html"`) en `vercel.json` conservando las cabeceras de caché existentes para evitar errores `404 NOT_FOUND` al recargar subrutas sin Service Worker activo.
+  - Extraída la función `forcePurgeCacheAndRedirect` (`src/lib/versionPurge.ts`): tras desregistrar Service Workers y vaciar `CacheStorage`, redirige limpiamente a `'/'` con `window.location.replace('/')`.
+  - Adaptado el modal **Diagnóstico de Versión** a Modo Claro/Oscuro OLED con botón principal en Oro Cava (`#C5A880`).
+
+### Changed
+- **Píldora Flotante de Versión Exclusiva en `Mi Perfil` (`ProfilePage.tsx`, `VersionBadge.tsx`):**
+  - Eliminado el bloque estático inferior y restaurada la píldora compacta flotante en la esquina inferior derecha (`fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-6 right-4 z-30`) exclusivamente en `Mi Perfil`.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/versionPurge.test.ts`):**
+  - Verificación de desregistro de Service Workers, limpieza de `CacheStorage`, redirección a `'/'`, exclusividad de la píldora en `ProfilePage.tsx` y regla SPA en `vercel.json`.
+
 ## [1.0.73] - 2026-11-25
 
 ### Changed
