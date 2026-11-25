@@ -493,7 +493,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const avatarDisplay = safeImageUrl(profile?.avatar_url)
 
   return (
-    <div className="max-w-xl mx-auto space-y-6 pt-4 sm:pt-6 pb-12">
+    <div className="max-w-xl mx-auto space-y-6 pt-4 sm:pt-6 pb-20">
       {/* Cabecera */}
       <div className="space-y-1">
         <h2 className="text-xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
@@ -1016,10 +1016,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         )}
       </div>
 
-      {/* Información de versión integrada al pie de Mi Perfil */}
-      <div className="pt-2 flex justify-center">
-        <VersionBadge variant="inline" />
-      </div>
+      {/* Píldora flotante de versión exclusiva de Mi Perfil */}
+      <VersionBadge variant="floating" />
 
       {/* Menú de Selección de Foto de Perfil (Action Sheet / Bottom Sheet) */}
       {isAvatarSheetOpen && (
