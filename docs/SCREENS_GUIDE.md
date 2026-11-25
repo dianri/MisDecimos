@@ -141,9 +141,10 @@ flowchart TD
 2. **Botón "Reclamar / Canjear Código" (o QR):**
    - Abre [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx) o [`InvitePage.tsx`](../src/pages/InvitePage.tsx) si se accede por enlace web `/invite/:id`.
    - Permite introducir el código de 6 dígitos o escanear el código QR recibido por WhatsApp/email.
-   - Realiza una previsualización de la participación (número, sorteo, porcentaje e importe en €) mediante `previewInvite` (`src/services/inviteService.ts`) y ofrece dos opciones:
-     - **"Aceptar y Asignar a mi cuenta":** Ejecuta `claimInvite` (`accept_pending_invite` RPC), garantizando el retorno del `ticket_id` y transfiriendo formalmente la cuota.
-     - **"Rechazar Participación":** Ejecuta `rejectInvite` (`reject_pending_invite` RPC), reintegrando de inmediato el porcentaje al propietario.
+   - Realiza una previsualización de la participación (número, sorteo, porcentaje en una línea e importe proporcional en formato español `X,XX €`) mediante `previewInvite` (`src/services/inviteService.ts`), utilizando `<DecimoIcon />` y la paleta Titanio / Oro Cava / Verde Granito en Modo Claro y Oscuro OLED, y ofrece las acciones jerarquizadas:
+     - **«Reclamar X%» (Botón principal full-width en Oro Cava `#C5A880`):** Ejecuta `claimInvite` (`accept_pending_invite` RPC), garantizando el retorno del `ticket_id` y transfiriendo formalmente la cuota.
+     - **«Volver» (Botón secundario neutro full-width):** Regresa al formulario de entrada de código.
+     - **«Rechazar participación» (Enlace de texto discreto en Rojo Coral con confirmación en 2 pasos):** Requiere una segunda pulsación dentro de 4 segundos (*"¿Confirmar rechazo? Pulsa de nuevo para rechazar"*) antes de ejecutar `rejectInvite` (`reject_pending_invite` RPC), evitando rechazos accidentales.
    - **Apertura Directa del Décimo y Retorno Garantizado a `Participaciones`:**
      - Al pulsar *"Aceptar y ver mi participación"*, los botones se deshabilitan inmediatamente para evitar dobles pulsaciones y el botón muestra *"Aceptando participación..."*.
      - Al confirmar con éxito:
