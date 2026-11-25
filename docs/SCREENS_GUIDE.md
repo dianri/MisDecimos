@@ -73,8 +73,8 @@ flowchart TD
    - **Cierre Natural de Modales y Sheets:** Al abrir cualquier diálogo (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal` o el modal de `<VersionBadge />`), pulsar el botón Atrás cierra limpiamente el modal sin abandonar la pantalla actual ni cerrar la aplicación.
    - **Navegación Interior:** En pantallas secundarias (`/alertas`, `/auditoria`, `/perfil`, `/billetes/:id`), pulsar Atrás regresa a la pantalla previa. Si se accedió por enlace profundo o notificación sin historial (`idx === 0`), redirige a la raíz `/` en vez de cerrar la PWA.
    - **Guardia Centinela en Ruta Raíz y Confirmación Doble Tap:** En la vista principal (`/`), el primer toque de Atrás muestra un toast flotante (`z-50`, encima de `BottomNav`): *"Pulsa atrás de nuevo para cerrar la aplicación"*. Si se pulsa de nuevo en menos de 2,5 segundos, la aplicación se cierra; si no, el aviso desaparece y la protección se rearma automáticamente.
-4. **Componente `<VersionBadge />`:**
-   - Widget flotante discreto en la esquina inferior que muestra `vX.Y.Z · <git-hash>` y el indicador de red (*Online/Offline*).
+4. **Componente `<VersionBadge />` (exclusivo en `Mi Perfil`):**
+   - Integrado de forma limpia al pie de [`ProfilePage.tsx`](../src/pages/ProfilePage.tsx) (`variant="inline"`), eliminando el widget flotante del layout global para no interferir con el botón flotante `Añadir` ni tapar contenido en otras pantallas. Muestra `vX.Y.Z · <git-hash>` y el indicador de red (*Online/Offline*).
    - Al pulsar, abre un modal de diagnóstico técnico con la fecha de build y el botón *"Forzar actualización y limpiar caché"*, que vacía `caches`, desregistra Service Workers y recarga en limpio.
    - **Ciclo de vida `autoUpdate` silencioso:** El Service Worker descarga y activa inmediatamente las nuevas versiones en segundo plano (`skipWaiting: true`, `clientsClaim: true`) y recarga la interfaz una sola vez de forma limpia sin requerir confirmación del usuario ni mostrar carteles flotantes molestos. Comprueba actualizaciones cada 60 segundos y cada vez que el usuario regresa a la pestaña (`visibilitychange`).
 5. **Onboarding Inteligente de Notificaciones Push (`<PushPermissionModal />` y `usePushPermissionPrompt`):**
@@ -98,7 +98,7 @@ flowchart TD
 - **Modal de Reclamación:** [`src/components/tickets/InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx)
 
 ### Pestañas del Dashboard (`TicketsPage.tsx`) y Pantalla `Premios` (`PrizesPage.tsx`):
-- **Pantalla Principal (`/` — Décimos):** Muestra directamente el botón verde **`Añadir`** a ancho completo, el selector de pestañas (**Décimos**, **Participaciones**, **Archivados**) y el listado de tarjetas.
+- **Pantalla Principal (`/` — Décimos):** Listado único unificado de **Décimos** propios activos y **Participaciones** activas ordenados por fecha de sorteo, con badges identificativos (`Décimo` en verde / `Participación` en naranja), botón flotante **`Añadir`** encima de `BottomNav` y margen inferior `pb-32`. En la vista de detalle, **Propiedad y Reparto** incluye el botón **`Crear participación`** cuando el propietario tiene porcentaje libre.
 - **Pantalla Premios (`/premios` — [`src/pages/PrizesPage.tsx`](../src/pages/PrizesPage.tsx)):**
   - **Bloque Superior — Tarjetas KPI:**
     - **Décimos Activos:** Suma los décimos propios no archivados más las participaciones no archivadas en estado `ACEPTADA` (excluyendo `RENUNCIADA`, `PENDIENTE`, `CANCELADA`, `RECHAZADA` y archivados).

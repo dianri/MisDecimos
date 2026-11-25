@@ -143,3 +143,14 @@ export function formatQuickPrizeCheckToast(
     text: `Comprobado · Sin premio en el sorteo oficial del ${shortDate}`,
   }
 }
+
+/**
+ * Determina si debe mostrarse el botón "Crear participación" en la ficha de propiedad.
+ */
+export function shouldShowCreateParticipationButton(params: {
+  isOwner: boolean
+  ticketStatus: string
+  availablePercentage: number
+}): boolean {
+  return params.isOwner && params.ticketStatus !== 'LIQUIDADO' && params.availablePercentage > 0
+}

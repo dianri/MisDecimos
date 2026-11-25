@@ -5,6 +5,24 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.61] - 2026-11-25
+
+### Changed
+- **Listado Unificado de `Décimos` y `Participaciones` (`TicketsPage.tsx`, `TicketListItemCard.tsx`, `ticketMetrics.ts`, `ticketCardHelper.ts`, `SwipeableTicketCard.tsx`):**
+  - Eliminado el selector de subpestañas (`Décimos` / `Participaciones`), mostrando todos los décimos propios activos y participaciones activas en un único listado ordenado por fecha de sorteo (`buildUnifiedActiveTicketsList`), conservando compatibilidad con `?tab=participaciones` y acceso opcional a archivados.
+  - Añadida etiqueta visual distintiva en cada tarjeta: **`Décimo`** en verde (`bg-emerald-100 text-emerald-800`) o **`Participación`** en naranja/ámbar (`bg-orange-100 text-orange-800`), junto con la cuota (`100% tuyo` / `Tu cuota: X%`).
+  - Restringido el gesto de swipe izquierdo (**Eliminar**) y el filo derecho rojo exclusivamente a los décimos propios (`allowDelete={item.isOwner}`), conservando el swipe derecho (**Archivar**) en todas las tarjetas.
+- **Botón Flotante `Añadir` encima de `BottomNav` (`TicketsPage.tsx`):**
+  - Movido el botón verde **`Añadir`** a posición flotante fija encima de la barra inferior (`fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))]`), con `pb-32` en la lista para evitar cualquier solapamiento.
+- **Botón `Crear participación` Restaurado en Detalle (`OwnershipBreakdownCard.tsx`, `cardQuickActions.ts`):**
+  - Restaurado el botón **`Crear participación`** (`min-h-[44px]`, `UserPlus`) dentro de **Propiedad y Reparto** cuando `isOwner` y hay porcentaje disponible (`shouldShowCreateParticipationButton`).
+- **Versión Exclusiva en `Mi Perfil` (`AppShell.tsx`, `VersionBadge.tsx`, `ProfilePage.tsx`):**
+  - Eliminado el badge flotante de versión del layout global (`AppShell.tsx`) e integrado en formato `inline` exclusivamente al pie de `Mi Perfil` (`ProfilePage.tsx`).
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/unifiedListAndActions.test.ts`):**
+  - Verificación del listado unificado, bordes visuales (`Décimo` vs `Participación`), bloqueo de swipe de borrado en participaciones y visibilidad del botón `Crear participación`.
+
 ## [1.0.60] - 2026-11-25
 
 ### Added

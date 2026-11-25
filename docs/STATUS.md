@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.60` (Producción Estable · Pestaña Premios e Historial de Escrutinio)  
+**Versión Actual:** `1.0.61` (Producción Estable · Listado Unificado, Botón Flotante Añadir y Versión en Perfil)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.60`)  
+**Rama de Producción:** `main` (Tag `v1.0.61`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -142,3 +142,4 @@
 - [x] v1.0.58: Botón `Añadir` a ancho completo (`w-full`), escáner unificado con **Tengo un código** y **Añadir décimo manual** sin subida de fotos (`BarcodeScannerModal.tsx`, `TicketFormModal.tsx`), gestos horizontales **Swipe** en tarjetas para **Archivar** y **Eliminar** con confirmación (`SwipeableTicketCard.tsx`, `swipeCardState.ts` con 131 tests superados al 100%), y limpieza visual de `TicketDetailPage.tsx` y `OwnershipBreakdownCard.tsx` (rosco por persona y eliminación de botones redundantes).
 - [x] v1.0.59: Nuevo icono oficial limpio `<DecimoIcon />` sin muescas (`AppShell.tsx`, `TicketsPage.tsx`, `TicketListItemCard.tsx`), aislamiento estricto de eventos en botones **`Compartir`** (excluyendo `PROPIETARIO`/`RENUNCIADA`) y **`Comprobar sorteo`** (sin navegación al detalle), filos laterales verde/rojo (`border-l-4 border-l-emerald-600`, `border-r-4 border-r-rose-500`) como pista visual del swipe en tarjetas y suite de pruebas unitarias ampliada (132 tests superados al 100%).
 - [x] v1.0.60: Reestructuración de navegación a 3 pestañas (**Décimos**, **Premios**, **Alertas** en `grid-cols-3` con `min-h-[44px]`), traslado de tarjetas KPI (`Décimos Activos` y `Total Premios`) desde `TicketsPage.tsx` a la nueva pantalla **`/premios`** (`PrizesPage.tsx`, `prizesSummary.ts`) con historial completo de escrutinio (`Todos`, `Premiados`, `Sin premio`) y suite de tests (`prizesSummary.test.ts` con 135 tests superados al 100%).
+- [x] v1.0.61: Listado unificado de **Décimos** y **Participaciones** con badges identificativos (`Décimo` en verde / `Participación` en naranja), swipe de eliminación restringido a propios, botón flotante **`Añadir`** encima de `BottomNav`, restauración de **`Crear participación`** en `OwnershipBreakdownCard.tsx`, traslado de `<VersionBadge />` exclusivamente a `ProfilePage.tsx` y tests unitarios (`unifiedListAndActions.test.ts` con 137 tests superados al 100%).
