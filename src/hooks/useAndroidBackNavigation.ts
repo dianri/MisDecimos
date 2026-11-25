@@ -43,6 +43,9 @@ export function parseRouteFromPath(rawPath: string): { tab: TabType; ticketId: s
     }
   }
 
+  if (lower === '/premios' || lower === '/premios/') {
+    return { tab: 'premios', ticketId: null }
+  }
   if (lower === '/alertas' || lower === '/alertas/') {
     return { tab: 'alertas', ticketId: null }
   }
