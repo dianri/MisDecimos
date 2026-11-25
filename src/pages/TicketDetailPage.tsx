@@ -614,17 +614,17 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         />
 
         {/* Fila inferior de metadatos */}
-        <div className="flex items-center justify-between text-xs px-2 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-          <div className="flex items-center gap-1.5 tabular-nums text-[11px]">
-            <Calendar className="h-3.5 w-3.5" />
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs px-2 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+          <div className="inline-flex items-center gap-1.5 whitespace-nowrap tabular-nums text-[11px]">
+            <Calendar className="h-3.5 w-3.5 shrink-0" />
             <span>
               FECHA SORTEO:{' '}
               <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">{ticket.draw_date}</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 font-semibold text-[#3A5245] dark:text-[#C5A880] text-[11px]">
-            <Barcode className="h-3.5 w-3.5" />
+          <div className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[#3A5245] dark:text-[#C5A880] text-[11px]">
+            <Barcode className="h-3.5 w-3.5 shrink-0" />
             <span>ORIGEN: {ticket.origin === 'BARCODE_GS1' ? 'Escáner GS1-128' : 'Manual'}</span>
           </div>
         </div>
