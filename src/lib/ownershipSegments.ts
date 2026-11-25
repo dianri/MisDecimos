@@ -15,9 +15,9 @@ export interface RadialSegment {
 }
 
 export const SEGMENT_COLORS = {
-  propietario: '#3A5245',
-  cotitulares: '#2563EB',
-  pendientes: '#C5A880',
+  propietario: '#4E6E5D',
+  cotitulares: '#C5A880',
+  pendientes: 'rgba(197, 168, 128, 0.45)',
   disponible: '#E5E7EB',
 } as const
 
