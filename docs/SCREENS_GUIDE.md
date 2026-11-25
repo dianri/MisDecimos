@@ -84,7 +84,7 @@ flowchart TD
 6. **Instalador y Banner PWA Multiplataforma (`<PwaInstallBanner />` y `usePwaInstallPrompt`):**
    - **Detección Avanzada de Instalación:** Integra comprobación síncrona de modo standalone y asíncrona mediante `navigator.getInstalledRelatedApps()`, apoyado en el Web App Manifest oficial con `"id": "/"` y `"related_applications"`.
    - **Anti-Redundancia en Navegadores Chromium:** En Chrome/Edge/Brave/Samsung Internet, donde el navegador suprime el evento `beforeinstallprompt` si la app ya está instalada, el sistema nunca muestra automáticamente la guía manual de los tres puntos. Solo se activa si `deferredPrompt` está disponible de forma nativa.
-   - **Cierre Definitivo en 1 Clic:** Unifica los botones de acción en un botón principal (*«Instalar aplicación»* si hay prompt nativo o *«Entendido»* en guías manuales) acompañado de *«No volver a mostrar»*, guardando de forma permanente en `localStorage` el flag `misdecimos_pwa_prompt_dismissed` para no volver a mostrar el modal de forma automática en ese navegador.
+   - **Recuperación tras Desinstalación y Caducidad Temporal (7 días):** Cuando la aplicación se ejecuta en modo navegador (`!display-mode: standalone` y `!navigator.standalone`), limpia automáticamente cualquier marca previa de instalación (`misdecimos_pwa_installed`) en `localStorage`. El botón secundario *«Ahora no»* (o *«Entendido»* en guías manuales) registra una caducidad temporal de **7 días** (`PWA_DISMISS_TTL_MS`) en `misdecimos_pwa_prompt_dismissed` en lugar de un bloqueo permanente.
 
 ---
 
