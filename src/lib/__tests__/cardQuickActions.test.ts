@@ -4,6 +4,7 @@ import {
   resolveShareButtonNavigation,
   evaluateQuickPrizeCheckPrecondition,
   formatQuickPrizeCheckToast,
+  hasThirdPartyParticipations,
 } from '../cardQuickActions.ts'
 
 test('resolveShareButtonNavigation - sin participaciones previas abre crear participación', () => {
@@ -65,7 +66,7 @@ test('formatQuickPrizeCheckToast - formatea premio con categoría, 0 € sin pre
     '22/12/2025'
   )
   assert.equal(prized.type, 'success')
-  assert.equal(prized.text, '¡Décimo premiado con 400.000,00 €! (1.º Premio (El Gordo))')
+  assert.equal(prized.text, '¡Premiado! · 1.º Premio (El Gordo) (400.000,00 €)')
 
   const noPrize = formatQuickPrizeCheckToast(
     {
@@ -98,4 +99,41 @@ test('formatQuickPrizeCheckToast - formatea premio con categoría, 0 € sin pre
   )
   assert.equal(unavailable.type, 'warning')
   assert.equal(unavailable.text, 'No hay resultados históricos disponibles.')
+})
+
+test('hasThirdPartyParticipations - ignora cuota del propietario y participaciones renunciadas', () => {
+  const sharesOnlyOwner = [
+    { ticket_id: 't1', role: 'PROPIETARIO', status: 'ACEPTADA' },
+    { ticket_id: 't1', role: 'PARTICIPANTE', status: 'RENUNCIADA' },
+  ]
+  assert.equal(
+    hasThirdPartyParticipations({ ticketId: 't1', shares: sharesOnlyOwner }),
+    false
+  )
+
+  const targetNoCoOwners = resolveShareButtonNavigation({
+    ticketId: 't1',
+    hasParticipations: hasThirdPartyParticipations({ ticketId: 't1', shares: sharesOnlyOwner }),
+    fromTab: 'decimos',
+  })
+  assert.equal(targetNoCoOwners.state.openCreateShare, true)
+
+  const sharesWithCoOwner = [
+    ...sharesOnlyOwner,
+    { ticket_id: 't1', role: 'PARTICIPANTE', status: 'ACEPTADA' },
+  ]
+  assert.equal(
+    hasThirdPartyParticipations({ ticketId: 't1', shares: sharesWithCoOwner }),
+    true
+  )
+
+  // Invitación pendiente cuenta como participación creada
+  assert.equal(
+    hasThirdPartyParticipations({
+      ticketId: 't1',
+      shares: sharesOnlyOwner,
+      pendingInviteTicketIds: new Set(['t1']),
+    }),
+    true
+  )
 })

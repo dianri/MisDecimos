@@ -43,7 +43,9 @@ test('resolveTicketCardPresentation - billete premiado con cuota activa (¡PREMI
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
   assert.ok(result.statusBadgeClasses.includes('from-amber-500'))
   assert.ok(result.containerClasses.includes('bg-gradient-to-br from-amber-50/90'))
-  assert.ok(result.containerClasses.includes('border-2 border-amber-400/85'))
+  assert.ok(result.containerClasses.includes('border-y-2 border-y-amber-400/85'))
+  assert.ok(result.containerClasses.includes('border-l-4 border-l-emerald-600'))
+  assert.ok(result.containerClasses.includes('border-r-4 border-r-rose-500'))
   assert.ok(result.containerClasses.includes('ring-2 ring-amber-300/25'))
 })
 
@@ -85,7 +87,9 @@ test('resolveTicketCardPresentation - billete premiado liquidado (LIQUIDADO)', (
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.statusBadgeLabel, 'LIQUIDADO')
   assert.ok(result.statusBadgeClasses.includes('bg-emerald-600'))
-  assert.ok(result.containerClasses.includes('border-2 border-amber-400/85'))
+  assert.ok(result.containerClasses.includes('border-y-2 border-y-amber-400/85'))
+  assert.ok(result.containerClasses.includes('border-l-4 border-l-emerald-600'))
+  assert.ok(result.containerClasses.includes('border-r-4 border-r-rose-500'))
 })
 
 test('resolveTicketCardPresentation - billete archivado premiado preserva estilo destacado', () => {

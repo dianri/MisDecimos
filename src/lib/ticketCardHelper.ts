@@ -65,8 +65,8 @@ export function resolveTicketCardPresentation(params: {
   }
 
   const containerClasses = isPrized
-    ? 'bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/75 rounded-3xl border-2 border-amber-400/85 ring-2 ring-amber-300/25 shadow-md shadow-amber-900/5 p-4 hover:shadow-lg hover:border-amber-500 active:scale-[0.99] transition-all cursor-pointer space-y-3 relative overflow-hidden'
-    : 'bg-white rounded-3xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:border-lottery/30 active:scale-[0.99] transition-all cursor-pointer space-y-3 relative overflow-hidden'
+    ? 'bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/75 rounded-2xl border-y-2 border-y-amber-400/85 border-l-4 border-l-emerald-600 border-r-4 border-r-rose-500 ring-2 ring-amber-300/25 shadow-md shadow-amber-900/5 p-4 hover:shadow-lg active:scale-[0.99] transition-all cursor-pointer space-y-3 relative overflow-hidden'
+    : 'bg-white rounded-2xl border-y border-y-gray-100 border-l-4 border-l-emerald-600 border-r-4 border-r-rose-500 shadow-sm p-4 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-3 relative overflow-hidden'
 
   return {
     isPrized,

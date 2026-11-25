@@ -1,4 +1,5 @@
 import type { CheckPrizeResult } from '../services/prizeService'
+import type { OwnershipShareRow } from './ticketMetrics'
 
 export interface ShareNavigationTarget {
   ticketId: string
@@ -6,6 +7,23 @@ export interface ShareNavigationTarget {
     fromTab: 'decimos' | 'participaciones' | 'archivados'
     openCreateShare?: boolean
   }
+}
+
+/**
+ * Determina si un décimo tiene participaciones de terceros creadas,
+ * excluyendo estrictamente la cuota del propietario (role !== 'PROPIETARIO')
+ * y las participaciones renunciadas (status !== 'RENUNCIADA').
+ */
+export function hasThirdPartyParticipations(params: {
+  ticketId: string
+  shares: Pick<OwnershipShareRow, 'ticket_id' | 'role' | 'status'>[]
+  pendingInviteTicketIds?: Set<string>
+}): boolean {
+  const { ticketId, shares, pendingInviteTicketIds } = params
+  const coOwnerShares = shares.filter(
+    (s) => s.ticket_id === ticketId && s.role !== 'PROPIETARIO' && s.status !== 'RENUNCIADA'
+  )
+  return coOwnerShares.length > 0 || Boolean(pendingInviteTicketIds?.has(ticketId))
 }
 
 /**
@@ -113,10 +131,10 @@ export function formatQuickPrizeCheckToast(
   }
 
   if (res.prizeAmountCents > 0) {
-    const categorySuffix = res.prizeCategory ? ` (${res.prizeCategory})` : ''
+    const categoryText = res.prizeCategory ? ` · ${res.prizeCategory}` : ''
     return {
       type: 'success',
-      text: `¡Décimo premiado con ${res.formattedPrize}!${categorySuffix}`,
+      text: `¡Premiado!${categoryText} (${res.formattedPrize})`,
     }
   }
 
