@@ -189,9 +189,9 @@ export const AppShell: React.FC = () => {
             className="flex items-center gap-2 sm:gap-2.5 rounded-xl p-1 -ml-1 hover:bg-black/[0.03] active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 shrink-0"
           >
             <img
-              src="/pwa-192x192.png"
+              src="/logo-4mills.png"
               alt="MisDecimos"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-contain shadow-xs shrink-0"
+              className="w-9 h-9 rounded-xl object-contain shadow-sm shrink-0"
               width={36}
               height={36}
             />

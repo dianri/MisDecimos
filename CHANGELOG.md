@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.64] - 2026-11-25
+
+### Changed
+- **Nueva Identidad Visual "4 MILLS" (`public/`, `vite.config.ts`, `index.html`, `AppShell.tsx`, `LoginPage.tsx`, `ShareInviteModal.tsx`):**
+  - Recortado en formato `1:1` el squircle central de la bola de madera **4 MILLS** y generados todos los assets en `public/`: `logo-4mills.png` (`512x512`), `pwa-192x192.png`, `pwa-512x512.png`, `pwa-maskable-512x512.png` (margen de seguridad ~15% sobre `#1c1c1e`), `apple-touch-icon.png` (`180x180` sobre `#1c1c1e`), `favicon-32x32.png` y `favicon.ico` (`16x16` + `32x32`).
+  - Actualizada la configuración de `VitePWA` (`includeAssets`, `icons` con `any` y `maskable`) y los `<link>` de `index.html`.
+  - Integrado `/logo-4mills.png` en la cabecera principal (`AppShell.tsx`, `w-9 h-9 rounded-xl`), pantalla de acceso (`LoginPage.tsx`, `w-20 h-20 rounded-2xl`) y centro del código QR (`ShareInviteModal.tsx`).
+
 ## [1.0.63] - 2026-11-25
 
 ### Fixed
