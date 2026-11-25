@@ -1,7 +1,17 @@
 export type SwipeSide = 'left' | 'right' | null
+export type SwipeRightActionMode = 'delete' | 'renounce'
 
 export const SWIPE_ACTION_WIDTH = 84
 export const SWIPE_OPEN_THRESHOLD = 42
+
+/**
+ * Determina la acción revelada al deslizar hacia la izquierda:
+ * - Propietario (DÉCIMO): 'delete' (Eliminar)
+ * - Cotitular (PARTICIPACIÓN): 'renounce' (Renunciar)
+ */
+export function resolveSwipeRightAction(isOwner: boolean): SwipeRightActionMode {
+  return isOwner ? 'delete' : 'renounce'
+}
 
 /**
  * Calcula el desplazamiento horizontal limitado (clamped) durante el arrastre táctil.
