@@ -63,7 +63,7 @@ test('buildUnifiedActiveTicketsList - unifica Décimos propios y Participaciones
   assert.equal(unified[1].isOwner, true)
   assert.equal(unified[1].userPercentage, 100)
 
-  // Presentación minimalista Apple: esquinas muy redondeadas (rounded-[22px]) y superficie limpia light/dark
+  // Presentación minimalista Apple: esquinas muy redondeadas (rounded-[22px]) y filos de swipe en décimo propio
   const ownPresentation = resolveTicketCardPresentation({
     prizeAmountCents: 0,
     status: 'PENDIENTE',
@@ -73,6 +73,8 @@ test('buildUnifiedActiveTicketsList - unifica Décimos propios y Participaciones
   assert.ok(ownPresentation.containerClasses.includes('rounded-[22px]'))
   assert.ok(ownPresentation.containerClasses.includes('bg-white'))
   assert.ok(ownPresentation.containerClasses.includes('dark:bg-[#1D1D1F]'))
+  assert.ok(ownPresentation.containerClasses.includes('border-l-[#3A5245]'))
+  assert.ok(ownPresentation.containerClasses.includes('border-r-[#D04848]'))
 
   const partPresentation = resolveTicketCardPresentation({
     prizeAmountCents: 0,
@@ -82,6 +84,8 @@ test('buildUnifiedActiveTicketsList - unifica Décimos propios y Participaciones
   })
   assert.ok(partPresentation.containerClasses.includes('rounded-[22px]'))
   assert.ok(partPresentation.containerClasses.includes('bg-white'))
+  assert.ok(!partPresentation.containerClasses.includes('border-l-[#3A5245]'))
+  assert.ok(!partPresentation.containerClasses.includes('border-r-[#D04848]'))
 
   // Swipe en Participación: permite derecha (Archivar) pero bloquea izquierda (Eliminar)
   assert.equal(clampSwipeOffset(-60, 0, false), 0)

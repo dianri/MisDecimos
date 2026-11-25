@@ -480,13 +480,12 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case 'LIQUIDADO':
-        return 'bg-emerald-50 text-emerald-800 border-emerald-300'
       case 'VALIDADO':
-        return 'bg-amber-50 text-amber-800 border-amber-300'
+        return 'bg-[#3A5245] text-[#FFFFFF] border-[#3A5245]'
       case 'ARCHIVADO':
-        return 'bg-gray-100 text-gray-700 border-gray-300'
+        return 'bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 border-transparent'
       default:
-        return 'bg-lottery-50 text-lottery border-lottery-200'
+        return 'bg-[#C5A880]/20 text-[#1D1D1F] dark:text-[#F5F5F7] border-[#C5A880]/40'
     }
   }
 

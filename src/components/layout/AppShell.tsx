@@ -180,7 +180,7 @@ export const AppShell: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col justify-between selection:bg-[#C5A880] selection:text-[#1D1D1F] pb-24 md:pb-10 transition-colors">
       {/* 1. Cabecera Superior Fija */}
-      <header className="sticky top-0 z-30 bg-[#F5F5F7]/90 dark:bg-[#000000]/90 backdrop-blur-md border-b border-black/[0.06] dark:border-white/[0.08] pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6 transition-colors">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#1D1D1F]/95 backdrop-blur-md border-b border-black/[0.06] dark:border-white/[0.08] pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6 transition-colors">
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-2">
           {/* Izquierda: Logotipo y Marca MisDecimos -> Inicio (/) (Común Móvil y Escritorio) */}
           <button
@@ -279,7 +279,7 @@ export const AppShell: React.FC = () => {
                       {isAlertsBell && alertDotPriority && (
                         <span
                           aria-label="Alertas sin leer"
-                          className={`absolute -top-0.5 -right-0.5 w-[7px] h-[7px] rounded-full ${alertDotColorClass} ring-2 ring-[#F5F5F7] dark:ring-[#000000]`}
+                          className={`absolute -top-0.5 -right-0.5 w-[7px] h-[7px] rounded-full ${alertDotColorClass} ring-2 ring-white dark:ring-[#1D1D1F]`}
                         />
                       )}
                     </div>
@@ -454,7 +454,7 @@ export const AppShell: React.FC = () => {
       {/* 9. Barra de Navegación Inferior Fija Móvil (< 768px) */}
       <nav
         aria-label="Navegación principal móvil"
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[#F5F5F7]/95 dark:bg-[#000000]/95 backdrop-blur-md border-t border-black/[0.08] dark:border-white/[0.1] shadow-lg pb-safe transition-colors"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-[#1D1D1F]/95 backdrop-blur-md border-t border-black/[0.08] dark:border-white/[0.1] shadow-lg pb-safe transition-colors"
       >
         <div className="max-w-xl mx-auto px-2 h-16 grid grid-cols-3 items-center">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
@@ -488,7 +488,7 @@ export const AppShell: React.FC = () => {
                   {isAlertsBell && alertDotPriority && (
                     <span
                       aria-label="Alertas sin leer"
-                      className={`absolute top-0.5 right-1.5 w-[7px] h-[7px] rounded-full ${alertDotColorClass} ring-2 ring-[#F5F5F7] dark:ring-[#000000]`}
+                      className={`absolute top-0.5 right-1.5 w-[7px] h-[7px] rounded-full ${alertDotColorClass} ring-2 ring-white dark:ring-[#1D1D1F]`}
                     />
                   )}
                 </div>

@@ -5,13 +5,12 @@ import { classifyScannedPayload } from '../../lib/scanPayloadClassifier'
 import { BarcodeScannerModal } from './BarcodeScannerModal'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
+import { DecimoIcon } from '../icons/DecimoIcon'
 import {
   X,
-  Ticket,
   Camera,
   Edit3,
   Layers,
-  Sparkles,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -290,12 +289,12 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
           {/* Cabecera del modal (shrink-0) */}
           <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-lottery text-white shadow-sm shadow-lottery/20">
-                <Ticket className="h-4 w-4" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#3A5245] text-white shadow-sm">
+                <DecimoIcon className="h-4 w-4" />
               </span>
               <div>
                 <h3 className="text-sm font-bold text-gray-900">Registrar Décimo</h3>
-                <p className="text-[11px] text-gray-500">Añade tu boleto para compartir cuotas</p>
+                <p className="text-[11px] text-gray-500">Añade tu décimo para compartir cuotas</p>
               </div>
             </div>
             <button
@@ -389,20 +388,19 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
               <label className="block text-xs font-semibold text-gray-700">Tipo de Sorteo</label>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { id: 'NAVIDAD', label: 'Navidad', icon: Sparkles },
-                  { id: 'EL_NINO', label: 'El Niño', icon: Sparkles },
+                  { id: 'NAVIDAD', label: 'Navidad' },
+                  { id: 'EL_NINO', label: 'El Niño' },
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleDrawTypeChange(item.id as 'NAVIDAD' | 'EL_NINO')}
-                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-xs font-semibold transition text-center ${
+                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-xs font-semibold transition text-center cursor-pointer ${
                       drawType === item.id
-                        ? 'border-lottery bg-lottery-50/70 text-lottery font-bold shadow-xs ring-1 ring-lottery/30'
+                        ? 'border-[#C5A880] bg-[#C5A880]/20 text-[#1D1D1F] font-bold shadow-xs'
                         : 'border-gray-200 hover:border-gray-300 text-gray-600 bg-white'
                     }`}
                   >
-                    <item.icon className="h-4 w-4 shrink-0 text-amber-500" />
                     <span>{item.label}</span>
                   </button>
                 ))}

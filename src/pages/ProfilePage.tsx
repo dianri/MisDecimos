@@ -493,7 +493,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const avatarDisplay = safeImageUrl(profile?.avatar_url)
 
   return (
-    <div className="max-w-xl mx-auto space-y-6 pb-12">
+    <div className="max-w-xl mx-auto space-y-6 pt-4 sm:pt-6 pb-12">
       {/* Cabecera */}
       <div className="space-y-1">
         <h2 className="text-xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">

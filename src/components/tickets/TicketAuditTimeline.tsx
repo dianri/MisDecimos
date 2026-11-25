@@ -159,6 +159,47 @@ const ACTION_CONFIGS: Record<string, ActionConfig> = {
     bgClass: 'bg-emerald-100',
     borderClass: 'border-emerald-300',
   },
+  SIMULACION_PREMIO: {
+    title: 'Simulación de premio activada',
+    icon: Trophy,
+    colorClass: 'text-[#1D1D1F]',
+    bgClass: 'bg-[#C5A880]/25',
+    borderClass: 'border-[#C5A880]/60',
+  },
+  SIMULACION_PREMIO_ACTIVADA: {
+    title: 'Simulación de premio activada',
+    icon: Trophy,
+    colorClass: 'text-[#1D1D1F]',
+    bgClass: 'bg-[#C5A880]/25',
+    borderClass: 'border-[#C5A880]/60',
+  },
+  SIMULACION_PREMIO_RESTABLECIDA: {
+    title: 'Simulación de premio restablecida',
+    icon: RefreshCw,
+    colorClass: 'text-[#1D1D1F]',
+    bgClass: 'bg-[#F5F5F7]',
+    borderClass: 'border-black/10',
+  },
+}
+
+function formatFallbackActionTitle(action: string): string {
+  const words = action
+    .replace(/_/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/\bsimulacion\b/g, 'simulación')
+    .replace(/\bparticipacion\b/g, 'participación')
+    .replace(/\bdecimo\b/g, 'décimo')
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : action
+}
+
+function formatCheckSource(source: unknown): string {
+  const raw = String(source || '').trim()
+  if (!raw) return ''
+  if (raw.toUpperCase() === 'SIMULACION' || raw.toUpperCase() === 'SIMULACIÓN') {
+    return 'Simulación'
+  }
+  return raw
 }
 
 export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
@@ -221,7 +262,7 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
 
           {events.map((evt) => {
             const config = ACTION_CONFIGS[evt.action] || {
-              title: evt.action.replace(/_/g, ' '),
+              title: formatFallbackActionTitle(evt.action),
               icon: Clock,
               colorClass: 'text-gray-700',
               bgClass: 'bg-gray-100',
@@ -229,6 +270,18 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
             }
 
             const Icon = config.icon
+            const meta =
+              evt.metadata && typeof evt.metadata === 'object'
+                ? (evt.metadata as Record<string, unknown>)
+                : null
+            const hasPrize = Boolean(meta && meta.prize_amount_cents !== undefined && meta.prize_amount_cents !== null)
+            const checkSourceText = meta ? formatCheckSource(meta.check_source) : ''
+            const hasShortCode = Boolean(meta?.short_code)
+            const hasLabel = Boolean(meta?.label)
+            const hasReason = Boolean(meta?.reason)
+            const hasPartsCount = Boolean(meta?.parts_count)
+            const hasVisibleMetadata =
+              hasPrize || Boolean(checkSourceText) || hasShortCode || hasLabel || hasReason || hasPartsCount
 
             return (
               <div key={evt.id} className="flex items-start gap-3.5 relative z-10 text-xs">
@@ -260,36 +313,36 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
                     </span>
                   </div>
 
-                  {/* Metadatos adicionales si existen */}
-                  {evt.metadata && typeof evt.metadata === 'object' && Object.keys(evt.metadata).length > 0 && (
+                  {/* Metadatos adicionales si existen detalles visibles */}
+                  {meta && hasVisibleMetadata && (
                     <div className="text-[10px] text-gray-500 font-mono bg-white/70 p-2 rounded-xl mt-1.5 border border-gray-100 space-y-0.5">
-                      {Boolean((evt.metadata as Record<string, unknown>).prize_amount_cents !== undefined) && (
+                      {hasPrize && (
                         <p>
                           Premio total:{' '}
                           <strong className="text-lottery font-bold">
-                            {(Number((evt.metadata as Record<string, unknown>).prize_amount_cents) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
+                            {(Number(meta.prize_amount_cents) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                           </strong>
                         </p>
                       )}
-                      {Boolean((evt.metadata as Record<string, unknown>).check_source) && (
-                        <p>Fuente: {String((evt.metadata as Record<string, unknown>).check_source)}</p>
+                      {Boolean(checkSourceText) && (
+                        <p>Fuente: {checkSourceText}</p>
                       )}
-                      {Boolean((evt.metadata as Record<string, unknown>).short_code) && (
+                      {hasShortCode && (
                         <p>
                           Código:{' '}
                           <strong className="tracking-wider text-gray-800">
-                            {String((evt.metadata as Record<string, unknown>).short_code)}
+                            {String(meta.short_code)}
                           </strong>
                         </p>
                       )}
-                      {Boolean((evt.metadata as Record<string, unknown>).label) && (
-                        <p>Etiqueta: {String((evt.metadata as Record<string, unknown>).label)}</p>
+                      {hasLabel && (
+                        <p>Etiqueta: {String(meta.label)}</p>
                       )}
-                      {Boolean((evt.metadata as Record<string, unknown>).reason) && (
-                        <p>Motivo: {String((evt.metadata as Record<string, unknown>).reason)}</p>
+                      {hasReason && (
+                        <p>Motivo: {String(meta.reason)}</p>
                       )}
-                      {Boolean((evt.metadata as Record<string, unknown>).parts_count) && (
-                        <p>Partes: {String((evt.metadata as Record<string, unknown>).parts_count)}</p>
+                      {hasPartsCount && (
+                        <p>Partes: {String(meta.parts_count)}</p>
                       )}
                     </div>
                   )}

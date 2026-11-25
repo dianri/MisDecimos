@@ -197,25 +197,27 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             <span className="truncate">Sorteo: {ticket.draw_date}</span>
           </div>
 
-          <button
-            type="button"
-            data-no-card-nav="true"
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation()
-              onShareClick?.(ticket.id, hasParticipations ?? false)
-            }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition active:scale-95 shrink-0 ${
-              isPrized
-                ? 'bg-[#1D1D1F]/10 text-[#1D1D1F] hover:bg-[#1D1D1F]/15'
-                : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/10 dark:hover:bg-white/15'
-            }`}
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>Compartir</span>
-          </button>
+          {isOwner && (
+            <button
+              type="button"
+              data-no-card-nav="true"
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                onShareClick?.(ticket.id, hasParticipations ?? false)
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition active:scale-95 shrink-0 ${
+                isPrized
+                  ? 'bg-[#1D1D1F]/10 text-[#1D1D1F] hover:bg-[#1D1D1F]/15'
+                  : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/10 dark:hover:bg-white/15'
+              }`}
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Compartir</span>
+            </button>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-2">

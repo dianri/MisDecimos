@@ -30,6 +30,7 @@ export function resolveTicketCardPresentation(params: {
   isRenounced?: boolean
   lastCheckedAt?: string | null
 }): TicketCardPresentation {
+  const isOwner = params.isOwner !== false
   const isPrized = params.prizeAmountCents > 0
   const isUserActive = !params.isRenounced && params.userPercentage > 0
   const isCheckedWithoutPrize =
@@ -68,9 +69,19 @@ export function resolveTicketCardPresentation(params: {
     }
   }
 
+  const swipeEdgeClasses = isOwner
+    ? 'border-l-4 border-l-[#3A5245] border-r-4 border-r-[#D04848]'
+    : ''
+
   const containerClasses = isPrized
-    ? 'bg-[#C5A880] text-[#1D1D1F] rounded-[22px] border border-[#C5A880] shadow-sm p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden'
-    : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden'
+    ? `bg-[#C5A880] text-[#1D1D1F] rounded-[22px] border-y border-y-[#C5A880] ${
+        isOwner ? swipeEdgeClasses : 'border-x border-x-[#C5A880]'
+      } shadow-sm p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
+    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border-y border-y-black/[0.06] dark:border-y-white/[0.08] ${
+        isOwner
+          ? swipeEdgeClasses
+          : 'border-x border-x-black/[0.06] dark:border-x-white/[0.08]'
+      } shadow-sm p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
 
   return {
     isPrized,

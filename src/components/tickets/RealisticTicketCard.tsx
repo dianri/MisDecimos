@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { Database } from '../../types/database.types'
-import { ShieldCheck, Sparkles } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
 type DrawTemplate = Database['public']['Tables']['draw_templates']['Row']
@@ -108,7 +108,6 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
           <div className="flex items-start justify-between border-b border-lottery/20 pb-2.5 relative z-10">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5 text-lottery">
-                <Sparkles className="h-3.5 w-3.5 text-gold" />
                 <h4 className="text-[11px] font-extrabold uppercase tracking-widest font-sans">
                   LOTERÍA NACIONAL DE ESPAÑA
                 </h4>

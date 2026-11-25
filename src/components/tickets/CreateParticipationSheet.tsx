@@ -10,7 +10,6 @@ import {
   Plus,
   Loader2,
   AlertCircle,
-  Sparkles,
   Info,
 } from 'lucide-react'
 
@@ -289,8 +288,7 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
 
               {/* Previsualización matemática en tiempo real */}
               <div className="rounded-2xl border border-lottery/30 bg-lottery-50/50 p-3.5 space-y-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-lottery">
-                  <Sparkles className="h-3.5 w-3.5 text-gold-600" />
+                <div className="flex items-center gap-1.5 font-bold text-[#1D1D1F]">
                   <span>Desglose exacto del reparto</span>
                 </div>
 
@@ -394,7 +392,7 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
               type="button"
               onClick={handleCreateEqualSplit}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold shadow-sm active:scale-98 transition disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -411,7 +409,7 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
               form="manual-participation-form"
               onClick={() => handleCreateManual()}
               disabled={isLoading || manualPercentage <= 0 || manualPercentage > availablePercentage}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-bold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold shadow-sm active:scale-98 transition disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 <>
