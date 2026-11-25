@@ -153,7 +153,7 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
                 level="M"
                 includeMargin={false}
                 imageSettings={{
-                  src: '/favicon.svg',
+                  src: '/logo-4mills.png',
                   x: undefined,
                   y: undefined,
                   height: 32,

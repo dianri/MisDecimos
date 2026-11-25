@@ -149,11 +149,11 @@ export const LoginPage: React.FC = () => {
         {/* Cabecera / Identidad */}
         <div className="text-center space-y-2">
           <img
-            src="/pwa-192x192.png"
+            src="/logo-4mills.png"
             alt="MisDecimos"
-            className="h-16 w-16 rounded-2xl shadow-md shadow-[#2E6146]/10 object-contain mb-2 mx-auto"
-            width={64}
-            height={64}
+            className="w-20 h-20 rounded-2xl object-contain shadow-md mb-2 mx-auto"
+            width={80}
+            height={80}
           />
           <h1 className="text-2xl font-extrabold text-lottery tracking-tight">MisDecimos</h1>
           <p className="text-xs font-medium text-gray-500">

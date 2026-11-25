@@ -21,13 +21,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.ico',
-        'favicon.svg',
+        'favicon-32x32.png',
         'apple-touch-icon.png',
-        'masked-icon.svg',
+        'logo-4mills.png',
         'badge-mono.png',
         'push-sw.js',
         'pwa-192x192.png',
         'pwa-512x512.png',
+        'pwa-maskable-512x512.png',
       ],
       manifest: {
         id: '/',
@@ -59,7 +60,7 @@ export default defineConfig({
             purpose: 'any'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/pwa-maskable-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'

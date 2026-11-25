@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.63` (Producción Estable · Aislamiento de Escáner y Aviso de Compartición)  
+**Versión Actual:** `1.0.64` (Producción Estable · Identidad Visual 4 MILLS)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.63`)  
+**Rama de Producción:** `main` (Tag `v1.0.64`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -145,3 +145,4 @@
 - [x] v1.0.61: Listado unificado de **Décimos** y **Participaciones** con badges identificativos (`Décimo` en verde / `Participación` en naranja), swipe de eliminación restringido a propios, botón flotante **`Añadir`** encima de `BottomNav`, restauración de **`Crear participación`** en `OwnershipBreakdownCard.tsx`, traslado de `<VersionBadge />` exclusivamente a `ProfilePage.tsx` y tests unitarios (`unifiedListAndActions.test.ts` con 137 tests superados al 100%).
 - [x] v1.0.62: Pantalla principal limpia sin pestañas ni filtros (`TicketsPage.tsx`), traslado de **Décimos archivados** a **Mi Perfil** (`ProfilePage.tsx`, `archivedTickets.ts`) con desplegable `Décimos archivados (X)`, botones **Restaurar** y **Eliminar** (`min-h-[44px]`), toast *"Décimo archivado en tu cuenta. Puedes consultarlo en Mi Perfil."*, insignia `ARCHIVADO` en `TicketDetailPage.tsx` y tests unitarios (`archivedTickets.test.ts` con 140 tests superados al 100%).
 - [x] v1.0.63: Aislamiento de cierre/retroceso del escáner (`useModalBackHandler.ts`, `useAndroidBackNavigation.ts`) con ventana de protección de 300 ms evitando el toast de salida, banner guiado *"Selecciona una participación para compartir"* al navegar desde `Compartir` con participaciones existentes (`selectShareToShare: true` en `TicketDetailPage.tsx`), botón táctil `min-h-[44px]` en `Ver QR / Compartir` y tests unitarios (141 tests superados al 100%).
+- [x] v1.0.64: Integración de la identidad visual **4 MILLS** (bola de madera de bombo en squircle oscuro): recorte `1:1` y generación de `logo-4mills.png`, `pwa-192x192.png`, `pwa-512x512.png`, `pwa-maskable-512x512.png`, `apple-touch-icon.png`, `favicon-32x32.png` y `favicon.ico`, actualización de `vite.config.ts` e `index.html`, e integración en `AppShell.tsx`, `LoginPage.tsx` y `ShareInviteModal.tsx`.
