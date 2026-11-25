@@ -16,6 +16,7 @@ import {
   simulateTicketPrize,
   resetTicketPrizeSimulation,
 } from '../services/prizeService'
+import { hasSelectShareToShareFlag } from '../lib/cardQuickActions'
 import type { Database } from '../types/database.types'
 import {
   ArrowLeft,
@@ -29,6 +30,8 @@ import {
   CheckCircle2,
   Sparkles,
   RotateCcw,
+  Share2,
+  X,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -67,6 +70,20 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
     return false
   })
+  const [showSelectShareBanner, setShowSelectShareBanner] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return hasSelectShareToShareFlag(window.history.state)
+    }
+    return false
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && hasSelectShareToShareFlag(window.history.state)) {
+      const nextState = { ...window.history.state }
+      delete nextState.selectShareToShare
+      window.history.replaceState(nextState, '', window.location.href)
+    }
+  }, [])
 
   const handleAutoOpenHandled = useCallback(() => {
     setAutoOpenCreateShare(false)
@@ -536,20 +553,51 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
 
         {activeTab === 'propiedad' ? (
-          <OwnershipBreakdownCard
-            ticketId={ticket.id}
-            ticketNumber={ticket.number}
-            drawName={ticket.draw_name}
-            ticketStatus={ticket.status}
-            prizeAmountCents={ticket.prize_amount_cents}
-            isOwner={isOwner}
-            shares={shares}
-            pendingInvites={pendingInvites}
-            onRefresh={loadTicketDetails}
-            onRenounced={handleShareRenounced}
-            autoOpenCreateShare={autoOpenCreateShare}
-            onAutoOpenHandled={handleAutoOpenHandled}
-          />
+          <div className="space-y-3">
+            {showSelectShareBanner && (
+              <div
+                role="status"
+                className="flex items-start justify-between gap-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 shadow-xs animate-in fade-in duration-150"
+              >
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700 mt-0.5">
+                    <Share2 className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-emerald-950">
+                      Selecciona una participación para compartir
+                    </p>
+                    <p className="text-[11px] text-emerald-800/90 leading-snug">
+                      Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSelectShareBanner(false)}
+                  aria-label="Cerrar aviso"
+                  className="p-1 text-emerald-700 hover:text-emerald-950 rounded-lg transition shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            <OwnershipBreakdownCard
+              ticketId={ticket.id}
+              ticketNumber={ticket.number}
+              drawName={ticket.draw_name}
+              ticketStatus={ticket.status}
+              prizeAmountCents={ticket.prize_amount_cents}
+              isOwner={isOwner}
+              shares={shares}
+              pendingInvites={pendingInvites}
+              onRefresh={loadTicketDetails}
+              onRenounced={handleShareRenounced}
+              autoOpenCreateShare={autoOpenCreateShare}
+              onAutoOpenHandled={handleAutoOpenHandled}
+            />
+          </div>
         ) : (
           <TicketAuditTimeline
             events={auditEvents}

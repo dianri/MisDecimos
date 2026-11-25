@@ -6,6 +6,7 @@ export interface ShareNavigationTarget {
   state: {
     fromTab: 'decimos' | 'participaciones' | 'archivados'
     openCreateShare?: boolean
+    selectShareToShare?: boolean
   }
 }
 
@@ -53,8 +54,17 @@ export function resolveShareButtonNavigation(params: {
     ticketId,
     state: {
       fromTab,
+      selectShareToShare: true,
     },
   }
+}
+
+/**
+ * Extrae el flag selectShareToShare del estado de navegación del historial.
+ */
+export function hasSelectShareToShareFlag(historyState: unknown): boolean {
+  if (!historyState || typeof historyState !== 'object') return false
+  return Boolean((historyState as { selectShareToShare?: boolean }).selectShareToShare)
 }
 
 /**

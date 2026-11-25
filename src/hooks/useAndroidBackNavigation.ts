@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { TabType } from '../components/layout/AppShell'
+import { isModalBackGuardActive } from './useModalBackHandler.ts'
 
 interface HistoryItemState {
   tab: TabType
@@ -129,8 +130,8 @@ export function useAndroidBackNavigation() {
     }
 
     const handlePopState = (e: PopStateEvent) => {
-      // 1. Si un modal estaba abierto, el hook useModalBackHandler se encarga
-      if (e.state?.modalOpen) {
+      // 1. Si un modal está abierto o acaba de cerrarse (< 300ms), ignorar para no disparar aviso de salida
+      if (e.state?.modalOpen || isModalBackGuardActive()) {
         return
       }
 

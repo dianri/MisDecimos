@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.62` (Producción Estable · Gestión de Décimos Archivados en Mi Perfil)  
+**Versión Actual:** `1.0.63` (Producción Estable · Aislamiento de Escáner y Aviso de Compartición)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.62`)  
+**Rama de Producción:** `main` (Tag `v1.0.63`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -144,3 +144,4 @@
 - [x] v1.0.60: Reestructuración de navegación a 3 pestañas (**Décimos**, **Premios**, **Alertas** en `grid-cols-3` con `min-h-[44px]`), traslado de tarjetas KPI (`Décimos Activos` y `Total Premios`) desde `TicketsPage.tsx` a la nueva pantalla **`/premios`** (`PrizesPage.tsx`, `prizesSummary.ts`) con historial completo de escrutinio (`Todos`, `Premiados`, `Sin premio`) y suite de tests (`prizesSummary.test.ts` con 135 tests superados al 100%).
 - [x] v1.0.61: Listado unificado de **Décimos** y **Participaciones** con badges identificativos (`Décimo` en verde / `Participación` en naranja), swipe de eliminación restringido a propios, botón flotante **`Añadir`** encima de `BottomNav`, restauración de **`Crear participación`** en `OwnershipBreakdownCard.tsx`, traslado de `<VersionBadge />` exclusivamente a `ProfilePage.tsx` y tests unitarios (`unifiedListAndActions.test.ts` con 137 tests superados al 100%).
 - [x] v1.0.62: Pantalla principal limpia sin pestañas ni filtros (`TicketsPage.tsx`), traslado de **Décimos archivados** a **Mi Perfil** (`ProfilePage.tsx`, `archivedTickets.ts`) con desplegable `Décimos archivados (X)`, botones **Restaurar** y **Eliminar** (`min-h-[44px]`), toast *"Décimo archivado en tu cuenta. Puedes consultarlo en Mi Perfil."*, insignia `ARCHIVADO` en `TicketDetailPage.tsx` y tests unitarios (`archivedTickets.test.ts` con 140 tests superados al 100%).
+- [x] v1.0.63: Aislamiento de cierre/retroceso del escáner (`useModalBackHandler.ts`, `useAndroidBackNavigation.ts`) con ventana de protección de 300 ms evitando el toast de salida, banner guiado *"Selecciona una participación para compartir"* al navegar desde `Compartir` con participaciones existentes (`selectShareToShare: true` en `TicketDetailPage.tsx`), botón táctil `min-h-[44px]` en `Ver QR / Compartir` y tests unitarios (141 tests superados al 100%).

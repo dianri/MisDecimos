@@ -5,6 +5,7 @@ import {
   evaluateQuickPrizeCheckPrecondition,
   formatQuickPrizeCheckToast,
   hasThirdPartyParticipations,
+  hasSelectShareToShareFlag,
 } from '../cardQuickActions.ts'
 
 test('resolveShareButtonNavigation - sin participaciones previas abre crear participación', () => {
@@ -19,7 +20,7 @@ test('resolveShareButtonNavigation - sin participaciones previas abre crear part
   assert.equal(target.state.openCreateShare, true)
 })
 
-test('resolveShareButtonNavigation - con participaciones previas navega al detalle sin openCreateShare', () => {
+test('resolveShareButtonNavigation - con participaciones previas navega al detalle con selectShareToShare: true', () => {
   const target = resolveShareButtonNavigation({
     ticketId: 'ticket-456',
     hasParticipations: true,
@@ -29,6 +30,9 @@ test('resolveShareButtonNavigation - con participaciones previas navega al detal
   assert.equal(target.ticketId, 'ticket-456')
   assert.equal(target.state.fromTab, 'participaciones')
   assert.equal(target.state.openCreateShare, undefined)
+  assert.equal(target.state.selectShareToShare, true)
+  assert.equal(hasSelectShareToShareFlag(target.state), true)
+  assert.equal(hasSelectShareToShareFlag({}), false)
 })
 
 test('evaluateQuickPrizeCheckPrecondition - sorteo futuro bloquea comprobación con aviso claro', () => {

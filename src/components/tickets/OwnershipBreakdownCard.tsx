@@ -926,7 +926,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveShareInvite(invite)}
-                className="flex-1 py-1.5 px-2 bg-white border border-amber-300 rounded-xl text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-50 active:scale-95 transition shadow-xs"
+                className="flex-1 min-h-[44px] py-2 px-3 bg-white border border-amber-300 rounded-xl text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-50 active:scale-95 transition shadow-xs"
               >
                 <QrCode className="h-3.5 w-3.5 text-amber-700" />
                 <Share2 className="h-3.5 w-3.5 text-amber-700" />
