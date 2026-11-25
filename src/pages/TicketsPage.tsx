@@ -22,7 +22,7 @@ import {
   formatQuickPrizeCheckToast,
   hasThirdPartyParticipations,
 } from '../lib/cardQuickActions'
-import { resolveScannerHaveCodeTransition } from '../lib/swipeCardState'
+import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../lib/swipeCardState'
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { checkTicketPrize } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
@@ -341,11 +341,55 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const handleSwipeRenounce = async (ticket: TicketRow, userPercentage: number) => {
+    const userShare = allShares.find(
+      (s) =>
+        s.ticket_id === ticket.id &&
+        s.user_id === user?.id &&
+        s.role === 'PARTICIPANTE' &&
+        s.status !== 'RENUNCIADA'
+    )
+
+    if (!userShare) {
+      setToastVariant('warning')
+      setClaimToastMsg('No se encontró una participación activa para renunciar.')
+      return
+    }
+
+    if (
+      !confirm(
+        `¿Seguro que quieres renunciar a tu participación del ${userPercentage}% en el décimo #${ticket.number}? Tu porcentaje volverá al propietario.`
+      )
+    ) {
+      return
+    }
+
+    try {
+      const { error } = await supabase.rpc('renounce_own_participation', {
+        p_share_id: userShare.id,
+      })
+
+      if (error) throw error
+
+      setToastVariant('success')
+      setClaimToastMsg(
+        `Has renunciado a tu participación del ${userPercentage}% en el décimo #${ticket.number}.`
+      )
+      await loadTickets()
+    } catch (err: unknown) {
+      console.error('Error renunciando a participación:', err)
+      setToastVariant('warning')
+      setClaimToastMsg(
+        err instanceof Error ? err.message : 'No se pudo completar la renuncia a la participación.'
+      )
+    }
+  }
+
   return (
     <div className="space-y-4 pb-32 max-w-xl mx-auto">
       {/* Cabecera limpia del listado principal (sin pestañas ni filtros) */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-base font-extrabold text-gray-900 tracking-tight">
+        <h2 className="text-base font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
           Mis Décimos y Participaciones ({unifiedActiveTickets.length})
         </h2>
       </div>
@@ -353,15 +397,15 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       {/* Listado unificado de décimos y participaciones activas */}
       {isLoading ? (
         <div className="flex justify-center p-12">
-          <Loader2 className="h-6 w-6 animate-spin text-lottery" />
+          <Loader2 className="h-6 w-6 animate-spin text-[#C5A880]" />
         </div>
       ) : unifiedActiveTickets.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
-          <DecimoIcon className="mx-auto w-10 h-10 text-gray-300" />
-          <h3 className="text-sm font-bold text-gray-800">
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-8 text-center space-y-2">
+          <DecimoIcon className="mx-auto w-10 h-10 text-[#1D1D1F]/25 dark:text-[#F5F5F7]/25" />
+          <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
             No tienes décimos ni participaciones
           </h3>
-          <p className="text-xs text-gray-400 max-w-xs mx-auto">
+          <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 max-w-xs mx-auto">
             Pulsa el botón Añadir abajo para escanear un décimo, introducirlo manualmente o canjear un código.
           </p>
         </div>
@@ -372,7 +416,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
               key={item.ticket.id}
               ticketId={item.ticket.id}
               isArchived={item.isArchived}
-              allowDelete={item.isOwner}
+              allowDelete={true}
+              rightActionMode={resolveSwipeRightAction(item.isOwner)}
               openSwipeTicketId={openSwipeTicketId}
               onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
               onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
@@ -384,6 +429,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                   item.ticket.status
                 )
               }
+              onRenounceClick={() => handleSwipeRenounce(item.ticket, item.userPercentage)}
               onCardClick={handleTicketClick}
             >
               <TicketListItemCard
@@ -415,9 +461,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
             setIsTicketScannerOpen(true)
           }}
           aria-label="Añadir décimo"
-          className="w-full min-h-[48px] px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 transition"
+          className="w-full min-h-[48px] px-6 py-3 rounded-[22px] bg-[#C5A880] hover:bg-[#B8996E] active:scale-[0.98] text-[#1D1D1F] font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-black/15 transition cursor-pointer"
         >
-          <Camera className="w-4.5 h-4.5 text-white shrink-0" />
+          <Camera className="w-4.5 h-4.5 text-[#1D1D1F] shrink-0" />
           <span>Añadir</span>
         </button>
       </div>
@@ -539,10 +585,10 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         <div
           role="status"
           aria-live="polite"
-          className={`fixed bottom-20 md:bottom-6 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 text-white text-xs font-semibold rounded-2xl shadow-2xl border flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200 ${
+          className={`fixed bottom-20 md:bottom-6 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 text-xs font-semibold rounded-[20px] shadow-2xl border flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200 ${
             toastVariant === 'warning'
-              ? 'bg-amber-800 border-amber-600'
-              : 'bg-emerald-800 border-emerald-600'
+              ? 'bg-[#D04848] border-[#D04848] text-white'
+              : 'bg-[#3A5245] border-[#3A5245] text-white'
           }`}
         >
           <div className="flex items-center gap-2">

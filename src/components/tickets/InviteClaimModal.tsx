@@ -132,24 +132,28 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-sm rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
+        className="w-full max-w-sm rounded-[22px] bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
         role="dialog"
         aria-modal="true"
       >
         {/* Cabecera (shrink-0) */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold-100 text-gold-700">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#C5A880]/20 text-[#C5A880]">
               <KeyRound className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Código de Invitación</h3>
-              <p className="text-[11px] text-gray-500">Reclama tu cuota en el décimo</p>
+              <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                Código de Invitación
+              </h3>
+              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+                Reclama tu cuota en el décimo
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+            className="rounded-lg p-1.5 text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -157,8 +161,8 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
 
         <div className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
           {errorMsg && (
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-[#D04848]/10 border border-[#D04848]/30 text-[#D04848] text-xs">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#D04848]" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -173,7 +177,7 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
               className="space-y-4"
             >
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-700">
+                <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
                   Código de invitación (6 dígitos o token)
                 </label>
                 <input
@@ -183,7 +187,7 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                   placeholder="Ej. 493072"
                   value={code}
                   onChange={(e) => setCode(e.target.value.trim())}
-                  className="w-full text-center tracking-widest text-xl font-bold font-mono py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lottery/20 focus:border-lottery text-gray-900 shadow-sm transition"
+                  className="w-full text-center tracking-widest text-xl font-bold font-mono py-2.5 px-4 rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-[#F5F5F7] dark:bg-[#2C2C2E] focus:outline-none focus:ring-2 focus:ring-[#C5A880]/40 focus:border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm transition"
                 />
               </div>
 
@@ -191,14 +195,14 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 active:scale-98 transition"
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-[#F5F5F7] dark:bg-[#2C2C2E] text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] hover:opacity-80 active:scale-98 transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || !code.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-lottery text-white text-xs font-semibold shadow-sm hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold shadow-sm active:scale-98 transition disabled:opacity-45 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
@@ -214,38 +218,45 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
           ) : (
             /* Tarjeta de Confirmación de Participación */
             <div className="space-y-4">
-              <div className="rounded-2xl border border-lottery/30 bg-lottery-50/50 p-4 space-y-3">
+              <div className="rounded-2xl border border-[#3A5245]/30 bg-[#F5F5F7] dark:bg-[#2C2C2E] p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-lottery">
+                  <div className="flex items-center gap-2 text-[#3A5245] dark:text-[#C5A880]">
                     <Ticket className="h-4 w-4" />
                     <span className="text-xs font-extrabold uppercase tracking-wide">
                       {preview.draw_name}
                     </span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-lottery text-white text-xs font-bold font-mono">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#3A5245] text-white text-xs font-bold font-mono">
                     {preview.percentage}% cuota
                   </span>
                 </div>
 
-                <div className="text-center py-2 bg-white rounded-xl border border-gray-200 shadow-xs">
-                  <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                <div className="text-center py-2 bg-white dark:bg-[#1D1D1F] rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-xs">
+                  <p className="text-[10px] font-bold tracking-widest text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 uppercase">
                     Número
                   </p>
-                  <p className="text-2xl font-extrabold font-mono tracking-widest text-gray-900">
+                  <p className="text-2xl font-black tracking-tight tabular-nums text-[#1D1D1F] dark:text-[#F5F5F7]">
                     {preview.number}
                   </p>
                 </div>
 
-                <div className="text-xs text-gray-600 space-y-1">
+                <div className="text-xs text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 space-y-1">
                   <p>
-                    Compartido por: <strong className="text-gray-900">{preview.owner_name}</strong>
+                    Compartido por:{' '}
+                    <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">
+                      {preview.owner_name}
+                    </strong>
                   </p>
                   <p>
                     Fecha del sorteo:{' '}
-                    <span className="font-mono text-gray-800">{preview.draw_date}</span>
+                    <span className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">
+                      {preview.draw_date}
+                    </span>
                   </p>
                   {preview.label && (
-                    <p className="text-[11px] text-gray-500 italic">Etiqueta: {preview.label}</p>
+                    <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 italic">
+                      Etiqueta: {preview.label}
+                    </p>
                   )}
                 </div>
               </div>

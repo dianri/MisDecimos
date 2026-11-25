@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Archive, ArchiveRestore, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, Trash2, LogOut } from 'lucide-react'
 import {
   SWIPE_ACTION_WIDTH,
   clampSwipeOffset,
@@ -13,10 +13,12 @@ export interface SwipeableTicketCardProps {
   ticketId: string
   isArchived?: boolean
   allowDelete?: boolean
+  rightActionMode?: 'delete' | 'renounce'
   openSwipeTicketId: string | null
   onSwipeOpenChange: (ticketId: string | null, side: SwipeSide) => void
   onArchiveClick: (ticketId: string) => void
   onDeleteClick: (ticketId: string) => void
+  onRenounceClick?: (ticketId: string) => void
   onCardClick: (ticketId: string) => void
   children: React.ReactNode
 }
@@ -25,10 +27,12 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
   ticketId,
   isArchived = false,
   allowDelete = true,
+  rightActionMode = 'delete',
   openSwipeTicketId,
   onSwipeOpenChange,
   onArchiveClick,
   onDeleteClick,
+  onRenounceClick,
   onCardClick,
   children,
 }) => {
@@ -120,7 +124,7 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
   }
 
   return (
-    <div className="relative rounded-2xl overflow-hidden select-none touch-pan-y">
+    <div className="relative rounded-[22px] overflow-hidden select-none touch-pan-y">
       {/* Fondo izquierdo: botón Archivar / Desarchivar (revelado al deslizar hacia la derecha) */}
       <div
         className={`absolute inset-y-0 left-0 flex items-center justify-center transition-opacity ${
@@ -137,7 +141,7 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
             onArchiveClick(ticketId)
           }}
           aria-label={isArchived ? 'Desarchivar décimo' : 'Archivar décimo'}
-          className="w-full h-full flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] active:scale-95 transition"
+          className="w-full h-full flex flex-col items-center justify-center gap-1 bg-[#3A5245] hover:bg-[#2F4338] text-white font-semibold text-[11px] active:scale-95 transition"
         >
           {isArchived ? (
             <ArchiveRestore className="w-5 h-5" />
@@ -148,8 +152,8 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
         </button>
       </div>
 
-      {/* Fondo derecho: botón Eliminar (revelado al deslizar hacia la izquierda, solo si allowDelete) */}
-      {allowDelete && (
+      {/* Fondo derecho: botón Eliminar (propietario) o Renunciar (participación) */}
+      {(allowDelete || rightActionMode === 'renounce') && (
         <div
           className={`absolute inset-y-0 right-0 flex items-center justify-center transition-opacity ${
             dragOffset < 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -162,13 +166,26 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
               e.stopPropagation()
               setDragOffset(0)
               onSwipeOpenChange(null, null)
-              onDeleteClick(ticketId)
+              if (rightActionMode === 'renounce') {
+                onRenounceClick?.(ticketId)
+              } else {
+                onDeleteClick(ticketId)
+              }
             }}
-            aria-label="Eliminar décimo"
-            className="w-full h-full flex flex-col items-center justify-center gap-1 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] active:scale-95 transition"
+            aria-label={rightActionMode === 'renounce' ? 'Renunciar a participación' : 'Eliminar décimo'}
+            className="w-full h-full flex flex-col items-center justify-center gap-1 bg-[#D04848] hover:bg-[#B83B3B] text-white font-semibold text-[11px] active:scale-95 transition cursor-pointer"
           >
-            <Trash2 className="w-5 h-5" />
-            <span>Eliminar</span>
+            {rightActionMode === 'renounce' ? (
+              <>
+                <LogOut className="w-5 h-5" />
+                <span>Renunciar</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-5 h-5" />
+                <span>Eliminar</span>
+              </>
+            )}
           </button>
         </div>
       )}

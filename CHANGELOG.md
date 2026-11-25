@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.67] - 2026-11-25
+
+### Changed
+- **Nuevo Sistema Visual "Titanio, Oro Cava y Verde Granito" (Claro y Oscuro OLED):**
+  - Configurados tokens CSS y Tailwind (`darkMode: 'class'`) con soporte automático `prefers-color-scheme` y selector rápido de apariencia (`Claro` / `Oscuro` / `Sistema`) en `Mi Perfil` (`ThemeContext.tsx`, `ProfilePage.tsx`), actualizando `<meta name="theme-color">` dinámicamente (`#F5F5F7` / `#000000`).
+  - Tipografía `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif` con protagonista de 5 dígitos (`font-black tracking-tight tabular-nums`) y tarjetas `rounded-[22px]`.
+  - **Tarjetas premiadas (`prize_amount_cents > 0`):** superficie completa en Oro Cava (`#C5A880`) con texto `#1D1D1F` e insignia en Verde Granito (`#3A5245`); tarjetas comprobadas sin premio muestran píldora `[✓ Comprobado]` en Verde Granito.
+  - **Botones primarios y Campana de Alertas:** acciones principales en Oro Cava (`#C5A880`) con texto `#1D1D1F` (`font-semibold`) y campana con punto de `7px × 7px`, efecto *cutout* (`ring-2`) y prioridad cromática (`#D04848` crítica, `#3A5245` premio/buenas noticias, `#C5A880` general) sin contador numérico.
+  - Adaptación completa a Modo Oscuro OLED en `RealisticTicketCard`, `TicketDetailPage`, `TicketAuditTimeline`, `OwnershipBreakdownCard`, `PrizesPage`, `AlertsPage`, `AuditPage`, `LoginPage` y modales.
+
+### Added
+- **Swipe `Renunciar` en Tarjetas de Participación (`TicketsPage.tsx`, `SwipeableTicketCard.tsx`, `swipeCardState.ts`):**
+  - Las tarjetas de `PARTICIPACIÓN` (`owner_id !== user.id`) muestran ambos filos laterales (`#3A5245` izquierdo y `#D04848` derecho) y habilitan el deslizamiento hacia la izquierda para revelar **`Renunciar`** en Rojo Coral (`#D04848`) con confirmación y llamada a `renounce_own_participation`.
+  - Añadidos tests unitarios en `alertBadgePriority.test.ts`, `swipeCardState.test.ts` y actualizados `winningTicketCard.test.ts` y `unifiedListAndActions.test.ts`.
+
 ## [1.0.66] - 2026-11-25
 
 ### Fixed

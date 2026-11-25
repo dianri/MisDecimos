@@ -423,7 +423,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       )}
 
       {/* 2. Gráfico Donut SVG Sólido */}
-      <div className="bg-white rounded-3xl p-3.5 sm:p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] p-3.5 sm:p-5 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-sm flex flex-col items-center justify-center">
         <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
           <svg
             className="w-full h-full"
@@ -437,7 +437,8 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
               cy="80"
               r={r}
               fill="none"
-              stroke="#E5E7EB"
+              stroke="currentColor"
+              className="text-[#E5E7EB] dark:text-[#2C2C2E]"
               strokeWidth={DONUT_STROKE_WIDTH}
             />
 
@@ -462,22 +463,22 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
           {/* Texto Central */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
-            <span className="text-2xl font-black text-lottery tracking-tight">
+            <span className="text-2xl font-black text-[#3A5245] dark:text-[#C5A880] tracking-tight tabular-nums">
               {ownerPct}%
             </span>
-            <span className="text-[10px] font-semibold text-gray-500">
+            <span className="text-[10px] font-semibold text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Tu cuota
             </span>
           </div>
         </div>
 
         {/* Porcentaje por persona de forma limpia y legible */}
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-2.5 sm:mt-4 text-xs font-medium text-gray-700">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-2.5 sm:mt-4 text-xs font-medium text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2E6146] shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#3A5245] shrink-0" />
             <span>
               {ownerShare?.profiles?.display_name || 'Propietario'}:{' '}
-              <strong className="font-mono text-gray-900">{ownerPct}%</strong>
+              <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{ownerPct}%</strong>
             </span>
           </div>
 
@@ -486,7 +487,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] shrink-0" />
               <span>
                 {s.profiles?.display_name || 'Participante'}:{' '}
-                <strong className="font-mono text-gray-900">{Number(s.percentage)}%</strong>
+                <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{Number(s.percentage)}%</strong>
               </span>
             </div>
           ))}
@@ -494,20 +495,20 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           {isOwner ? (
             activePendingInvites.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300 shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880] shrink-0" />
                 <span>
                   Pendientes:{' '}
-                  <strong className="font-mono text-gray-900">{totalPendingPct}%</strong>
+                  <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{totalPendingPct}%</strong>
                 </span>
               </div>
             )
           ) : (
             unassignedPct > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300 shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880] shrink-0" />
                 <span>
                   Sin asignar:{' '}
-                  <strong className="font-mono text-gray-900">{unassignedPct}%</strong>
+                  <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{unassignedPct}%</strong>
                 </span>
               </div>
             )
@@ -519,11 +520,11 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       <div className="space-y-3">
         {/* Tarjeta del Propietario */}
         {ownerShare && (
-          <div className="bg-[#EAF3EE] border-2 border-lottery/40 rounded-2xl p-3.5 flex items-center justify-between relative overflow-hidden shadow-xs">
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-lottery" />
+          <div className="bg-white dark:bg-[#1D1D1F] border border-[#3A5245]/40 rounded-[22px] p-4 flex items-center justify-between relative overflow-hidden shadow-xs">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#3A5245]" />
 
             <div className="flex items-center gap-3 pl-2">
-              <div className="w-10 h-10 rounded-full bg-lottery text-white flex items-center justify-center font-bold text-xs shadow-inner">
+              <div className="w-10 h-10 rounded-full bg-[#3A5245] text-white flex items-center justify-center font-bold text-xs shadow-inner">
                 {ownerShare.profiles?.avatar_url ? (
                   <img
                     src={ownerShare.profiles.avatar_url}
@@ -539,15 +540,15 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-900">
+                  <span className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
                     {ownerShare.profiles?.display_name ||
                       (ownerShare.user_id === user?.id ? 'Tú (Propietario)' : 'Propietario')}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-lottery text-white uppercase">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-[#3A5245] text-white uppercase">
                     Propietario
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-lottery font-medium mt-0.5">
+                <div className="flex items-center gap-1 text-[11px] text-[#3A5245] dark:text-[#C5A880] font-medium mt-0.5">
                   <ShieldCheck className="h-3 w-3" />
                   <span>ACEPTADA</span>
                 </div>
@@ -555,21 +556,23 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
             </div>
 
             <div className="text-right">
-              <span className="text-base font-extrabold font-mono text-lottery">
+              <span className="text-base font-extrabold tabular-nums text-[#3A5245] dark:text-[#C5A880]">
                 {ownerShare.percentage}%
               </span>
               {prizeAmountCents > 0 ? (
                 <div className="space-y-0.5">
-                  <p className="text-[11px] font-bold text-lottery font-mono">
+                  <p className="text-[11px] font-bold text-[#3A5245] dark:text-[#C5A880] tabular-nums">
                     {((prizeAmountCents / 100) * (Number(ownerShare.percentage) / 100)).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                   </p>
-                  <span className="inline-block px-1.5 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    {ownerShare.prize_paid_confirmed ? 'COBRADO' : 'CUSTODIO'}
-                  </span>
+                  {ownerShare.prize_paid_confirmed && (
+                    <span className="inline-block px-1.5 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase bg-[#3A5245] text-white">
+                      COBRADO
+                    </span>
+                  )}
                 </div>
               ) : (
-                <p className="text-[10px] text-gray-500 font-mono">
-                  {((Number(ownerShare.percentage) / 100) * 20).toFixed(2)} €
+                <p className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 tabular-nums">
+                  {((Number(ownerShare.percentage) / 100) * 20).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                 </p>
               )}
             </div>
@@ -641,7 +644,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                       </div>
                     ) : (
                       <p className="text-[10px] text-gray-400 font-mono">
-                        {((Number(share.percentage) / 100) * 20).toFixed(2)} €
+                        {((Number(share.percentage) / 100) * 20).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </p>
                     )}
                   </div>
@@ -891,45 +894,45 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         {isOwner && activePendingInvites.map((invite) => (
           <div
             key={invite.id}
-            className="bg-amber-50/60 border border-dashed border-amber-300 rounded-2xl p-3.5 relative overflow-hidden shadow-xs space-y-2.5"
+            className="bg-[#C5A880]/15 border border-dashed border-[#C5A880] rounded-2xl p-3.5 relative overflow-hidden shadow-xs space-y-2.5"
           >
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-900">
+                  <span className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
                     {invite.label || 'Invitación pendiente'}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-amber-100 text-amber-800 border border-amber-300 uppercase">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wider bg-[#C5A880] text-[#1D1D1F] uppercase">
                     Pendiente
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-amber-700 font-mono">
+                <div className="flex items-center gap-1.5 text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 font-mono">
                   <span>CÓDIGO:</span>
-                  <strong className="tracking-widest bg-white px-1.5 py-0.5 rounded border border-amber-200">
+                  <strong className="tracking-widest bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] px-1.5 py-0.5 rounded border border-[#C5A880]/50">
                     {invite.short_code}
                   </strong>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-base font-extrabold font-mono text-amber-800">
+                <span className="text-base font-extrabold font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">
                   {invite.percentage}%
                 </span>
-                <p className="text-[10px] text-amber-600 font-mono">
-                  {((Number(invite.percentage) / 100) * 20).toFixed(2)} €
+                <p className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 font-mono">
+                  {((Number(invite.percentage) / 100) * 20).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                 </p>
               </div>
             </div>
 
             {/* Acciones de la invitación */}
-            <div className="flex items-center gap-2 pt-1 border-t border-amber-200/60">
+            <div className="flex items-center gap-2 pt-1 border-t border-[#C5A880]/30">
               <button
                 type="button"
                 onClick={() => setActiveShareInvite(invite)}
-                className="flex-1 min-h-[44px] py-2 px-3 bg-white border border-amber-300 rounded-xl text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-50 active:scale-95 transition shadow-xs"
+                className="flex-1 min-h-[44px] py-2 px-3 bg-white dark:bg-[#1D1D1F] border border-[#C5A880]/60 rounded-xl text-[#1D1D1F] dark:text-[#F5F5F7] text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#C5A880]/10 active:scale-95 transition shadow-xs"
               >
-                <QrCode className="h-3.5 w-3.5 text-amber-700" />
-                <Share2 className="h-3.5 w-3.5 text-amber-700" />
+                <QrCode className="h-3.5 w-3.5 text-[#1D1D1F] dark:text-[#C5A880]" />
+                <Share2 className="h-3.5 w-3.5 text-[#1D1D1F] dark:text-[#C5A880]" />
                 <span>Ver QR / Compartir</span>
               </button>
 
@@ -985,9 +988,9 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           <button
             type="button"
             onClick={() => setShowCreateSheet(true)}
-            className="w-full min-h-[44px] py-3 px-4 rounded-2xl bg-lottery hover:bg-lottery-dark text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]"
+            className="w-full min-h-[44px] py-3 px-4 rounded-2xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98] cursor-pointer"
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="h-4 w-4 text-[#1D1D1F]" />
             <span>Crear participación (hasta {ownerPct}% disponible)</span>
           </button>
         </div>
@@ -1073,7 +1076,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 Vas a renunciar voluntariamente a tu participación del{' '}
                 <span className="font-extrabold text-rose-900">
                   {renouncingShare.percentage}% (
-                  {((Number(renouncingShare.percentage) / 100) * 20).toFixed(2)} €
+                  {((Number(renouncingShare.percentage) / 100) * 20).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                 </span>
                 ). Esta cuota volverá automáticamente al propietario del décimo y quedará registrada
                 en el historial de auditoría.

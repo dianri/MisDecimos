@@ -12,7 +12,6 @@ import {
   X,
   Smartphone,
   Monitor,
-  Sparkles,
   Zap,
   Bell,
   WifiOff,
@@ -84,22 +83,21 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
       aria-labelledby="pwa-install-title"
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
     >
-      <div className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh] pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-5 animate-in slide-in-from-bottom-6 duration-200">
+      <div className="w-full max-w-lg bg-white dark:bg-[#1D1D1F] rounded-t-[22px] sm:rounded-[22px] shadow-2xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 overflow-hidden flex flex-col max-h-[90vh] pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-5 animate-in slide-in-from-bottom-6 duration-200">
         {/* Pestaña táctil móvil */}
-        <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto mt-2.5 sm:hidden" />
+        <div className="w-12 h-1 bg-[#1D1D1F]/15 dark:bg-[#F5F5F7]/15 rounded-full mx-auto mt-2.5 sm:hidden" />
 
         {/* Cabecera con icono corporativo y botón cerrar */}
         <div className="p-5 pb-3 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lottery text-white shadow-md shadow-lottery/20 ring-4 ring-lottery/10">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#3A5245] text-white shadow-sm">
               <Download className="h-5 w-5" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1 text-[10px] font-bold text-lottery tracking-wider uppercase bg-lottery-50 px-2 py-0.5 rounded-full mb-0.5">
-                <Sparkles className="h-2.5 w-2.5 text-lottery" />
+              <div className="inline-flex items-center gap-1 text-[10px] font-bold text-[#3A5245] dark:text-[#C5A880] tracking-wider uppercase bg-[#3A5245]/10 dark:bg-[#C5A880]/15 px-2 py-0.5 rounded-full mb-0.5">
                 <span>Instalación PWA</span>
               </div>
-              <h3 id="pwa-install-title" className="text-base font-bold text-gray-900 leading-tight">
+              <h3 id="pwa-install-title" className="text-base font-bold text-[#1D1D1F] dark:text-[#F5F5F7] leading-tight">
                 Instala MisDecimos en tu dispositivo
               </h3>
             </div>
@@ -108,7 +106,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
           <button
             type="button"
             onClick={handleNeverShowAgain}
-            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+            className="p-1.5 rounded-xl text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
             title="Cerrar"
           >
             <X className="h-4 w-4" />
@@ -117,7 +115,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
 
         {/* Subtítulo explicativo */}
         <div className="px-5 pb-2">
-          <p className="text-xs text-gray-600 leading-relaxed">
+          <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 leading-relaxed">
             Acceso rápido desde tu pantalla de inicio, modo pantalla completa sin barras del navegador y avisos de premios al instante.
           </p>
         </div>
