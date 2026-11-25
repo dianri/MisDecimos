@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.71] - 2026-11-25
+
+### Changed
+- **Aro Champán en Avatar de `Mi Perfil` (`ProfilePage.tsx`):**
+  - Sustituido el aro verde del avatar principal por un borde fino champán / Oro Cava (`border-2 border-[#C5A880]/70 dark:border-[#C5A880]/60`) con fondo cálido sutil (`bg-[#C5A880]/[0.08] dark:bg-[#C5A880]/[0.10]`) e icono en tono suave (`text-[#8C6D43] dark:text-[#E2CCA8]`).
+  - Armonizado el botón flotante de cámara en Oro Cava (`bg-[#C5A880] hover:bg-[#B8996F] text-[#1D1D1F]`) con anillo de recorte (`ring-2 ring-white dark:ring-[#1D1D1F]`).
+
 ## [1.0.70] - 2026-11-25
 
 ### Changed

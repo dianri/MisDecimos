@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.70` (Producción Estable · Acabado Champán Premiados + Jerarquía Botones)  
+**Versión Actual:** `1.0.71` (Producción Estable · Aro Champán en Avatar de Perfil)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.70`)  
+**Rama de Producción:** `main` (Tag `v1.0.71`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
