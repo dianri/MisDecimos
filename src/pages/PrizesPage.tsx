@@ -91,7 +91,7 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
   return (
     <div className="space-y-5 pb-12 max-w-xl mx-auto">
       {/* 1. Bloque Superior — Tarjetas KPI (2 columnas) */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-5 space-y-4">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-5 space-y-4">
         <div>
           <h2 className="text-base sm:text-lg font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
             Resumen de Premios
@@ -209,7 +209,7 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
                   className={`w-full text-left rounded-[22px] p-5 transition-all active:scale-[0.99] relative overflow-hidden space-y-3 cursor-pointer ${
                     isPrized
                       ? 'bg-[#C5A880] text-[#1D1D1F] border border-[#C5A880] shadow-sm hover:brightness-[0.98]'
-                      : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] border border-black/[0.06] dark:border-white/[0.08] shadow-sm hover:shadow-md'
+                      : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm hover:shadow-md'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">

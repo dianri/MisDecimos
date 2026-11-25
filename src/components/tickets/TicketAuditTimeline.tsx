@@ -248,7 +248,7 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
       </div>
 
       {events.length === 0 ? (
-        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] p-8 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-center space-y-2">
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] p-8 border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] text-center space-y-2">
           <Clock className="h-8 w-8 text-[#1D1D1F]/30 dark:text-[#F5F5F7]/30 mx-auto" />
           <p className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">Sin eventos de auditoría</p>
           <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
@@ -256,7 +256,7 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
           </p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 p-5 shadow-sm space-y-5 relative">
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-5 shadow-sm space-y-5 relative">
           {/* Línea vertical del timeline */}
           <div className="absolute left-[33px] top-7 bottom-7 w-0.5 bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 -z-0" />
 

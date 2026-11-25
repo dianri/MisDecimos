@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.68` (Producción Estable · Paleta Detalle OLED + Oro Cava / Verde Granito)  
+**Versión Actual:** `1.0.69` (Producción Estable · Remates Redondeados Donut + Bordes Hairline OLED)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.68`)  
+**Rama de Producción:** `main` (Tag `v1.0.69`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

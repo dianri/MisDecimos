@@ -72,7 +72,7 @@ export function resolveTicketCardPresentation(params: {
 
   const containerClasses = isPrized
     ? `bg-[#C5A880] text-[#1D1D1F] rounded-[22px] border-y border-y-[#C5A880] ${swipeEdgeClasses} shadow-sm p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
-    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border-y border-y-black/[0.06] dark:border-y-white/[0.08] ${swipeEdgeClasses} shadow-sm p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
+    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08] ${swipeEdgeClasses} shadow-sm p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
 
   return {
     isPrized,

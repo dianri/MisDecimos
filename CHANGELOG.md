@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.69] - 2026-11-25
+
+### Changed
+- **Acabado iOS/Apple en Rosco y Bordes Hairline OLED (`OwnershipBreakdownCard.tsx`, `ticketCardHelper.ts`, `TicketAuditTimeline.tsx`, `PrizesPage.tsx`, `AlertsPage.tsx`, `ProfilePage.tsx`):**
+  - Añadidas terminaciones redondeadas (`strokeLinecap="round"`) a los segmentos del gráfico donut de reparto con separación angular limpia entre tramos múltiples para evitar solapamientos.
+  - Aplicado borde sutil `hairline` de `1px` (`border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08]`) en todas las tarjetas elevadas `dark:bg-[#1D1D1F]` sobre el fondo `#000000`.
+
 ## [1.0.68] - 2026-11-25
 
 ### Fixed
