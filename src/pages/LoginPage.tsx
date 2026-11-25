@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { VersionBadge } from '../components/common/VersionBadge'
 import { Mail, ArrowRight, KeyRound, Loader2, RefreshCw, AlertCircle } from 'lucide-react'
 
 export const LoginPage: React.FC = () => {
@@ -294,12 +293,9 @@ export const LoginPage: React.FC = () => {
         )}
       </div>
 
-      <p className="mt-6 text-[11px] text-gray-400 text-center max-w-xs">
-        MisDecimos v{__APP_VERSION__} · Plataforma segura PWA de reparto de Lotería
+      <p className="mt-6 text-[11px] text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 text-center max-w-xs">
+        MisDecimos · Plataforma segura PWA de reparto de Lotería
       </p>
-
-      {/* Control visual de versión anti-caché */}
-      <VersionBadge className="bottom-3 right-3" />
     </div>
   )
 }
