@@ -23,10 +23,10 @@ import {
   hasThirdPartyParticipations,
 } from '../lib/cardQuickActions'
 import { resolveScannerHaveCodeTransition } from '../lib/swipeCardState'
+import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { checkTicketPrize } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
-  Archive,
   Loader2,
   Camera,
   CheckCircle2,
@@ -53,36 +53,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 }) => {
   const { user } = useAuth()
 
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const tabParam = searchParams.get('tab')
-  const historyFromTab =
-    typeof window !== 'undefined'
-      ? (window.history.state as { fromTab?: string; subTab?: string } | null)?.fromTab
-      : undefined
-
-  const activeTab: 'decimos' | 'participaciones' | 'archivados' =
-    tabParam === 'participaciones' || tabParam === 'archivados'
-      ? tabParam
-      : tabParam === 'decimos'
-      ? 'decimos'
-      : historyFromTab === 'participaciones' || historyFromTab === 'archivados'
-      ? historyFromTab
-      : 'decimos'
-
-  const handleTabChange = (nextTab: 'decimos' | 'participaciones' | 'archivados') => {
-    if (nextTab === 'decimos') {
-      setSearchParams(
-        {},
-        { replace: true, state: { subTab: 'decimos', fromTab: 'decimos' } }
-      )
-    } else {
-      setSearchParams(
-        { tab: nextTab },
-        { replace: true, state: { subTab: nextTab, fromTab: nextTab } }
-      )
-    }
-  }
+  const [, setSearchParams] = useSearchParams()
+  const activeTab: 'decimos' | 'participaciones' | 'archivados' = 'decimos'
   const [ticketLists, setTicketLists] = useState<UserTicketListsAndMetrics>(() =>
     classifyUserTickets([], [], new Set(), '')
   )
@@ -253,11 +225,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }, [loadTickets])
 
-  // Listas extraídas del clasificador reactivo
-  const {
-    activeTickets,
-    misArchivados,
-  } = ticketLists
+  // Listas extraídas del clasificador reactivo (sin archivados en la pantalla principal)
+  const { activeTickets } = ticketLists
 
   const unifiedActiveTickets = buildUnifiedActiveTicketsList(activeTickets)
 
@@ -325,7 +294,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       if (error) throw error
 
       setToastVariant('success')
-      setClaimToastMsg(nextArchive ? 'Décimo archivado en tu cuenta.' : 'Décimo desarchivado.')
+      setClaimToastMsg(nextArchive ? ARCHIVE_SUCCESS_TOAST : RESTORE_SUCCESS_TOAST)
       await loadTickets()
     } catch (err: unknown) {
       console.error('Error al archivar décimo:', err)
@@ -374,86 +343,18 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
   return (
     <div className="space-y-4 pb-32 max-w-xl mx-auto">
-      {/* Cabecera de listado unificado (sin subpestañas Décimos/Participaciones) */}
+      {/* Cabecera limpia del listado principal (sin pestañas ni filtros) */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-base font-extrabold text-gray-900 tracking-tight">
-          {activeTab === 'archivados'
-            ? `Archivados (${misArchivados.length})`
-            : `Mis Décimos y Participaciones (${unifiedActiveTickets.length})`}
+          Mis Décimos y Participaciones ({unifiedActiveTickets.length})
         </h2>
-
-        {(misArchivados.length > 0 || activeTab === 'archivados') && (
-          <button
-            type="button"
-            onClick={() =>
-              handleTabChange(activeTab === 'archivados' ? 'decimos' : 'archivados')
-            }
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-gray-200 bg-white text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition"
-          >
-            <Archive className="h-3.5 w-3.5 text-gray-500" />
-            <span>
-              {activeTab === 'archivados'
-                ? 'Ver activos'
-                : `Archivados (${misArchivados.length})`}
-            </span>
-          </button>
-        )}
       </div>
 
-      {/* Listado unificado o archivados */}
+      {/* Listado unificado de décimos y participaciones activas */}
       {isLoading ? (
         <div className="flex justify-center p-12">
           <Loader2 className="h-6 w-6 animate-spin text-lottery" />
         </div>
-      ) : activeTab === 'archivados' ? (
-        misArchivados.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
-            <Archive className="mx-auto w-10 h-10 text-gray-300" />
-            <h3 className="text-sm font-bold text-gray-800">Sin décimos archivados</h3>
-            <p className="text-xs text-gray-400 max-w-xs mx-auto">
-              Los décimos que decidas ocultar u archivar se mostrarán aquí.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {misArchivados.map((item) => (
-              <SwipeableTicketCard
-                key={item.ticket.id}
-                ticketId={item.ticket.id}
-                isArchived={true}
-                allowDelete={item.isOwner}
-                openSwipeTicketId={openSwipeTicketId}
-                onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
-                onArchiveClick={(id) => handleSwipeArchive(id, true)}
-                onDeleteClick={(id) =>
-                  handleSwipeDelete(
-                    id,
-                    item.isOwner,
-                    item.participantsCount,
-                    item.ticket.status
-                  )
-                }
-                onCardClick={handleTicketClick}
-              >
-                <TicketListItemCard
-                  ticket={item.ticket}
-                  userPercentage={item.userPercentage}
-                  isOwner={item.isOwner}
-                  participantsCount={item.participantsCount}
-                  hasParticipations={hasThirdPartyParticipations({
-                    ticketId: item.ticket.id,
-                    shares: allShares,
-                    pendingInviteTicketIds,
-                  })}
-                  isArchived={true}
-                  isCheckingPrize={checkingTicketId === item.ticket.id}
-                  onShareClick={handleQuickShare}
-                  onCheckPrizeClick={handleQuickPrizeCheck}
-                />
-              </SwipeableTicketCard>
-            ))}
-          </div>
-        )
       ) : unifiedActiveTickets.length === 0 ? (
         <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
           <DecimoIcon className="mx-auto w-10 h-10 text-gray-300" />
