@@ -19,9 +19,6 @@ import {
 import type { Database } from '../types/database.types'
 import {
   ArrowLeft,
-  Archive,
-  ArchiveRestore,
-  Trash2,
   Lock,
   Users,
   Shield,
@@ -58,9 +55,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [shares, setShares] = useState<OwnershipShare[]>([])
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
-  const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [isActionLoading, setIsActionLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'propiedad' | 'historial'>('propiedad')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
@@ -259,16 +254,6 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       if (auditErr) console.error('Error cargando eventos de auditoría:', auditErr)
       setAuditEvents((auditData as unknown as AuditEvent[]) || [])
-
-      // 6. Comprobar si está archivado por el usuario actual
-      const { data: hideData } = await supabase
-        .from('ticket_archive_hides')
-        .select('ticket_id')
-        .eq('ticket_id', ticketId)
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      setIsArchived(!!hideData || ticketData.status === 'ARCHIVADO')
     } catch (err: unknown) {
       console.error('Error al cargar detalle del décimo:', err)
       setStatusMsg({
@@ -386,60 +371,6 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       window.location.href = `/${search}`
     }
   }, [ticket, user?.id, onBack, onNavigateToRoot])
-
-  // Archivar o Desarchivar
-  const handleToggleArchive = async () => {
-    if (!ticket || isActionLoading) return
-    setIsActionLoading(true)
-    setStatusMsg(null)
-
-    try {
-      const nextArchive = !isArchived
-      const { error } = await supabase.rpc('toggle_archive_ticket', {
-        p_ticket_id: ticket.id,
-        p_archive: nextArchive,
-      })
-
-      if (error) throw error
-
-      setIsArchived(nextArchive)
-      setStatusMsg({
-        type: 'success',
-        text: nextArchive ? 'Décimo archivado en tu cuenta.' : 'Décimo desarchivado.',
-      })
-    } catch (err: unknown) {
-      console.error('Error conmutando archivo:', err)
-      setStatusMsg({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Error al actualizar el estado de archivo.',
-      })
-    } finally {
-      setIsActionLoading(false)
-    }
-  }
-
-  // Eliminar décimo (Solo si no tiene participaciones aceptadas de terceros)
-  const handleDeleteTicket = async () => {
-    if (!ticket) return
-    if (!confirm('¿Estás seguro de que deseas eliminar este décimo? Esta acción no se puede deshacer.')) {
-      return
-    }
-
-    setIsActionLoading(true)
-    try {
-      const { error } = await supabase.from('tickets').delete().eq('id', ticket.id)
-      if (error) throw error
-      handleBack()
-    } catch (err: unknown) {
-      console.error('Error eliminando décimo:', err)
-      setStatusMsg({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'No se pudo eliminar el décimo.',
-      })
-    } finally {
-      setIsActionLoading(false)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -632,14 +563,17 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       </div>
 
-      {/* 4. Tarjeta de Comprobación Oficial de Premios */}
-      <PrizeCheckCard
-        ticket={ticket}
-        userShare={userShare}
-        shares={shares}
-        isOwner={isOwner}
-        onRefresh={loadTicketDetails}
-      />
+      {/* 4. Tarjeta de Premio Oficial (solo si el décimo ya está premiado) */}
+      {ticket.prize_amount_cents > 0 && (
+        <PrizeCheckCard
+          ticket={ticket}
+          userShare={userShare}
+          shares={shares}
+          isOwner={isOwner}
+          hideCheckButton={true}
+          onRefresh={loadTicketDetails}
+        />
+      )}
 
       {/* 5. Panel Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 taps en Sello Digital) */}
       {isOwner && showSimulationPanel && (
@@ -698,42 +632,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       )}
 
-      {/* 6. Acciones del Décimo */}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <button
-          type="button"
-          onClick={handleToggleArchive}
-          disabled={isActionLoading}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 active:scale-98 transition shadow-xs"
-        >
-          {isArchived ? (
-            <>
-              <ArchiveRestore className="h-4 w-4 text-lottery" />
-              <span>Desarchivar décimo</span>
-            </>
-          ) : (
-            <>
-              <Archive className="h-4 w-4 text-lottery" />
-              <span>Archivar décimo</span>
-            </>
-          )}
-        </button>
-
-        {isOwner && !hasAcceptedThirdPartyShares && ticket.status !== 'LIQUIDADO' && (
-          <button
-            type="button"
-            onClick={handleDeleteTicket}
-            disabled={isActionLoading}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-98 transition"
-            title="Eliminar décimo"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>Eliminar</span>
-          </button>
-        )}
-      </div>
-
-      {/* 7. Aviso de seguridad si tiene cotitulares activos */}
+      {/* 6. Aviso de seguridad si tiene cotitulares activos */}
       {hasAcceptedThirdPartyShares && (
         <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-start gap-2.5">
           <Lock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />

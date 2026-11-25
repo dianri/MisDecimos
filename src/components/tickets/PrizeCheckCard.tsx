@@ -25,6 +25,7 @@ interface PrizeCheckCardProps {
   userShare?: OwnershipShare
   shares: OwnershipShare[]
   isOwner?: boolean
+  hideCheckButton?: boolean
   onRefresh: () => Promise<void>
 }
 
@@ -32,6 +33,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
   ticket,
   userShare,
   shares,
+  hideCheckButton = false,
   onRefresh,
 }) => {
   const [isChecking, setIsChecking] = useState(false)
@@ -267,7 +269,8 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
   return (
     <div className="space-y-3">
       {/* 1. Botón Principal Dorado/Ámbar */}
-      {!isDrawHeld ? (
+      {!hideCheckButton &&
+        (!isDrawHeld ? (
         <button
           type="button"
           disabled
@@ -300,7 +303,7 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
             </>
           )}
         </button>
-      )}
+      ))}
 
       {/* Mensaje de feedback temporal */}
       {feedbackMsg && (

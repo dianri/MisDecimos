@@ -26,6 +26,7 @@ export interface TicketFormModalProps {
   onClose: () => void
   onCreated: (ticketId: string) => void
   onInviteScanned?: (inviteCode: string) => void
+  onRequestScanner?: () => void
 }
 
 export const TicketFormModal: React.FC<TicketFormModalProps> = ({
@@ -35,6 +36,7 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   onClose,
   onCreated,
   onInviteScanned,
+  onRequestScanner,
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'ticket_form_modal' })
 
@@ -310,8 +312,13 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setTab('scan')
-                  setIsScannerOpen(true)
+                  if (onRequestScanner) {
+                    onClose()
+                    onRequestScanner()
+                  } else {
+                    setTab('scan')
+                    setIsScannerOpen(true)
+                  }
                 }}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
                   tab === 'scan'
