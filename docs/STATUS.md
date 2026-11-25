@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.79` (Producción Estable · Botón Manual y Paleta Oficial en Escáner)  
+**Versión Actual:** `1.0.80` (Producción Estable · Renovación Preventiva de Sesión y Reintento 401)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.79`)  
+**Rama de Producción:** `main` (Tag `v1.0.80`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
