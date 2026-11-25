@@ -59,8 +59,8 @@ test('prizeService y check-prizes integran extracción de errores y simulación 
   )
 
   assert.ok(
-    prizeServiceSource.includes('extractFunctionErrorMessage'),
-    'prizeService.ts debe usar extractFunctionErrorMessage al manejar error de invoke'
+    prizeServiceSource.includes('invokeEdgeFunction'),
+    'prizeService.ts debe usar invokeEdgeFunction con reintento 401 y extracción de error'
   )
   assert.ok(
     edgeFnSource.includes('isSimulationRequest') &&

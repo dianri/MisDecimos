@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { extractFunctionErrorMessage } from '../lib/edgeFunctionError'
+import { invokeEdgeFunction } from '../lib/invokeEdgeFunction'
 
 export interface CheckPrizeResult {
   ok?: boolean
@@ -28,18 +28,9 @@ export async function checkTicketPrize(params: {
   simulatedPrizePerDecimo?: number
   resetSimulation?: boolean
 }): Promise<CheckPrizeResult> {
-  const { data, error } = await supabase.functions.invoke('check-prizes', {
+  const data = await invokeEdgeFunction<CheckPrizeResult>('check-prizes', {
     body: params,
   })
-
-  if (error) {
-    console.error('Error invocando Edge Function check-prizes:', error)
-    const detailedMessage = await extractFunctionErrorMessage(
-      error,
-      'Error al consultar resultados oficiales.'
-    )
-    throw new Error(detailedMessage)
-  }
 
   if (data?.error) {
     throw new Error(data.error)

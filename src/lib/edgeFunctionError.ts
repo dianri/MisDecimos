@@ -1,3 +1,6 @@
+import type { FunctionInvokeOptions, Session } from '@supabase/supabase-js'
+import type { EnsureFreshSessionOptions } from './sessionManagerCore.ts'
+
 /**
  * Extrae el mensaje de error real devuelto en el cuerpo JSON/texto de un
  * FunctionsHttpError de `supabase.functions.invoke`, evitando el mensaje opaco
@@ -61,4 +64,74 @@ export async function extractFunctionErrorMessage(
   }
 
   return fallbackMessage
+}
+
+function isUnauthorizedFunctionError(error: unknown, extractedMessage: string): boolean {
+  if (error && typeof error === 'object') {
+    const errObj = error as { status?: number; context?: { status?: number } }
+    if (errObj.context?.status === 401 || errObj.status === 401) {
+      return true
+    }
+  }
+
+  const lower = extractedMessage.toLowerCase()
+  return (
+    lower.includes('no autenticado') ||
+    lower.includes('sesión expirada') ||
+    lower.includes('jwt expired') ||
+    lower.includes('invalid jwt') ||
+    lower.includes('401')
+  )
+}
+
+export interface EdgeFunctionInvokerDeps {
+  invoke: <T>(
+    functionName: string,
+    options?: FunctionInvokeOptions
+  ) => Promise<{ data: T | null; error: unknown }>
+  ensureFreshSession: (options?: EnsureFreshSessionOptions) => Promise<Session | null>
+  signOut: () => Promise<unknown>
+}
+
+/**
+ * Crea un invocador resiliente de Edge Functions con refresco preventivo de sesión,
+ * reintento único ante HTTP 401 y cierre de sesión limpio si el refresh token caducó.
+ */
+export function createEdgeFunctionInvoker(deps: EdgeFunctionInvokerDeps) {
+  return async function invokeEdgeFunction<T = unknown>(
+    functionName: string,
+    options?: FunctionInvokeOptions
+  ): Promise<T> {
+    await deps.ensureFreshSession()
+
+    const { data, error } = await deps.invoke<T>(functionName, options)
+
+    if (!error) {
+      return data as T
+    }
+
+    const firstMessage = await extractFunctionErrorMessage(error)
+    if (!isUnauthorizedFunctionError(error, firstMessage)) {
+      throw new Error(firstMessage)
+    }
+
+    // Reintento único tras forzar renovación de sesión
+    const refreshedSession = await deps.ensureFreshSession({ force: true })
+    if (!refreshedSession) {
+      await deps.signOut().catch(() => {})
+      throw new Error(firstMessage)
+    }
+
+    const { data: retryData, error: retryError } = await deps.invoke<T>(functionName, options)
+    if (!retryError) {
+      return retryData as T
+    }
+
+    const retryMessage = await extractFunctionErrorMessage(retryError)
+    if (isUnauthorizedFunctionError(retryError, retryMessage)) {
+      await deps.signOut().catch(() => {})
+    }
+
+    throw new Error(retryMessage)
+  }
 }

@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.80] - 2026-11-25
+
+### Added
+- **Renovación Preventiva Deduplicada de Sesión y Reintento Automático `401` (`sessionManager.ts`, `edgeFunctionError.ts`, `App.tsx`):**
+  - Implementado `ensureFreshSession()` en `src/lib/sessionManager.ts` con promesa compartida `inFlightRefresh` para deduplicar refrescos concurrentes cuando la sesión tiene `< 60 s` de vigencia o está expirada, ejecutando `signOut()` si el refresh token es inválido o caducado.
+  - Registrado listener `visibilitychange` en `App.tsx` (`registerVisibilitySessionRefresh`) para refrescar preventivamente la sesión al volver la PWA a primer plano.
+  - Implementado `invokeEdgeFunction<T>()` en `src/lib/edgeFunctionError.ts` con refresco previo, reintento único tras `refreshSession` forzado ante HTTP `401` y cierre de sesión limpio si persiste el error.
+  - Integrado `invokeEdgeFunction` en `src/services/prizeService.ts` (`check-prizes`) y `src/pages/ProfilePage.tsx` (`send-push`).
+- **Tests Unitarios (`src/lib/__tests__/sessionManager.test.ts`):**
+  - Cobertura de deduplicación de `ensureFreshSession()`, cierre de sesión ante fallo de refresh token y reintento único exitoso tras `401` en `invokeEdgeFunction`.
+
 ## [1.0.79] - 2026-11-25
 
 ### Changed
