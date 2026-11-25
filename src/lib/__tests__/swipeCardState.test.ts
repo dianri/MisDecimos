@@ -7,6 +7,7 @@ import {
   detectHorizontalSwipeLock,
   resolveCardTapWithSwipe,
   resolveScannerHaveCodeTransition,
+  resolveSwipeRightAction,
 } from '../swipeCardState.ts'
 
 test('clampSwipeOffset - limita el desplazamiento entre -SWIPE_ACTION_WIDTH y +SWIPE_ACTION_WIDTH', () => {
@@ -48,4 +49,9 @@ test('resolveScannerHaveCodeTransition - cierra el escáner y abre el modal de r
     openClaimModal: true,
     resetClaimCode: true,
   })
+})
+
+test('resolveSwipeRightAction - participación muestra Renunciar (nunca Eliminar) y décimo propio Eliminar', () => {
+  assert.equal(resolveSwipeRightAction(true), 'delete')
+  assert.equal(resolveSwipeRightAction(false), 'renounce')
 })

@@ -63,7 +63,7 @@ test('buildUnifiedActiveTicketsList - unifica Décimos propios y Participaciones
   assert.equal(unified[1].isOwner, true)
   assert.equal(unified[1].userPercentage, 100)
 
-  // Presentación minimalista Apple: esquinas muy redondeadas (rounded-[22px]) y filos de swipe en décimo propio
+  // Presentación minimalista Apple: esquinas muy redondeadas (rounded-[22px]) y filos de swipe en ambos tipos (Décimo y Participación)
   const ownPresentation = resolveTicketCardPresentation({
     prizeAmountCents: 0,
     status: 'PENDIENTE',
@@ -84,12 +84,12 @@ test('buildUnifiedActiveTicketsList - unifica Décimos propios y Participaciones
   })
   assert.ok(partPresentation.containerClasses.includes('rounded-[22px]'))
   assert.ok(partPresentation.containerClasses.includes('bg-white'))
-  assert.ok(!partPresentation.containerClasses.includes('border-l-[#3A5245]'))
-  assert.ok(!partPresentation.containerClasses.includes('border-r-[#D04848]'))
+  assert.ok(partPresentation.containerClasses.includes('border-l-[#3A5245]'))
+  assert.ok(partPresentation.containerClasses.includes('border-r-[#D04848]'))
 
-  // Swipe en Participación: permite derecha (Archivar) pero bloquea izquierda (Eliminar)
-  assert.equal(clampSwipeOffset(-60, 0, false), 0)
-  assert.deepEqual(resolveSwipeSnap(-60, false), { side: null, snappedOffset: 0 })
+  // Swipe en Participación: permite derecha (Archivar) e izquierda (Renunciar, nunca Eliminar)
+  assert.equal(clampSwipeOffset(-60, 0, true), -60)
+  assert.deepEqual(resolveSwipeSnap(-60, true), { side: 'right', snappedOffset: -84 })
 })
 
 test('shouldShowCreateParticipationButton - visible solo para propietario con porcentaje libre y no liquidado', () => {

@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.66` (Producción Estable · Toast Selección de Participación)  
+**Versión Actual:** `1.0.67` (Producción Estable · Tema Titanio, Oro Cava y Verde Granito + Swipe Renunciar)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.66`)  
+**Rama de Producción:** `main` (Tag `v1.0.67`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

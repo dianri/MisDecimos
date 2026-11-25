@@ -22,7 +22,7 @@ import {
   formatQuickPrizeCheckToast,
   hasThirdPartyParticipations,
 } from '../lib/cardQuickActions'
-import { resolveScannerHaveCodeTransition } from '../lib/swipeCardState'
+import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../lib/swipeCardState'
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { checkTicketPrize } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
@@ -341,6 +341,50 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const handleSwipeRenounce = async (ticket: TicketRow, userPercentage: number) => {
+    const userShare = allShares.find(
+      (s) =>
+        s.ticket_id === ticket.id &&
+        s.user_id === user?.id &&
+        s.role === 'PARTICIPANTE' &&
+        s.status !== 'RENUNCIADA'
+    )
+
+    if (!userShare) {
+      setToastVariant('warning')
+      setClaimToastMsg('No se encontró una participación activa para renunciar.')
+      return
+    }
+
+    if (
+      !confirm(
+        `¿Seguro que quieres renunciar a tu participación del ${userPercentage}% en el décimo #${ticket.number}? Tu porcentaje volverá al propietario.`
+      )
+    ) {
+      return
+    }
+
+    try {
+      const { error } = await supabase.rpc('renounce_own_participation', {
+        p_share_id: userShare.id,
+      })
+
+      if (error) throw error
+
+      setToastVariant('success')
+      setClaimToastMsg(
+        `Has renunciado a tu participación del ${userPercentage}% en el décimo #${ticket.number}.`
+      )
+      await loadTickets()
+    } catch (err: unknown) {
+      console.error('Error renunciando a participación:', err)
+      setToastVariant('warning')
+      setClaimToastMsg(
+        err instanceof Error ? err.message : 'No se pudo completar la renuncia a la participación.'
+      )
+    }
+  }
+
   return (
     <div className="space-y-4 pb-32 max-w-xl mx-auto">
       {/* Cabecera limpia del listado principal (sin pestañas ni filtros) */}
@@ -372,7 +416,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
               key={item.ticket.id}
               ticketId={item.ticket.id}
               isArchived={item.isArchived}
-              allowDelete={item.isOwner}
+              allowDelete={true}
+              rightActionMode={resolveSwipeRightAction(item.isOwner)}
               openSwipeTicketId={openSwipeTicketId}
               onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
               onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
@@ -384,6 +429,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                   item.ticket.status
                 )
               }
+              onRenounceClick={() => handleSwipeRenounce(item.ticket, item.userPercentage)}
               onCardClick={handleTicketClick}
             >
               <TicketListItemCard
