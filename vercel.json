@@ -3,7 +3,7 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/((?!assets/|pwa-.*|favicon|apple-touch-icon|badge-mono|push-sw|sw\\.js|manifest\\.webmanifest|workbox-.*).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
