@@ -51,12 +51,14 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   })
 
   const secondaryTextClass = isPrized
-    ? 'text-[#1D1D1F]/75'
+    ? 'text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70'
     : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
 
-  const primaryTextClass = isPrized
-    ? 'text-[#1D1D1F]'
-    : 'text-[#1D1D1F] dark:text-[#F5F5F7]'
+  const primaryTextClass = 'text-[#1D1D1F] dark:text-[#F5F5F7]'
+
+  const typeBadgeClasses = isOwner
+    ? 'bg-[#3A5245]/10 text-[#3A5245] dark:bg-[#3A5245]/25 dark:text-[#96BFA9]'
+    : 'bg-[#C5A880]/18 text-[#7C5F35] dark:bg-[#C5A880]/20 dark:text-[#E2CCA8]'
 
   return (
     <div
@@ -77,7 +79,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
                 ? 'bg-[#3A5245] text-[#FFFFFF]'
                 : isArchived
                 ? 'bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
-                : 'bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7]'
+                : typeBadgeClasses
             }`}
           >
             {isPrized ? (
@@ -91,16 +93,12 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
-                  isPrized
-                    ? 'bg-[#1D1D1F]/10 text-[#1D1D1F]'
-                    : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75'
-                }`}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${typeBadgeClasses}`}
               >
                 {isOwner ? 'Décimo' : 'Participación'}
               </span>
               {isArchived && isPrized && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-[#1D1D1F]/10 text-[#1D1D1F]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7]">
                   Archivado
                 </span>
               )}
@@ -187,7 +185,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
       <div
         className={`space-y-2.5 pt-3 border-t text-xs ${
           isPrized
-            ? 'border-[#1D1D1F]/15'
+            ? 'border-[#C5A880]/35'
             : 'border-black/[0.06] dark:border-white/[0.08]'
         }`}
       >
@@ -208,11 +206,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
                 e.stopPropagation()
                 onShareClick?.(ticket.id, hasParticipations ?? false)
               }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition active:scale-95 shrink-0 ${
-                isPrized
-                  ? 'bg-[#1D1D1F]/10 text-[#1D1D1F] hover:bg-[#1D1D1F]/15'
-                  : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/10 dark:hover:bg-white/15'
-              }`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-[#C5A880]/18 hover:bg-[#C5A880]/28 active:scale-[0.98] text-[#73562E] dark:bg-[#C5A880]/18 dark:hover:bg-[#C5A880]/28 dark:text-[#E5CFA9] border border-[#C5A880]/45 font-semibold transition-all shrink-0 cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>Compartir</span>
@@ -232,11 +226,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
               e.stopPropagation()
               onCheckPrizeClick?.(ticket)
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition active:scale-95 disabled:opacity-60 shrink-0 ${
-              isPrized
-                ? 'bg-[#1D1D1F]/10 text-[#1D1D1F] hover:bg-[#1D1D1F]/15'
-                : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-black/10 dark:hover:bg-white/15'
-            }`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-[#3A5245]/12 hover:bg-[#3A5245]/20 active:scale-[0.98] text-[#2B3F34] dark:bg-[#3A5245]/30 dark:hover:bg-[#3A5245]/40 dark:text-[#A8CEB9] border border-[#3A5245]/25 font-semibold transition-all disabled:opacity-60 shrink-0 cursor-pointer"
           >
             {isCheckingPrize ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -246,13 +236,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             <span>{isCheckingPrize ? 'Comprobando...' : 'Comprobar sorteo'}</span>
           </button>
 
-          <span
-            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold tabular-nums ${
-              isPrized
-                ? 'bg-[#1D1D1F]/10 text-[#1D1D1F]'
-                : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F] dark:text-[#F5F5F7]'
-            }`}
-          >
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums bg-[#1D1D1F]/[0.05] dark:bg-[#F5F5F7]/[0.07] text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75">
             {isOwner && userPercentage === 100
               ? '100% tuyo'
               : `Tu cuota: ${userPercentage}%`}

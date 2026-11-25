@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.69` (Producción Estable · Remates Redondeados Donut + Bordes Hairline OLED)  
+**Versión Actual:** `1.0.70` (Producción Estable · Acabado Champán Premiados + Jerarquía Botones)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.69`)  
+**Rama de Producción:** `main` (Tag `v1.0.70`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
