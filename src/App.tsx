@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LoginPage } from './pages/LoginPage'
 import { AppShell } from './components/layout/AppShell'
+import { registerVisibilitySessionRefresh } from './lib/sessionManager'
 import { Loader2 } from 'lucide-react'
 
 const AppContent: React.FC = () => {
@@ -31,6 +32,10 @@ const AppContent: React.FC = () => {
 }
 
 export const App: React.FC = () => {
+  useEffect(() => {
+    return registerVisibilitySessionRefresh()
+  }, [])
+
   return (
     <ThemeProvider>
       <AuthProvider>

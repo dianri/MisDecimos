@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { invokeEdgeFunction } from '../lib/invokeEdgeFunction'
 import { sanitizeText, safeImageUrl } from '../lib/sanitize'
 import {
   buildArchivedTicketsList,
@@ -455,10 +456,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       }
 
       // 3. Invocar la Edge Function send-push
-      const { data, error } = await supabase.functions.invoke('send-push', {
+      const data = await invokeEdgeFunction<{
+        sent?: number
+        sentCount?: number
+        errors?: string[]
+        message?: string
+      }>('send-push', {
         body: { testPush: true },
       })
-      if (error) throw error
 
       const sent = data?.sent ?? data?.sentCount ?? 0
       const errors = data?.errors || []
