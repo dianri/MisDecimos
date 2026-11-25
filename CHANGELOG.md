@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.68] - 2026-11-25
+
+### Fixed
+- **Paleta Oscura OLED y Eliminación de Tonos Azules/Grises en Detalle (`OwnershipBreakdownCard.tsx`, `ownershipSegments.ts`, `TicketDetailPage.tsx`):**
+  - Sustituido el azul eléctrico (`#2563EB` / `blue-*`) del gráfico Donut, leyenda y tarjetas de `COTITULAR` por **Oro Cava (`#C5A880`)** y **Verde Granito (`#4E6E5D` / `#3A5245`)**.
+  - Adaptada la tarjeta de `COTITULAR` (`bg-white dark:bg-[#1D1D1F]`, `border-l-4 border-l-[#C5A880]`), botón **`Renunciar a mi participación`** (`bg-[#D04848]/10 text-[#D04848]`), modal de renuncia y tarjetas `RENUNCIADA` (`bg-[#1D1D1F]/[0.04] dark:bg-[#1D1D1F]/50`) al Modo Oscuro OLED.
+
 ## [1.0.67] - 2026-11-25
 
 ### Changed

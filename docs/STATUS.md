@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.67` (Producción Estable · Tema Titanio, Oro Cava y Verde Granito + Swipe Renunciar)  
+**Versión Actual:** `1.0.68` (Producción Estable · Paleta Detalle OLED + Oro Cava / Verde Granito)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.67`)  
+**Rama de Producción:** `main` (Tag `v1.0.68`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

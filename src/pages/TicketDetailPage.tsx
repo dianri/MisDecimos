@@ -437,8 +437,10 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       <div className="text-center py-12 px-4 space-y-4 max-w-sm mx-auto">
         <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
         <div>
-          <h3 className="text-sm font-bold text-gray-800">Décimo no encontrado</h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+            Décimo no encontrado
+          </h3>
+          <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 mt-1">
             {statusMsg?.type === 'error'
               ? statusMsg.text
               : 'No se ha podido localizar el décimo o no tienes permisos para acceder a él.'}
@@ -446,7 +448,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
         <button
           onClick={handleBack}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-lottery text-white text-xs font-semibold shadow hover:bg-lottery-600 transition"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold shadow transition cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Volver a la lista
@@ -514,7 +516,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
         <div className="flex items-center gap-1.5 shrink-0">
           {isArchived && ticket.status !== 'ARCHIVADO' && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider bg-gray-100 text-gray-700 border-gray-300">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase tracking-wider bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               ARCHIVADO
             </span>
           )}
@@ -532,14 +534,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         <div
           className={`flex items-center gap-2 p-3.5 rounded-2xl text-xs font-medium ${
             statusMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border border-rose-200 text-rose-800'
+              ? 'bg-[#3A5245] text-[#FFFFFF]'
+              : 'bg-[#D04848] text-[#FFFFFF]'
           }`}
         >
           {statusMsg.type === 'success' ? (
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#C5A880]" />
           ) : (
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+            <AlertCircle className="h-4 w-4 shrink-0 text-[#FFFFFF]" />
           )}
           <span>{statusMsg.text}</span>
         </div>

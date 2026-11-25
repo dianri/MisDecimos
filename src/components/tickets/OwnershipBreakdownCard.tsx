@@ -389,17 +389,17 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
     <div className="space-y-3 sm:space-y-5">
       {/* 1. Header con Título y Refresh */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
           CUADRO DE PROPIEDAD Y REPARTO
         </h3>
         <button
           type="button"
           onClick={handleManualRefresh}
           disabled={isRefreshing}
-          className="p-1.5 rounded-xl border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition active:scale-95"
+          className="p-1.5 rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition active:scale-95 cursor-pointer"
           title="Actualizar reparto"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-lottery' : ''}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-[#C5A880]' : ''}`} />
         </button>
       </div>
 
@@ -407,15 +407,15 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         <div
           className={`p-3 rounded-2xl text-xs font-medium flex items-center justify-between ${
             actionMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border border-rose-200 text-rose-800'
+              ? 'bg-[#3A5245] text-[#FFFFFF]'
+              : 'bg-[#D04848] text-[#FFFFFF]'
           }`}
         >
           <span>{actionMsg.text}</span>
           <button
             type="button"
             onClick={() => setActionMsg(null)}
-            className="p-1 text-gray-400 hover:text-gray-600"
+            className="p-1 opacity-80 hover:opacity-100"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -475,7 +475,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         {/* Porcentaje por persona de forma limpia y legible */}
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-2.5 sm:mt-4 text-xs font-medium text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#3A5245] shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#4E6E5D] shrink-0" />
             <span>
               {ownerShare?.profiles?.display_name || 'Propietario'}:{' '}
               <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{ownerPct}%</strong>
@@ -484,7 +484,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
           {participantShares.map((s) => (
             <div key={s.id} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] shrink-0" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880] shrink-0" />
               <span>
                 {s.profiles?.display_name || 'Participante'}:{' '}
                 <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{Number(s.percentage)}%</strong>
@@ -495,7 +495,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           {isOwner ? (
             activePendingInvites.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880] shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880]/45 shrink-0" />
                 <span>
                   Pendientes:{' '}
                   <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{totalPendingPct}%</strong>
@@ -505,7 +505,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           ) : (
             unassignedPct > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880] shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C5A880]/45 shrink-0" />
                 <span>
                   Sin asignar:{' '}
                   <strong className="font-mono text-[#1D1D1F] dark:text-[#F5F5F7]">{unassignedPct}%</strong>
@@ -588,15 +588,13 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           return (
             <div
               key={share.id}
-              className={`bg-white border border-gray-200/80 rounded-2xl p-3.5 relative shadow-xs space-y-2 transition ${
+              className={`bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 border-l-4 border-l-[#C5A880] rounded-[22px] p-4 relative shadow-xs space-y-2.5 transition overflow-hidden ${
                 activeMenuShareId === share.id ? 'z-30' : 'z-10'
               }`}
             >
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#2563EB] rounded-l-2xl" />
-
-              <div className="flex items-center justify-between pl-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+                  <div className="w-10 h-10 rounded-full bg-[#C5A880]/20 text-[#1D1D1F] dark:text-[#C5A880] flex items-center justify-center font-bold text-xs">
                     {share.profiles?.avatar_url ? (
                       <img
                         src={share.profiles.avatar_url}
@@ -610,12 +608,14 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-900">{shareDisplayName}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+                      <span className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                        {shareDisplayName}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-[#C5A880]/20 text-[#1D1D1F] dark:text-[#C5A880] border border-[#C5A880]/40 uppercase">
                         Cotitular
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] text-blue-700 font-medium mt-0.5">
+                    <div className="flex items-center gap-1 text-[11px] text-[#3A5245] dark:text-[#7AA38D] font-medium mt-0.5">
                       <ShieldCheck className="h-3 w-3" />
                       <span>ACEPTADA · Participante</span>
                     </div>
@@ -624,26 +624,26 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <span className="text-base font-extrabold font-mono text-blue-700">
+                    <span className="text-base font-bold tabular-nums text-[#1D1D1F] dark:text-[#C5A880]">
                       {share.percentage}%
                     </span>
                     {prizeAmountCents > 0 ? (
                       <div className="space-y-0.5">
-                        <p className="text-[11px] font-bold text-blue-700 font-mono">
+                        <p className="text-[11px] font-bold text-[#1D1D1F] dark:text-[#C5A880] tabular-nums">
                           {((prizeAmountCents / 100) * (Number(share.percentage) / 100)).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                         </p>
                         <span
-                          className={`inline-block px-1.5 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase border ${
+                          className={`inline-block px-1.5 py-0.2 rounded text-[8px] font-bold tracking-wider uppercase ${
                             share.prize_paid_confirmed
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                              : 'bg-amber-100 text-amber-800 border-amber-300'
+                              ? 'bg-[#3A5245] text-[#FFFFFF]'
+                              : 'bg-[#C5A880]/25 text-[#1D1D1F] dark:text-[#C5A880]'
                           }`}
                         >
                           {share.prize_paid_confirmed ? 'COBRO CONFIRMADO' : 'PENDIENTE DE COBRO'}
                         </span>
                       </div>
                     ) : (
-                      <p className="text-[10px] text-gray-400 font-mono">
+                      <p className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 tabular-nums">
                         {((Number(share.percentage) / 100) * 20).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </p>
                     )}
@@ -821,18 +821,18 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 ticketStatus !== 'LIQUIDADO' &&
                 !(ticketStatus === 'VALIDADO' && prizeAmountCents > 0) &&
                 !share.waiver_requested && (
-                  <div className="pl-2 pt-2 border-t border-gray-100 flex items-center justify-between">
-                    <span className="text-[10px] text-gray-400 font-medium">
+                  <div className="pt-2.5 border-t border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 font-medium">
                       ¿Ya no deseas tu participación?
                     </span>
                     <button
                       type="button"
                       onClick={() => setRenouncingShare(share)}
                       disabled={actionLoadingId === share.id}
-                      className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-xl text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 active:scale-95 transition shadow-xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-[#D04848]/10 hover:bg-[#D04848]/20 text-[#D04848] border border-[#D04848]/30 active:scale-95 transition cursor-pointer"
                       title="Renunciar voluntariamente a mi participación"
                     >
-                      <LogOut className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                      <LogOut className="h-3.5 w-3.5 text-[#D04848] shrink-0" />
                       <span>Renunciar a mi participación</span>
                     </button>
                   </div>
@@ -850,11 +850,11 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           return (
             <div
               key={share.id}
-              className="bg-gray-50/80 border border-gray-200/70 rounded-2xl p-3.5 relative shadow-xs opacity-75"
+              className="bg-[#1D1D1F]/[0.04] dark:bg-[#1D1D1F]/50 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 rounded-[22px] p-4 relative shadow-xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-xs">
+                  <div className="w-10 h-10 rounded-full bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 flex items-center justify-center font-bold text-xs">
                     {share.profiles?.avatar_url ? (
                       <img
                         src={share.profiles.avatar_url}
@@ -868,22 +868,26 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-700">{shareDisplayName}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-gray-200 text-gray-600 uppercase">
+                      <span className="text-xs font-bold text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50">
+                        {shareDisplayName}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 uppercase">
                         Renunciada
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mt-0.5">
+                    <div className="flex items-center gap-1 text-[11px] text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 font-medium mt-0.5">
                       <span>0% · Renuncia formal registrada en auditoría</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-base font-extrabold font-mono text-gray-400">
+                  <span className="text-base font-bold tabular-nums text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50">
                     0%
                   </span>
-                  <p className="text-[10px] text-gray-400 font-mono">0,00 €</p>
+                  <p className="text-[10px] text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 tabular-nums">
+                    0,00 €
+                  </p>
                 </div>
               </div>
             </div>
@@ -1054,34 +1058,34 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           aria-modal="true"
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
         >
-          <div className="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl border border-gray-100 space-y-4 animate-in zoom-in-95 duration-150">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1D1D1F] rounded-[22px] p-5 shadow-2xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 space-y-4 animate-in zoom-in-95 duration-150">
             {/* Cabecera con icono */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-10 h-10 rounded-2xl bg-[#D04848]/15 text-[#D04848] flex items-center justify-center shrink-0">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900 leading-tight">
+                <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7] leading-tight">
                   ¿Renunciar a tu participación?
                 </h3>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
                   Décimo #{ticketNumber} · {drawName}
                 </p>
               </div>
             </div>
 
             {/* Explicación legal y de negocio */}
-            <div className="bg-rose-50/70 border border-rose-200/80 rounded-2xl p-3.5 text-xs text-rose-950 space-y-2">
+            <div className="bg-[#D04848]/10 border border-[#D04848]/30 rounded-2xl p-3.5 text-xs text-[#1D1D1F] dark:text-[#F5F5F7] space-y-2">
               <p className="leading-relaxed">
                 Vas a renunciar voluntariamente a tu participación del{' '}
-                <span className="font-extrabold text-rose-900">
+                <span className="font-extrabold text-[#D04848]">
                   {renouncingShare.percentage}% (
                   {((Number(renouncingShare.percentage) / 100) * 20).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                 </span>
                 ). Esta cuota volverá automáticamente al propietario del décimo y quedará registrada
                 en el historial de auditoría.
               </p>
-              <p className="text-[11px] font-bold text-rose-800 flex items-center gap-1.5">
+              <p className="text-[11px] font-bold text-[#D04848] flex items-center gap-1.5">
                 <span>Esta acción no se puede deshacer.</span>
               </p>
             </div>
@@ -1092,7 +1096,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 type="button"
                 onClick={() => setRenouncingShare(null)}
                 disabled={isRenouncing}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-gray-300 bg-white text-gray-700 text-xs font-bold hover:bg-gray-50 active:scale-98 transition disabled:opacity-50 cursor-pointer"
+                className="flex-1 py-2.5 px-3 rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] text-xs font-semibold hover:opacity-80 active:scale-98 transition disabled:opacity-50 cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1100,7 +1104,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 type="button"
                 onClick={handleConfirmVoluntaryWaiver}
                 disabled={isRenouncing}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-xs disabled:opacity-50 cursor-pointer"
+                className="flex-1 py-2.5 px-3 rounded-xl bg-[#D04848] hover:bg-[#B83B3B] text-white text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 {isRenouncing ? (
                   <>
