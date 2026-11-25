@@ -84,6 +84,11 @@ export function usePwaInstall(): UsePwaInstallReturn {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    // Si corre en navegador (no standalone), limpiar cualquier marca residual de instalación previa
+    if (!isStandaloneMode() && typeof localStorage !== 'undefined') {
+      localStorage.removeItem('misdecimos_pwa_installed')
+    }
+
     // Escuchar cambios dinámicos en display-mode
     const mediaQuery = window.matchMedia('(display-mode: standalone)')
     const handleMediaChange = (e: MediaQueryListEvent) => {

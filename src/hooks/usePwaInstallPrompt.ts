@@ -11,6 +11,7 @@ export const PWA_PROMPT_COUNT_KEY = 'misdecimos_pwa_install_prompt_count'
 export const PWA_INSTALLED_KEY = 'misdecimos_pwa_installed'
 export const PWA_SESSION_SHOWN_KEY = 'misdecimos_pwa_prompt_shown_session'
 export const PWA_DISMISSED_KEY = 'misdecimos_pwa_prompt_dismissed'
+export const PWA_DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 días
 
 // Captura global de beforeinstallprompt a nivel de módulo para no perder el evento si se dispara antes del render
 let globalDeferredPrompt: BeforeInstallPromptEvent | null = null
@@ -64,11 +65,77 @@ export function incrementPwaPromptCount(): number {
 }
 
 /**
- * Comprueba si el usuario ha descartado definitivamente el aviso automático en este navegador.
+ * Detecta si la app se ejecuta en modo standalone/nativo (no en pestaña de navegador).
  */
-export function isPwaPromptPermanentlyDismissed(): boolean {
+export function isStandaloneDisplay(): boolean {
   if (typeof window === 'undefined') return false
-  return localStorage.getItem(PWA_DISMISSED_KEY) === 'true'
+  if (window.matchMedia?.('(display-mode: standalone)').matches) {
+    return true
+  }
+  const nav = window.navigator as unknown as { standalone?: boolean }
+  if (nav?.standalone === true) {
+    return true
+  }
+  if (typeof document !== 'undefined' && document.referrer?.startsWith('android-app://')) {
+    return true
+  }
+  return false
+}
+
+/**
+ * En modo navegador (no standalone), limpia cualquier marca previa de app instalada en localStorage
+ * para evitar que el flujo de instalación quede bloqueado tras una desinstalación.
+ */
+export function clearStalePwaInstalledState(): boolean {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false
+  if (isStandaloneDisplay()) return false
+  if (localStorage.getItem(PWA_INSTALLED_KEY) !== null) {
+    localStorage.removeItem(PWA_INSTALLED_KEY)
+    return true
+  }
+  return false
+}
+
+/**
+ * Registra un descarte temporal del banner de instalación por 7 días.
+ */
+export function dismissPwaPromptTemporarily(now: number = Date.now()): number {
+  const expiresAt = now + PWA_DISMISS_TTL_MS
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    localStorage.setItem(PWA_DISMISSED_KEY, String(expiresAt))
+  }
+  return expiresAt
+}
+
+/**
+ * Comprueba si el banner de instalación sigue dentro del periodo de enfriamiento temporal (7 días).
+ * Si ha caducado o contiene un valor antiguo ('true'), lo limpia y devuelve false.
+ */
+export function isPwaPromptDismissed(now: number = Date.now()): boolean {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false
+  const raw = localStorage.getItem(PWA_DISMISSED_KEY)
+  if (!raw) return false
+
+  // Migrar/limpiar antiguo descarte permanente ('true') para recuperar el aviso
+  if (raw === 'true') {
+    localStorage.removeItem(PWA_DISMISSED_KEY)
+    return false
+  }
+
+  const expiresAt = Number(raw)
+  if (!Number.isFinite(expiresAt) || now >= expiresAt) {
+    localStorage.removeItem(PWA_DISMISSED_KEY)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Alias retrocompatible de isPwaPromptDismissed.
+ */
+export function isPwaPromptPermanentlyDismissed(now: number = Date.now()): boolean {
+  return isPwaPromptDismissed(now)
 }
 
 /**
@@ -103,32 +170,18 @@ export async function checkGetInstalledRelatedApps(customNav?: {
 }
 
 /**
- * Comprueba si la aplicación ya está instalada como PWA (modo standalone o previamente registrada).
+ * Comprueba si la aplicación ya está instalada como PWA (modo standalone activo).
+ * En modo navegador nunca confía en marcas residuales de localStorage para permitir reinstalación.
  */
 export function isPwaInstalled(): boolean {
   if (typeof window === 'undefined') return false
 
-  // 1. Flag de instalación previa guardado
-  if (localStorage.getItem(PWA_INSTALLED_KEY) === 'true') {
+  if (isStandaloneDisplay()) {
     return true
   }
 
-  // 2. Modo standalone estándar (display-mode: standalone)
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    return true
-  }
-
-  // 3. Modo standalone en iOS Safari (navigator.standalone)
-  const nav = window.navigator as unknown as { standalone?: boolean }
-  if (nav?.standalone === true) {
-    return true
-  }
-
-  // 4. Android TWA / Webview referrer
-  if (typeof document !== 'undefined' && document.referrer?.startsWith('android-app://')) {
-    return true
-  }
-
+  // En modo navegador, limpiar cualquier marca obsoleta de instalación previa
+  clearStalePwaInstalledState()
   return false
 }
 
@@ -191,6 +244,7 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    clearStalePwaInstalledState()
     setPlatform(detectPwaPlatform())
     setIsInstalled(isPwaInstalled())
     setDeferredPrompt(globalDeferredPrompt)
@@ -229,11 +283,11 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
     }
   }, [])
 
-  // Disparador automático: solo tras 2.5s, máximo 3 veces, 1 vez por sesión y si no fue descartado definitivamente
+  // Disparador automático: solo tras 2.5s, máximo 3 veces, 1 vez por sesión y si no está en pausa temporal de 7 días
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (isInstalled || isPwaInstalled()) return
-    if (isPwaPromptPermanentlyDismissed()) return
+    if (isPwaPromptDismissed()) return
     if (options?.isBlocked) return
 
     // Comprobar si ya se mostró en esta sesión
@@ -249,7 +303,7 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
 
     const timer = window.setTimeout(async () => {
       // Re-verificar si fue instalada o descartada mientras corría el timer
-      if (isPwaInstalled() || isPwaPromptPermanentlyDismissed() || options?.isBlocked) {
+      if (isPwaInstalled() || isPwaPromptDismissed() || options?.isBlocked) {
         return
       }
 
@@ -291,11 +345,11 @@ export function usePwaInstallPrompt(options?: UsePwaInstallPromptOptions) {
     }
   }, [deferredPrompt])
 
-  const dismiss = useCallback((permanent = false) => {
+  const dismiss = useCallback((temporary = false) => {
     setIsOpen(false)
     sessionStorage.setItem(PWA_SESSION_SHOWN_KEY, 'true')
-    if (permanent) {
-      localStorage.setItem(PWA_DISMISSED_KEY, 'true')
+    if (temporary) {
+      dismissPwaPromptTemporarily()
     } else if (!isManualTrigger) {
       incrementPwaPromptCount()
     }

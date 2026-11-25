@@ -276,7 +276,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
                 onClick={handleNeverShowAgain}
                 className="w-full text-center py-2 text-xs font-semibold text-gray-400 hover:text-gray-600 transition cursor-pointer"
               >
-                No volver a mostrar
+                Ahora no
               </button>
             </>
           ) : (
