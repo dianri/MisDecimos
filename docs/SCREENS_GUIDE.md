@@ -98,7 +98,7 @@ flowchart TD
 - **Modal de Reclamación:** [`src/components/tickets/InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx)
 
 ### Pestañas del Dashboard (`TicketsPage.tsx`) y Pantalla `Premios` (`PrizesPage.tsx`):
-- **Pantalla Principal (`/` — Décimos):** Listado único unificado de **Décimos** propios activos y **Participaciones** activas ordenados por fecha de sorteo, con badges identificativos (`Décimo` en verde / `Participación` en naranja), botón flotante **`Añadir`** encima de `BottomNav` y margen inferior `pb-32`. En la vista de detalle, **Propiedad y Reparto** incluye el botón **`Crear participación`** cuando el propietario tiene porcentaje libre.
+- **Pantalla Principal (`/` — Décimos):** Listado único unificado sin pestañas ni filtros superiores de **Décimos** propios activos y **Participaciones** activas ordenados por fecha de sorteo (excluyendo los archivados), con badges identificativos (`Décimo` en verde / `Participación` en naranja), botón flotante **`Añadir`** encima de `BottomNav` y margen inferior `pb-32`. Al archivar un décimo vía swipe, muestra el toast *"Décimo archivado en tu cuenta. Puedes consultarlo en Mi Perfil."*. En la vista de detalle, **Propiedad y Reparto** incluye el botón **`Crear participación`** cuando el propietario tiene porcentaje libre y la cabecera muestra la etiqueta **`ARCHIVADO`** si corresponde.
 - **Pantalla Premios (`/premios` — [`src/pages/PrizesPage.tsx`](../src/pages/PrizesPage.tsx)):**
   - **Bloque Superior — Tarjetas KPI:**
     - **Décimos Activos:** Suma los décimos propios no archivados más las participaciones no archivadas en estado `ACEPTADA` (excluyendo `RENUNCIADA`, `PENDIENTE`, `CANCELADA`, `RECHAZADA` y archivados).
@@ -331,3 +331,5 @@ flowchart TD
    - Tarjeta interactiva destacada con icono de escudo criptográfico (`ShieldCheck`), chevron indicador y texto explicativo *"Historial inmutable de movimientos, participaciones y premios"*. Al pulsar, navega fluidamente a `/auditoria`.
 6. **Cierre de Sesión:**
    - Botón *"Cerrar sesión"* con diseño accesible en rojo suave e icono `LogOut`, confirmación previa, estado de carga durante el proceso y ejecución de `signOut()`, limpiando el estado global y devolviendo al usuario a la pantalla de Login.
+7. **Décimos Archivados (`Décimos archivados (X)`):**
+   - Sección desplegable situada encima de `<VersionBadge />`. Muestra el número de décimos y participaciones archivadas, con acceso directo al detalle (`/billetes/:id`), botón **`Restaurar`** (`ArchiveRestore`, `min-h-[44px]`) que devuelve el décimo a la pantalla principal con el toast *"Décimo restaurado a tu pantalla principal."*, y botón **`Eliminar`** (`Trash2`, `min-h-[44px]`) visible solo para el propietario (`owner_id === user.id`) con confirmación previa.

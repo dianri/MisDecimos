@@ -364,6 +364,7 @@ export const AppShell: React.FC = () => {
         {activeTab === 'perfil' && (
           <ProfilePage
             onNavigateToAudit={() => navigateTo({ tab: 'auditoria', ticketId: null })}
+            onSelectTicket={(ticketId) => navigateTo({ tab: 'billetes', ticketId })}
           />
         )}
       </main>

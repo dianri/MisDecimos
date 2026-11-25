@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { sanitizeText, safeImageUrl } from '../lib/sanitize'
+import {
+  buildArchivedTicketsList,
+  canDeleteArchivedTicket,
+  RESTORE_SUCCESS_TOAST,
+} from '../lib/archivedTickets'
+import type { TicketItemWithMeta } from '../lib/ticketMetrics'
 import {
   subscribeUserToPush,
   unsubscribeUserFromPush,
@@ -32,13 +38,20 @@ import {
   LogOut,
   ShieldCheck,
   ChevronRight,
+  ChevronDown,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react'
 
 export interface ProfilePageProps {
   onNavigateToAudit?: () => void
+  onSelectTicket?: (ticketId: string) => void
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({
+  onNavigateToAudit,
+  onSelectTicket,
+}) => {
   const { user, profile, signOut, refreshProfile } = useAuth()
 
   // Formulario
@@ -55,6 +68,96 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
 
   // Cierre de sesión
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // Décimos archivados
+  const [archivedTickets, setArchivedTickets] = useState<TicketItemWithMeta[]>([])
+  const [isArchivedExpanded, setIsArchivedExpanded] = useState(false)
+  const [isLoadingArchived, setIsLoadingArchived] = useState(false)
+  const [archivedActionId, setArchivedActionId] = useState<string | null>(null)
+
+  const loadArchivedTickets = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      setIsLoadingArchived(true)
+      const [
+        { data: ticketsData, error: ticketsErr },
+        { data: sharesData, error: sharesErr },
+        { data: hidesData },
+      ] = await Promise.all([
+        supabase.from('tickets').select('*').order('draw_date', { ascending: false }),
+        supabase.from('ownership_shares').select('*'),
+        supabase
+          .from('ticket_archive_hides')
+          .select('ticket_id')
+          .eq('user_id', user.id),
+      ])
+
+      if (ticketsErr) throw ticketsErr
+      if (sharesErr) throw sharesErr
+
+      const archivedIds = new Set((hidesData || []).map((h) => h.ticket_id))
+      setArchivedTickets(
+        buildArchivedTicketsList(ticketsData || [], sharesData || [], archivedIds, user.id)
+      )
+    } catch (err) {
+      console.error('Error cargando décimos archivados:', err)
+    } finally {
+      setIsLoadingArchived(false)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    loadArchivedTickets()
+  }, [loadArchivedTickets])
+
+  const handleRestoreArchived = async (ticketId: string) => {
+    try {
+      setArchivedActionId(ticketId)
+      const { error } = await supabase.rpc('toggle_archive_ticket', {
+        p_ticket_id: ticketId,
+        p_archive: false,
+      })
+      if (error) throw error
+
+      setStatusMsg({ type: 'success', text: RESTORE_SUCCESS_TOAST })
+      await loadArchivedTickets()
+    } catch (err: unknown) {
+      console.error('Error restaurando décimo:', err)
+      setStatusMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'No se pudo restaurar el décimo.',
+      })
+    } finally {
+      setArchivedActionId(null)
+    }
+  }
+
+  const handleDeleteArchived = async (ticketId: string) => {
+    if (
+      !confirm(
+        '¿Estás seguro de que deseas eliminar este décimo definitivamente? Esta acción no se puede deshacer.'
+      )
+    ) {
+      return
+    }
+
+    try {
+      setArchivedActionId(ticketId)
+      const { error } = await supabase.from('tickets').delete().eq('id', ticketId)
+      if (error) throw error
+
+      setStatusMsg({ type: 'success', text: 'Décimo eliminado definitivamente.' })
+      await loadArchivedTickets()
+    } catch (err: unknown) {
+      console.error('Error eliminando décimo archivado:', err)
+      setStatusMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'No se pudo eliminar el décimo.',
+      })
+    } finally {
+      setArchivedActionId(null)
+    }
+  }
 
   const handleSignOut = async () => {
     if (isLoggingOut) return
@@ -733,6 +836,128 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
           )}
           <span>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</span>
         </button>
+      </div>
+
+      {/* Sección Desplegable: Décimos archivados */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setIsArchivedExpanded((prev) => !prev)}
+          aria-expanded={isArchivedExpanded}
+          className="w-full min-h-[56px] p-5 flex items-center justify-between text-left hover:bg-gray-50/70 transition cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
+              <Archive className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">
+                Décimos archivados ({archivedTickets.length})
+              </h3>
+              <p className="text-[11px] text-gray-500">
+                Consulta, restaura o elimina décimos ocultos
+              </p>
+            </div>
+          </div>
+
+          <ChevronDown
+            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+              isArchivedExpanded ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+
+        {isArchivedExpanded && (
+          <div className="px-5 pb-5 pt-1 border-t border-gray-100 space-y-3">
+            {isLoadingArchived ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-lottery" />
+              </div>
+            ) : archivedTickets.length === 0 ? (
+              <p className="text-xs text-gray-500 text-center py-4">
+                No tienes ningún décimo archivado.
+              </p>
+            ) : (
+              <div className="space-y-2.5 pt-2">
+                {archivedTickets.map((item) => {
+                  const isBusy = archivedActionId === item.ticket.id
+                  const canDelete = canDeleteArchivedTicket(
+                    item.ticket.owner_id,
+                    user?.id || ''
+                  )
+                  return (
+                    <div
+                      key={item.ticket.id}
+                      onClick={() => onSelectTicket?.(item.ticket.id)}
+                      className="rounded-2xl border border-gray-200/80 bg-gray-50/60 p-3.5 space-y-3 hover:border-lottery/30 transition cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-base font-extrabold font-mono text-gray-900 tracking-wider">
+                              {item.ticket.number}
+                            </span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-wide ${
+                                item.isOwner
+                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                  : 'bg-orange-100 text-orange-800 border-orange-200'
+                              }`}
+                            >
+                              {item.isOwner ? 'Décimo' : 'Participación'}
+                            </span>
+                            <span className="text-[11px] font-mono font-bold text-lottery">
+                              {item.isOwner && item.userPercentage === 100
+                                ? '100% tuyo'
+                                : `${item.userPercentage}%`}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                            {item.ticket.draw_name} · {item.ticket.draw_date}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1 border-t border-gray-200/60">
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRestoreArchived(item.ticket.id)
+                          }}
+                          className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-[0.98] disabled:opacity-50"
+                        >
+                          {isBusy ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <ArchiveRestore className="w-4 h-4 text-emerald-700" />
+                          )}
+                          <span>Restaurar</span>
+                        </button>
+
+                        {canDelete && (
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteArchived(item.ticket.id)
+                            }}
+                            className="min-h-[44px] px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-[0.98] disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Eliminar</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Información de versión integrada al pie de Mi Perfil */}

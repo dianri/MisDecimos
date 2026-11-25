@@ -55,6 +55,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [shares, setShares] = useState<OwnershipShare[]>([])
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
+  const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'propiedad' | 'historial'>('propiedad')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
@@ -254,6 +255,16 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       if (auditErr) console.error('Error cargando eventos de auditoría:', auditErr)
       setAuditEvents((auditData as unknown as AuditEvent[]) || [])
+
+      // 6. Verificar estado archivado del usuario para mostrar insignia en cabecera
+      const { data: hideData } = await supabase
+        .from('ticket_archive_hides')
+        .select('ticket_id')
+        .eq('ticket_id', ticketId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      setIsArchived(!!hideData || ticketData.status === 'ARCHIVADO')
     } catch (err: unknown) {
       console.error('Error al cargar detalle del décimo:', err)
       setStatusMsg({
@@ -459,13 +470,20 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           </div>
         </div>
 
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider shrink-0 ${getStatusBadgeStyle(
-            ticket.status
-          )}`}
-        >
-          {ticket.status}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isArchived && ticket.status !== 'ARCHIVADO' && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider bg-gray-100 text-gray-700 border-gray-300">
+              ARCHIVADO
+            </span>
+          )}
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border uppercase tracking-wider ${getStatusBadgeStyle(
+              ticket.status
+            )}`}
+          >
+            {ticket.status}
+          </span>
+        </div>
       </div>
 
       {statusMsg && (
