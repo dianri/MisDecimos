@@ -54,6 +54,8 @@ Deno.serve(async (req: Request) => {
       drawDate,
       forceRefresh,
       simulatedPrizePerDecimo,
+      simulatedPrizeCents,
+      isSimulation,
       resetSimulation,
     } = await req.json()
 
@@ -148,7 +150,18 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    if (typeof simulatedPrizePerDecimo === 'number' && simulatedPrizePerDecimo > 0) {
+    const hasSimulatedPerDecimo =
+      typeof simulatedPrizePerDecimo === 'number' &&
+      Number.isFinite(simulatedPrizePerDecimo) &&
+      simulatedPrizePerDecimo > 0
+    const hasSimulatedCents =
+      typeof simulatedPrizeCents === 'number' &&
+      Number.isFinite(simulatedPrizeCents) &&
+      simulatedPrizeCents > 0
+    const isSimulationRequest =
+      isSimulation === true || hasSimulatedPerDecimo || hasSimulatedCents
+
+    if (isSimulationRequest) {
       if (ticketRow.owner_id !== user.id) {
         return new Response(
           JSON.stringify({ error: 'Solo el propietario del décimo puede simular premios' }),
@@ -156,7 +169,16 @@ Deno.serve(async (req: Request) => {
         )
       }
 
-      const prizeAmountCents = Math.round(simulatedPrizePerDecimo * 100)
+      const prizeAmountCents = hasSimulatedCents
+        ? Math.round(simulatedPrizeCents)
+        : Math.round(Number(simulatedPrizePerDecimo || 0) * 100)
+
+      if (!Number.isFinite(prizeAmountCents) || prizeAmountCents <= 0) {
+        return new Response(
+          JSON.stringify({ error: 'El importe de premio simulado debe ser mayor que 0' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
 
       const { data: recordData, error: rpcError } = await supabase.rpc(
         'record_ticket_prize_check',
@@ -181,7 +203,11 @@ Deno.serve(async (req: Request) => {
         maximumFractionDigits: 2,
       }) + ' €'
 
-      cache.delete(cacheKey)
+      try {
+        cache.delete(cacheKey)
+      } catch (cacheErr) {
+        console.warn('[check-prizes] Aviso no bloqueante limpiando caché tras simulación:', cacheErr)
+      }
 
       return new Response(
         JSON.stringify({

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { extractFunctionErrorMessage } from '../lib/edgeFunctionError'
 
 export interface CheckPrizeResult {
   ok?: boolean
@@ -33,7 +34,11 @@ export async function checkTicketPrize(params: {
 
   if (error) {
     console.error('Error invocando Edge Function check-prizes:', error)
-    throw new Error(error.message || 'Error al consultar resultados oficiales.')
+    const detailedMessage = await extractFunctionErrorMessage(
+      error,
+      'Error al consultar resultados oficiales.'
+    )
+    throw new Error(detailedMessage)
   }
 
   if (data?.error) {

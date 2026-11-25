@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.78] - 2026-11-25
+
+### Fixed
+- **Extracción de Error Real en `supabase.functions.invoke` y Blindaje de Simulación (`prizeService.ts`, `edgeFunctionError.ts`, `check-prizes/index.ts`):**
+  - Añadida la utilidad `extractFunctionErrorMessage` en `src/lib/edgeFunctionError.ts` e integrada en `src/services/prizeService.ts` para leer `error.context` (`Response` JSON/texto) y mostrar el motivo real devuelto por la Edge Function en lugar del mensaje opaco `"Edge Function returned a non-2xx status code"`.
+  - Reforzada la Edge Function `supabase/functions/check-prizes/index.ts` para aceptar `isSimulation` / `simulatedPrizeCents` además de `simulatedPrizePerDecimo`, validar importes positivos devolviendo JSON con cabeceras CORS y aislar efectos secundarios no bloqueantes en bloques `try/catch` con `console.warn`.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/edgeFunctionError.test.ts`):**
+  - Verificación de extracción de `body.error`, `body.message`, respuestas de texto plano y fallback en `extractFunctionErrorMessage`, junto con la integración en `prizeService.ts` y `check-prizes/index.ts`.
+
 ## [1.0.77] - 2026-11-25
 
 ### Fixed
