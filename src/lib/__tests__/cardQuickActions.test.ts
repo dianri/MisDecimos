@@ -6,6 +6,9 @@ import {
   formatQuickPrizeCheckToast,
   hasThirdPartyParticipations,
   hasSelectShareToShareFlag,
+  consumeSelectShareToast,
+  SELECT_SHARE_TOAST_TITLE,
+  SELECT_SHARE_TOAST_SUBTITLE,
 } from '../cardQuickActions.ts'
 
 test('resolveShareButtonNavigation - sin participaciones previas abre crear participación', () => {
@@ -33,6 +36,41 @@ test('resolveShareButtonNavigation - con participaciones previas navega al detal
   assert.equal(target.state.selectShareToShare, true)
   assert.equal(hasSelectShareToShareFlag(target.state), true)
   assert.equal(hasSelectShareToShareFlag({}), false)
+})
+
+test('consumeSelectShareToast - dispara toast flotante al cargar décimo, evita doble disparo y limpia historial', () => {
+  const initialState = { fromTab: 'decimos', selectShareToShare: true }
+
+  // Antes de cargar el décimo no debe dispararse
+  const beforeLoad = consumeSelectShareToast({
+    historyState: initialState,
+    isTicketLoaded: false,
+    alreadyTriggered: false,
+  })
+  assert.equal(beforeLoad.shouldTrigger, false)
+  assert.equal(beforeLoad.cleanedState, null)
+
+  // Al cargar el décimo dispara el toast y devuelve el estado limpio sin selectShareToShare
+  const onLoad = consumeSelectShareToast({
+    historyState: initialState,
+    isTicketLoaded: true,
+    alreadyTriggered: false,
+  })
+  assert.equal(onLoad.shouldTrigger, true)
+  assert.deepEqual(onLoad.cleanedState, { fromTab: 'decimos' })
+  assert.equal(SELECT_SHARE_TOAST_TITLE, 'Selecciona una participación para compartir')
+  assert.equal(
+    SELECT_SHARE_TOAST_SUBTITLE,
+    'Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código.'
+  )
+
+  // En segundo montaje (StrictMode) con alreadyTriggered=true no vuelve a dispararse
+  const secondRun = consumeSelectShareToast({
+    historyState: initialState,
+    isTicketLoaded: true,
+    alreadyTriggered: true,
+  })
+  assert.equal(secondRun.shouldTrigger, false)
 })
 
 test('evaluateQuickPrizeCheckPrecondition - sorteo futuro bloquea comprobación con aviso claro', () => {

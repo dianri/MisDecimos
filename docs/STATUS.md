@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.65` (Producción Estable · Recuperación Reinstalación PWA)  
+**Versión Actual:** `1.0.66` (Producción Estable · Toast Selección de Participación)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.65`)  
+**Rama de Producción:** `main` (Tag `v1.0.66`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
