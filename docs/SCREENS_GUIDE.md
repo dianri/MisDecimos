@@ -215,12 +215,12 @@ flowchart TD
   - **Renderizado Condicional Estricto (`isOwner === true`):** El listado de tarjetas amarillas de invitaciones pendientes, los códigos PIN de 6 dígitos, los botones *"Ver QR / Compartir"*, *"Eliminar"* y *"Cancelar todas las pendientes"* solo se muestran si el usuario es el propietario del décimo.
   - **Vista Neutra para Participantes (`!isOwner`):** En el gráfico Donut y su leyenda, cualquier cuota pendiente o aún no aceptada se visualiza como un porcentaje agregado neutro (*"Sin asignar / Pendiente (X%)"*) sin mostrar nombres, códigos PIN ni enlaces de invitaciones.
 - **Añadir Participación y Eliminación de Décimo:** El botón inferior *"Añadir participación"* permanece disponible tanto en `PENDIENTE` como en `VALIDADO` mientras el propietario conserve cuota libre. Asimismo, el botón *"Eliminar décimo"* está habilitado en ambos estados siempre que no existan cuotas de terceros en estado `ACEPTADA`.
-- **Flujo Bilateral de Renuncia de Participaciones:**
-  - El custodio puede pulsar *"Solicitar renuncia"* sobre cualquier participante aceptado en estado `PENDIENTE`.
+- **Flujo Bilateral de Renuncia de Participaciones (Gesto Swipe Izquierdo):**
+  - El custodio puede deslizar hacia la izquierda la tarjeta de cualquier participante aceptado en estado `PENDIENTE` (identificada con un filo derecho de `3px` en Rojo Coral `#D04848`) para revelar **`Solicitar renuncia`**.
   - El participante recibe una alerta y puede *"Aceptar y devolver"* (reintegrando el porcentaje al propietario) o *"Rechazar"*.
-- **Renuncia Voluntaria Directa del Participante:**
-  - En la tarjeta de participación del propio usuario autenticado (`share.user_id === user.id`), mientras el décimo no esté liquidado ni premiado pendiente de cobro, se muestra de forma permanente el botón *"Renunciar a mi participación"* con icono `LogOut`.
-  - Al pulsarlo, abre un diálogo de confirmación (`z-50` sobre `BottomNav` con integración `useModalBackHandler`) indicando el porcentaje y su importe exacto en euros. Al confirmar, ejecuta la función transaccional `renounce_own_participation`, reintegrando el porcentaje íntegro al propietario, registrando la auditoría y notificando al custodio.
+- **Renuncia Voluntaria Directa del Participante (Gesto Swipe Izquierdo):**
+  - En la tarjeta de participación del propio usuario autenticado (`share.user_id === user.id`), mientras el décimo no esté liquidado ni premiado pendiente de cobro, el filo derecho de `3px` en Rojo Coral (`#D04848`) indica que puede deslizarse hacia la izquierda para revelar **`Renunciar`**.
+  - Al pulsarla, abre un diálogo de confirmación (`z-50` sobre `BottomNav` con integración `useModalBackHandler`) indicando el porcentaje y su importe exacto en euros. Al confirmar, ejecuta la función transaccional `renounce_own_participation`, reintegrando el porcentaje íntegro al propietario, registrando la auditoría y notificando al custodio.
 - **Redirección Inmediata y Blindaje de Historial tras Renunciar:**
   - Tanto al renunciar voluntariamente como al aceptar una solicitud de renuncia del custodio, la aplicación no permanece en la ficha del décimo:
     - Redirige inmediatamente a la pestaña **Participaciones** (`/?tab=participaciones`) sustituyendo la entrada actual del historial (`replace: true`).
