@@ -585,7 +585,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             aria-label="Cambiar foto de perfil"
             title="Cambiar foto de perfil"
           >
-            <div className="w-28 h-28 rounded-full border-4 border-lottery shadow-md overflow-hidden bg-gray-50 flex items-center justify-center transition group-hover:opacity-95">
+            <div className="w-28 h-28 rounded-full border-2 border-[#C5A880]/70 dark:border-[#C5A880]/60 shadow-sm overflow-hidden bg-[#C5A880]/[0.08] dark:bg-[#C5A880]/[0.10] flex items-center justify-center transition group-hover:opacity-95">
               {avatarDisplay ? (
                 <img
                   src={avatarDisplay}
@@ -593,7 +593,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-14 h-14 text-gray-300" />
+                <User className="w-12 h-12 text-[#8C6D43] dark:text-[#E2CCA8]" />
               )}
             </div>
 
@@ -604,7 +604,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 setIsAvatarSheetOpen(true)
               }}
               disabled={isUploadingAvatar}
-              className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-lottery text-white flex items-center justify-center shadow-md shadow-lottery/30 hover:bg-lottery-600 active:scale-95 transition disabled:opacity-50"
+              className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-[#C5A880] hover:bg-[#B8996F] text-[#1D1D1F] ring-2 ring-white dark:ring-[#1D1D1F] flex items-center justify-center shadow-sm active:scale-95 transition disabled:opacity-50 cursor-pointer"
               title="Cambiar foto de perfil"
               aria-label="Abrir selector de foto de perfil"
             >
