@@ -32,7 +32,7 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: 'MisDecimos - Trazabilidad Asegurada',
+        name: 'MisDecimos',
         short_name: 'MisDecimos',
         description: 'Custodia compartida y reparto de décimos de Lotería Nacional',
         theme_color: '#2E6146',

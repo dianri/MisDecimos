@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.72] - 2026-11-25
+
+### Changed
+- **Simplificación del Nombre de la Aplicación a `MisDecimos` (`index.html`, `vite.config.ts`, `public/manifest.webmanifest`):**
+  - Eliminado el sufijo `"Trazabilidad Asegurada"` del `<title>`, metadatos PWA/OpenGraph (`application-name`, `apple-mobile-web-app-title`, `og:title`, `og:site_name`) y manifiestos (`name` y `short_name` establecidos en `"MisDecimos"`).
+
 ## [1.0.71] - 2026-11-25
 
 ### Changed
