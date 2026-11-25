@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.77] - 2026-11-25
+
+### Fixed
+- **Ajuste Responsive de Metadatos en Pantallas Estrechas (`TicketDetailPage.tsx`, `RealisticTicketCard.tsx`):**
+  - Reemplazada la fila rígida inferior de metadatos (`FECHA SORTEO` y `ORIGEN`) por un contenedor `flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs` con grupos `inline-flex items-center gap-1.5 whitespace-nowrap` e iconos con `shrink-0` para que `ORIGEN` baje íntegro a la segunda línea en móviles ≤ 375 px sin partir la fecha ni `Escáner GS1-128`.
+  - Añadido `whitespace-nowrap` y `flex-wrap` en los bloques de `SERIE` y `FRACCIÓN` dentro de `RealisticTicketCard.tsx`.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/ticketMetadataResponsive.test.ts`):**
+  - Verificación de clases responsive (`flex-wrap`, `whitespace-nowrap`, `shrink-0`) en `TicketDetailPage.tsx` y `RealisticTicketCard.tsx`.
+
 ## [1.0.76] - 2026-11-25
 
 ### Changed

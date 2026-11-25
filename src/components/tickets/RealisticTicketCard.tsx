@@ -92,11 +92,11 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
                     {ticket.number}
                   </p>
                 </div>
-                <div className="text-right text-xs tabular-nums space-y-0.5 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-                  <p className="font-semibold">
+                <div className="text-right text-xs tabular-nums space-y-0.5 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 shrink-0">
+                  <p className="font-semibold whitespace-nowrap">
                     Serie: <span className="text-[#1D1D1F] dark:text-[#F5F5F7]">{ticket.serie || '001'}</span>
                   </p>
-                  <p className="font-semibold">
+                  <p className="font-semibold whitespace-nowrap">
                     Fracc.: <span className="text-[#1D1D1F] dark:text-[#F5F5F7]">{ticket.fraccion || '01'}</span>
                   </p>
                 </div>
@@ -180,15 +180,15 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
                 <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-[#1D1D1F] dark:text-[#F5F5F7]">
                   {ticket.number}
                 </div>
-                <div className="flex items-center gap-3 mt-2 text-xs tabular-nums text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-                  <span>
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-2 text-xs tabular-nums text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+                  <span className="whitespace-nowrap">
                     SERIE:{' '}
                     <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">
                       {ticket.serie || '001'}
                     </strong>
                   </span>
-                  <span className="opacity-40">|</span>
-                  <span>
+                  <span className="opacity-40" aria-hidden="true">|</span>
+                  <span className="whitespace-nowrap">
                     FRACCIÓN:{' '}
                     <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">
                       {ticket.fraccion || '01'}

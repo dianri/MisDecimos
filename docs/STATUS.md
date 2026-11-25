@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.76` (Producción Estable · Rediseño Modal de Reclamación de Invitación)  
+**Versión Actual:** `1.0.77` (Producción Estable · Ajuste Responsive de Metadatos en Pantallas Estrechas)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.76`)  
+**Rama de Producción:** `main` (Tag `v1.0.77`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
