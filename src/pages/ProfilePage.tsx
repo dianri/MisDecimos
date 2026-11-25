@@ -505,7 +505,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* Selector Rápido de Apariencia (Claro / Oscuro / Sistema) */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-4 sm:p-5 space-y-3">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">Apariencia</h3>
@@ -568,7 +568,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       )}
 
       {/* Tarjeta de Avatar y Datos */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 space-y-6">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-6 space-y-6">
         {/* Avatar Circular con Botón de Cámara y Menú de Selección */}
         <div className="flex flex-col items-center">
           <div
@@ -724,7 +724,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* Sección Dispositivo y Notificaciones */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 space-y-5">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-6 space-y-5">
         <div className="flex items-center gap-2.5 border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
           <div className="h-8 w-8 rounded-xl bg-[#3A5245]/10 dark:bg-[#3A5245]/30 text-[#3A5245] dark:text-[#F5F5F7] flex items-center justify-center">
             <Smartphone className="h-4 w-4" />
@@ -848,7 +848,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* 2.5 Acceso al Centro de Auditoría */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-4 sm:p-5">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-4 sm:p-5">
         <button
           type="button"
           onClick={() => {
@@ -878,7 +878,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* 3. Tarjeta de Cierre de Sesión */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-4 sm:p-5">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-4 sm:p-5">
         <button
           type="button"
           onClick={handleSignOut}
@@ -895,7 +895,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* Sección Desplegable: Décimos archivados */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setIsArchivedExpanded((prev) => !prev)}

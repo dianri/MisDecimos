@@ -348,7 +348,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                 onClick={() => handleCardClick(item)}
                 className={`p-4 rounded-[22px] border transition-all relative overflow-hidden cursor-pointer shadow-xs ${
                   item.is_read
-                    ? 'bg-white dark:bg-[#1D1D1F] border-black/[0.06] dark:border-white/[0.08]'
+                    ? 'bg-white dark:bg-[#1D1D1F] border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08]'
                     : 'bg-white dark:bg-[#1D1D1F] border-[#C5A880] border-l-4 border-l-[#C5A880] shadow-sm'
                 }`}
               >

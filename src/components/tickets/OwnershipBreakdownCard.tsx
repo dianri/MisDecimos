@@ -423,7 +423,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       )}
 
       {/* 2. Gráfico Donut SVG Sólido */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] p-3.5 sm:p-5 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-sm flex flex-col items-center justify-center">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] p-3.5 sm:p-5 border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm flex flex-col items-center justify-center">
         <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
           <svg
             className="w-full h-full"
@@ -442,23 +442,32 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
               strokeWidth={DONUT_STROKE_WIDTH}
             />
 
-            {/* Arcos continuos y sólidos por categoría (> 0%) acumulando desplazamiento */}
-            {arcs.map((arc) => (
-              <circle
-                key={arc.category}
-                cx="80"
-                cy="80"
-                r={r}
-                fill="none"
-                stroke={arc.color}
-                strokeWidth={DONUT_STROKE_WIDTH}
-                strokeLinecap="butt"
-                strokeDasharray={`${arc.length} ${circumference}`}
-                strokeDashoffset={arc.offset}
-                transform="rotate(-90 80 80)"
-                className="transition-all duration-500 ease-out"
-              />
-            ))}
+            {/* Arcos continuos y sólidos por categoría (> 0%) con remates redondeados */}
+            {arcs.map((arc) => {
+              const needsCapGap = arcs.length > 1 || arc.percent < 100
+              const capGap = needsCapGap
+                ? Math.min(arc.length * 0.4, DONUT_STROKE_WIDTH + circumference * (2.5 / 360))
+                : 0
+              const visibleLength = Math.max(0.5, arc.length - capGap)
+              const visibleOffset = arc.offset - capGap / 2
+
+              return (
+                <circle
+                  key={arc.category}
+                  cx="80"
+                  cy="80"
+                  r={r}
+                  fill="none"
+                  stroke={arc.color}
+                  strokeWidth={DONUT_STROKE_WIDTH}
+                  strokeLinecap="round"
+                  strokeDasharray={`${visibleLength} ${circumference}`}
+                  strokeDashoffset={visibleOffset}
+                  transform="rotate(-90 80 80)"
+                  className="transition-all duration-500 ease-out"
+                />
+              )
+            })}
           </svg>
 
           {/* Texto Central */}
@@ -520,7 +529,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       <div className="space-y-3">
         {/* Tarjeta del Propietario */}
         {ownerShare && (
-          <div className="bg-white dark:bg-[#1D1D1F] border border-[#3A5245]/40 rounded-[22px] p-4 flex items-center justify-between relative overflow-hidden shadow-xs">
+          <div className="bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] border-l-4 border-l-[#3A5245] rounded-[22px] p-4 flex items-center justify-between relative overflow-hidden shadow-xs">
             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#3A5245]" />
 
             <div className="flex items-center gap-3 pl-2">
@@ -588,7 +597,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           return (
             <div
               key={share.id}
-              className={`bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 border-l-4 border-l-[#C5A880] rounded-[22px] p-4 relative shadow-xs space-y-2.5 transition overflow-hidden ${
+              className={`bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] border-l-4 border-l-[#C5A880] rounded-[22px] p-4 relative shadow-xs space-y-2.5 transition overflow-hidden ${
                 activeMenuShareId === share.id ? 'z-30' : 'z-10'
               }`}
             >
@@ -850,7 +859,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           return (
             <div
               key={share.id}
-              className="bg-[#1D1D1F]/[0.04] dark:bg-[#1D1D1F]/50 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 rounded-[22px] p-4 relative shadow-xs"
+              className="bg-[#1D1D1F]/[0.04] dark:bg-[#1D1D1F]/50 border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] rounded-[22px] p-4 relative shadow-xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
