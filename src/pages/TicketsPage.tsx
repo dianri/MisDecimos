@@ -253,13 +253,11 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }, [loadTickets])
 
-  // Listas y métricas extraídas del clasificador reactivo
+  // Listas extraídas del clasificador reactivo
   const {
     misDecimos,
     misParticipaciones,
     misArchivados,
-    totalActivosCount,
-    totalPremiosGanados,
   } = ticketLists
 
   const handleTicketClick = (ticketId: string) => {
@@ -374,42 +372,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   }
 
   return (
-    <div className="space-y-6 pb-12 max-w-xl mx-auto">
-      {/* 1. Tarjeta Resumen Superior */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 space-y-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
-            Mis Décimos Compartidos
-          </h2>
-        </div>
-
-        {/* Dos recuadros métricos */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-[#F7F9F7] p-3.5 border border-gray-200/50 space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-              Décimos Activos
-            </span>
-            <p className="text-2xl font-extrabold font-mono text-lottery">
-              {totalActivosCount}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-[#F7F9F7] p-3.5 border border-gray-200/50 space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-              Total Premios
-            </span>
-            <p className="text-2xl font-extrabold font-mono text-gold-600">
-              {totalPremiosGanados.toLocaleString('es-ES', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2,
-              })}{' '}
-              €
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Bloque de Acción Único a Ancho Completo */}
+    <div className="space-y-4 pb-12 max-w-xl mx-auto">
+      {/* 1. Bloque de Acción Único a Ancho Completo */}
       <div>
         <button
           type="button"

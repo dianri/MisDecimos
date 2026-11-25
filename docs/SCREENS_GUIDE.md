@@ -62,11 +62,11 @@ flowchart TD
    - **Padding y Área Segura:** Padding superior dinámico `pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6` que garantiza 14 px de aire vertical en escritorio y dispositivos sin notch, y absorbe fluidamente la zona del notch/isla dinámica en iOS y Android sin encajonar el contenido.
    - **Diseño Adaptativo Móvil vs Escritorio:**
      - **Izquierda Unificada (Marca e Inicio `/`):** En todos los dispositivos (móvil y escritorio), la cabecera muestra a la izquierda el isotipo e icono oficial de **MisDecimos** (`/pwa-192x192.png`, squircle verde esmeralda con medallón de orfebrería dorado, el décimo troquelado en 'D' y la estrella náutica de 4 puntas en relieve tridimensional) acompañado del nombre de la marca en negrita (`MisDecimos`), funcionando como enlace interactivo directo a la pantalla principal (`/`) o ejecutando scroll suave hacia arriba si ya se está en ella.
-     - **Dispositivos Móviles (`< 768px`):** En la esquina superior derecha muestra el botón compacto de usuario (avatar circular de 32 px + nombre recortado hasta 110 px sin email para evitar solapamientos en pantallas estrechas), con indicador de estado activo al encontrarse en **Perfil** o **Auditoría**, manteniendo las dos secciones principales (**Billetes** y **Alertas**) en la barra inferior para máxima ergonomía táctil.
-     - **Navegadores de Escritorio (`>= 768px`):** En la parte derecha integra el menú horizontal con accesos a **Billetes** y **Alertas** (con badge dinámico de notificaciones sin leer), un separador vertical sutil (`h-6 w-px bg-gray-200`) y el botón compacto de usuario (avatar circular de 32 px + nombre de usuario), con indicador activo verde (`bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30`) al navegar a **Perfil** o **Auditoría**.
+     - **Dispositivos Móviles (`< 768px`):** En la esquina superior derecha muestra el botón compacto de usuario (avatar circular de 32 px + nombre recortado hasta 110 px sin email para evitar solapamientos en pantallas estrechas), con indicador de estado activo al encontrarse en **Perfil** o **Auditoría**, manteniendo las tres secciones principales (**Décimos**, **Premios** y **Alertas**) en la barra inferior para máxima ergonomía táctil.
+     - **Navegadores de Escritorio (`>= 768px`):** En la parte derecha integra el menú horizontal con accesos a **Décimos**, **Premios** y **Alertas** (con badge dinámico de notificaciones sin leer), un separador vertical sutil (`h-6 w-px bg-gray-200`) y el botón compacto de usuario (avatar circular de 32 px + nombre de usuario), con indicador activo verde (`bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30`) al navegar a **Perfil** o **Auditoría**.
    - **Centralización de Cierre de Sesión:** El botón de salida se mantiene centralizado en la pantalla de **Perfil** para evitar clics accidentales.
-2. **Barra Inferior Móvil (`BottomNav`) Simplificada y Respuesta Responsive:**
-   - En dispositivos móviles (`< 768px`), la navegación se realiza mediante la barra fija inferior (`md:hidden`), optimizada para el pulgar con las dos secciones centrales del día a día: **Billetes** y **Alertas** (con badge dinámico en tiempo real).
+2. **Barra Inferior Móvil (`BottomNav`) de 3 Pestañas y Respuesta Responsive:**
+   - En dispositivos móviles (`< 768px`), la navegación se realiza mediante la barra fija inferior (`md:hidden`) en rejilla simétrica `grid-cols-3` con altura táctil mínima `min-h-[44px]`: **Décimos** (`<DecimoIcon />`, ruta `/`), **Premios** (`Trophy`, ruta `/premios`) y **Alertas** (`Bell` con contador de no leídas, ruta `/alertas`).
    - En ordenadores y tabletas (`>= 768px`), la barra inferior se oculta automáticamente y el relleno inferior de la pantalla se reduce (`pb-24 md:pb-10`), posicionando los toasts flotantes de forma ergonómica (`bottom-20 md:bottom-6`).
    - **Historial Completo de Navegación:** El cambio de pestaña añade entradas al historial de navegación (sin `replace: true`), permitiendo que el botón o gesto "Atrás" de Android regrese naturalmente a la vista anterior.
 3. **Gestión del Botón Atrás de Android y Protección contra Cierre PWA (`useAndroidBackNavigation` y `useModalBackHandler`):**
@@ -97,11 +97,14 @@ flowchart TD
 - **Parser Oficial GS1-128:** [`src/lib/selaeBarcodeParser.ts`](../src/lib/selaeBarcodeParser.ts)
 - **Modal de Reclamación:** [`src/components/tickets/InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx)
 
-### Pestañas del Dashboard y Cuadro de Mando:
-- **Cuadro de Mando Superior:**
-  - **Mis Décimos Compartidos:** Cabecera limpia y minimalista alineada directamente sobre el panel de métricas. El acceso a las notificaciones y su indicador dinámico de no leídas se centralizan exclusivamente en la pestaña fija **Alertas** de la barra de navegación inferior.
-  - **Décimos Activos:** Cuenta los décimos propios y participaciones activas aceptadas (`percentage > 0` y `status = 'ACEPTADA'`). Las participaciones a las que el usuario ha renunciado (`status = 'RENUNCIADA'`) quedan estrictamente excluidas de este contador.
-  - **Total Premios:** Agrega la parte proporcional ganada por el usuario de los premios en décimos activos propios y participaciones activas aceptadas.
+### Pestañas del Dashboard (`TicketsPage.tsx`) y Pantalla `Premios` (`PrizesPage.tsx`):
+- **Pantalla Principal (`/` — Décimos):** Muestra directamente el botón verde **`Añadir`** a ancho completo, el selector de pestañas (**Décimos**, **Participaciones**, **Archivados**) y el listado de tarjetas.
+- **Pantalla Premios (`/premios` — [`src/pages/PrizesPage.tsx`](../src/pages/PrizesPage.tsx)):**
+  - **Bloque Superior — Tarjetas KPI:**
+    - **Décimos Activos:** Suma los décimos propios no archivados más las participaciones no archivadas en estado `ACEPTADA` (excluyendo `RENUNCIADA`, `PENDIENTE`, `CANCELADA`, `RECHAZADA` y archivados).
+    - **Total Premios:** Suma en euros (`€`) la cuota proporcional exacta del usuario (`porcentaje_usuario %` sobre `prize_amount_cents`) de todos sus décimos y participaciones activas premiadas.
+  - **Bloque Inferior — Historial de Escrutinio (`Todos`, `Premiados`, `Sin premio`):**
+    - Muestra primero los décimos premiados de mayor a menor importe (con categoría oficial y cuota del usuario) y a continuación los ya comprobados sin premio (`Comprobado · Sin premio`, `0,00 €`) ordenados del sorteo más reciente al más antiguo. Al pulsar cualquier fila navega a `/billetes/:id`.
 - **Pestañas de Filtrado y Sincronización en URL (`?tab=...`):**
   - **Mis Décimos (`/` o `/?tab=decimos`):** Muestra los décimos donde el usuario actual es el custodio legal y propietario registrador (`owner_id = user.id`).
   - **Mis Participaciones (`/?tab=participaciones`):** Muestra los décimos donde el usuario ha sido invitado y posee una cuota activa aceptada (`status = 'ACEPTADA'` y `percentage > 0`). Las participaciones renunciadas no se muestran aquí.

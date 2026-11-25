@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.60] - 2026-11-25
+
+### Added
+- **Nueva Pestaña y Pantalla `Premios` (`/premios`, `PrizesPage.tsx`, `prizesSummary.ts`):**
+  - **Navegación de 3 Pestañas (`AppShell.tsx`, `useAndroidBackNavigation.ts`):** Reestructurada la barra inferior móvil (`grid-cols-3`, área táctil `min-h-[44px]`) y la navegación de escritorio con **Décimos** (`<DecimoIcon />`), **Premios** (`Trophy`, ruta `/premios`) y **Alertas** (`Bell` con contador de no leídas).
+  - **Tarjetas KPI (`Décimos Activos` y `Total Premios`):** Trasladadas desde la pantalla principal a `/premios`, calculando los décimos activos no archivados y el sumatorio proporcional exacto en euros (`porcentaje_usuario %` sobre `prize_amount_cents`).
+  - **Historial de Escrutinio (`Todos`, `Premiados`, `Sin premio`):** Muestra los décimos premiados ordenados de mayor a menor importe (con categoría oficial y cuota del usuario) seguidos de los comprobados sin premio (`Comprobado · Sin premio`, `0,00 €`) ordenados del sorteo más reciente al más antiguo, navegando al detalle al pulsar.
+- **Tests Unitarios (`src/lib/__tests__/prizesSummary.test.ts`):**
+  - Cobertura de `Décimos Activos`, `Total Premios` fraccionado, exclusión de renunciados/pendientes/archivados y filtrado/ordenación del historial de escrutinio.
+
+### Changed
+- **Cabecera Simplificada en `Décimos` (`TicketsPage.tsx`):**
+  - Eliminadas las dos tarjetas superiores de resumen en `TicketsPage.tsx` para dar protagonismo inmediato al botón **`Añadir`** a ancho completo, el selector de pestañas y las tarjetas.
+
 ## [1.0.59] - 2026-11-25
 
 ### Fixed
