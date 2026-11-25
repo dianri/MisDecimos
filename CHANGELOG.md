@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.75] - 2026-11-25
+
+### Fixed
+- **Píldora de Versión Restringida Exclusivamente a `Mi Perfil` (`LoginPage.tsx`, `versionPurge.test.ts`):**
+  - Eliminado `<VersionBadge />` de `LoginPage.tsx` y limpiado el pie de página a `"MisDecimos · Plataforma segura PWA de reparto de Lotería"` sin número de versión.
+  - Verificado mediante tests unitarios que `VersionBadge` se renderiza única y exclusivamente en `ProfilePage.tsx`.
+
 ## [1.0.74] - 2026-11-25
 
 ### Fixed

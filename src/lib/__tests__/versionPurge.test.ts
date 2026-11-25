@@ -52,10 +52,19 @@ test('ProfilePage muestra píldora flotante de versión exclusivamente en Mi Per
   assert.ok(profileSource.includes('<VersionBadge variant="floating"'))
   assert.ok(!profileSource.includes('<VersionBadge variant="inline"'))
 
-  for (const page of ['TicketsPage.tsx', 'PrizesPage.tsx', 'AlertsPage.tsx', 'TicketDetailPage.tsx']) {
+  for (const page of ['LoginPage.tsx', 'TicketsPage.tsx', 'PrizesPage.tsx', 'AlertsPage.tsx', 'TicketDetailPage.tsx', 'AuditPage.tsx']) {
     const src = readFileSync(resolve(process.cwd(), `src/pages/${page}`), 'utf8')
     assert.ok(!src.includes('VersionBadge'), `${page} no debe renderizar VersionBadge`)
   }
+
+  const loginSource = readFileSync(resolve(process.cwd(), 'src/pages/LoginPage.tsx'), 'utf8')
+  assert.ok(!loginSource.includes('__APP_VERSION__'), 'LoginPage no debe mostrar número de versión')
+  assert.ok(loginSource.includes('MisDecimos · Plataforma segura PWA de reparto de Lotería'))
+
+  const appSource = readFileSync(resolve(process.cwd(), 'src/App.tsx'), 'utf8')
+  const shellSource = readFileSync(resolve(process.cwd(), 'src/components/layout/AppShell.tsx'), 'utf8')
+  assert.ok(!appSource.includes('VersionBadge'), 'App.tsx no debe renderizar VersionBadge')
+  assert.ok(!shellSource.includes('VersionBadge'), 'AppShell.tsx no debe renderizar VersionBadge')
 
   // Modal de diagnóstico se abre al pulsar la píldora y ejecuta limpieza hacia '/'
   assert.ok(badgeSource.includes('onClick={() => setIsOpen(true)}'))

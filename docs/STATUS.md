@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.74` (Producción Estable · Rewrite SPA Vercel + Píldora Flotante en Perfil)  
+**Versión Actual:** `1.0.75` (Producción Estable · Píldora de Versión Exclusiva en Mi Perfil)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.74`)  
+**Rama de Producción:** `main` (Tag `v1.0.75`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
