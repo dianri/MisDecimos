@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.57` (Producción Estable · Terminología Décimos, Botón Único Añadir y Acciones Rápidas en Tarjetas)  
+**Versión Actual:** `1.0.58` (Producción Estable · Swipe en Tarjetas, Escáner Unificado y Detalle Simplificado)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.57`)  
+**Rama de Producción:** `main` (Tag `v1.0.58`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -139,3 +139,4 @@
 - [x] v1.0.55: Motor histórico oficial de sorteos 2020–2025 (Navidad y El Niño): base de datos oficial integrada con escrutinio completo SELAE (premios mayores, aproximaciones, centenas, terminaciones y reintegros), arquitectura híbrida de 3 niveles en Edge Function `check-prizes` desplegada en Supabase, fixtures y suite de pruebas unitarias (`historicalDraws.test.ts` con 116 tests totales superados), y visualización de categorías oficiales y resultado verificado de 0 € en `PrizeCheckCard.tsx`.
 - [x] v1.0.56: Cobertura de casos límite en premios y reparto (`historicalDraws.test.ts`, `prizeDistribution.test.ts` con 121 tests superados al 100%), validación estricta `/^\d{1,5}$/` en `historicalDraws.ts` con redespliegue de `check-prizes`, y mejoras de ergonomía táctil móvil (`>= 44px`, pestañas `grid-cols-2` y primer pliegue compacto en `TicketDetailPage.tsx` y `OwnershipBreakdownCard.tsx`).
 - [x] v1.0.57: Terminología unificada a **Décimos** en toda la interfaz (`AppShell.tsx`, `TicketsPage.tsx`, `TicketDetailPage.tsx`, `AlertsPage.tsx`), botón único centrado **Añadir** con apertura directa de cámara y botón **Añadir décimo manual** en el escáner (`BarcodeScannerModal.tsx`), acciones rápidas **Compartir** y **Comprobar sorteo** en cada tarjeta (`TicketListItemCard.tsx`, `cardQuickActions.ts`), y suite de pruebas unitarias (`cardQuickActions.test.ts` con 126 tests superados al 100%).
+- [x] v1.0.58: Botón `Añadir` a ancho completo (`w-full`), escáner unificado con **Tengo un código** y **Añadir décimo manual** sin subida de fotos (`BarcodeScannerModal.tsx`, `TicketFormModal.tsx`), gestos horizontales **Swipe** en tarjetas para **Archivar** y **Eliminar** con confirmación (`SwipeableTicketCard.tsx`, `swipeCardState.ts` con 131 tests superados al 100%), y limpieza visual de `TicketDetailPage.tsx` y `OwnershipBreakdownCard.tsx` (rosco por persona y eliminación de botones redundantes).

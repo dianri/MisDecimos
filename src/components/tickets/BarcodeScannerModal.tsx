@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { classifyScannedPayload } from '../../lib/scanPayloadClassifier'
-import { X, Camera, Upload, AlertCircle, RefreshCw, Ticket } from 'lucide-react'
+import { X, Camera, AlertCircle, RefreshCw, Ticket, KeyRound } from 'lucide-react'
 
 export interface BarcodeScannerModalProps {
   isOpen: boolean
@@ -10,6 +10,7 @@ export interface BarcodeScannerModalProps {
   onClose: () => void
   onScanSuccess: (decodedText: string) => void
   onManualEntry?: () => void
+  onHaveCode?: () => void
 }
 
 const UNIFIED_SUPPORTED_FORMATS = [
@@ -26,6 +27,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   onClose,
   onScanSuccess,
   onManualEntry,
+  onHaveCode,
 }) => {
   useModalBackHandler({ isOpen, onClose, modalKey: 'barcode_scanner_modal' })
 
@@ -42,10 +44,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [warningMsg, setWarningMsg] = useState<string | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
-  const [isScanningFile, setIsScanningFile] = useState(false)
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null)
   const sessionGenerationRef = useRef(0)
   const isTransitioningRef = useRef(false)
@@ -285,34 +285,6 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     }
   }, [isOpen, startCamera, forceReleaseCamera])
 
-  // 7. Subir imagen desde galería/archivo para decodificar
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setIsScanningFile(true)
-    setErrorMsg(null)
-
-    try {
-      await forceReleaseCamera()
-
-      const scanner = new Html5Qrcode(readerId, {
-        formatsToSupport: UNIFIED_SUPPORTED_FORMATS,
-        verbose: false,
-      })
-      html5QrCodeRef.current = scanner
-
-      const decodedText = await scanner.scanFile(file, true)
-      handleSuccess(decodedText)
-    } catch (err) {
-      console.warn('Error decodificando código desde imagen:', err)
-      setErrorMsg('No se detectó ningún código legible en la imagen subida.')
-    } finally {
-      setIsScanningFile(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
   if (!isOpen) return null
 
   return (
@@ -409,44 +381,37 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         </div>
 
         {/* Barra de opciones inferior (shrink-0) */}
-        <div className="p-4 bg-gray-900/90 border-t border-gray-800 flex items-center justify-between gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          {onManualEntry ? (
-            <button
-              type="button"
-              onClick={() => {
-                onManualEntry()
-              }}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition active:scale-98"
-            >
-              <Ticket className="h-4 w-4 text-lottery-300" />
-              <span>Añadir décimo manual</span>
-            </button>
-          ) : (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
+        <div className="p-4 bg-gray-900/90 border-t border-gray-800 space-y-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          {(onHaveCode || onManualEntry) && (
+            <div className={`grid gap-2 ${onHaveCode && onManualEntry ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {onHaveCode && (
+                <button
+                  type="button"
+                  onClick={() => onHaveCode()}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-400/30 hover:bg-amber-500/25 text-xs font-semibold text-amber-200 transition active:scale-98"
+                >
+                  <KeyRound className="h-4 w-4 text-amber-300 shrink-0" />
+                  <span className="truncate">Tengo un código</span>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isScanningFile}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition active:scale-98 disabled:opacity-50"
-              >
-                <Upload className="h-4 w-4 text-lottery-300" />
-                <span>{isScanningFile ? 'Analizando...' : 'Subir foto del código'}</span>
-              </button>
-            </>
+              {onManualEntry && (
+                <button
+                  type="button"
+                  onClick={() => onManualEntry()}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-semibold text-gray-200 transition active:scale-98"
+                >
+                  <Ticket className="h-4 w-4 text-lottery-300 shrink-0" />
+                  <span className="truncate">Añadir décimo manual</span>
+                </button>
+              )}
+            </div>
           )}
 
           <button
             type="button"
             onClick={() => onCloseRef.current()}
-            className="px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-medium text-gray-400 transition"
+            className="w-full px-4 py-2.5 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-medium text-gray-400 transition"
           >
             Cancelar
           </button>

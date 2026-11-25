@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   Check,
   X,
-  UserPlus,
   Loader2,
   ShieldCheck,
   Clock,
@@ -372,10 +371,6 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
     shares.reduce((acc, s) => acc + (s.status === 'ACEPTADA' ? Number(s.percentage) : 0), 0)
   const unassignedPct = Math.max(0, Math.round((100 - totalAcceptedSharesPct) * 100) / 100)
 
-  const totalAllocated = isOwner
-    ? totalAcceptedSharesPct + totalPendingPct
-    : totalAcceptedSharesPct + unassignedPct
-
   const coOwnersPct = participantShares.reduce((acc, s) => acc + Number(s.percentage), 0)
   const pendingPct = isOwner ? totalPendingPct : unassignedPct
 
@@ -466,49 +461,51 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           {/* Texto Central */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
             <span className="text-2xl font-black text-lottery tracking-tight">
-              {Math.round(totalAllocated)}%
+              {ownerPct}%
             </span>
-            <span className="text-[11px] font-bold text-lottery uppercase tracking-wider">
-              Distribuido
-            </span>
-            <span className="text-[9px] text-gray-400 font-medium">
-              Propiedad Distribuida
+            <span className="text-[10px] font-semibold text-gray-500">
+              Tu cuota
             </span>
           </div>
         </div>
 
-        {/* Leyenda Visual */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-2.5 sm:mt-4 text-[11px] font-medium text-gray-600">
+        {/* Porcentaje por persona de forma limpia y legible */}
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-2.5 sm:mt-4 text-xs font-medium text-gray-700">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2E6146]" />
-            <span>Propietario ({ownerPct}%)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2E6146] shrink-0" />
+            <span>
+              {ownerShare?.profiles?.display_name || 'Propietario'}:{' '}
+              <strong className="font-mono text-gray-900">{ownerPct}%</strong>
+            </span>
           </div>
 
-          {participantShares.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />
+          {participantShares.map((s) => (
+            <div key={s.id} className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] shrink-0" />
               <span>
-                Cotitulares (
-                {participantShares.reduce((a, b) => a + Number(b.percentage), 0)}%)
+                {s.profiles?.display_name || 'Participante'}:{' '}
+                <strong className="font-mono text-gray-900">{Number(s.percentage)}%</strong>
               </span>
             </div>
-          )}
+          ))}
 
           {isOwner ? (
             activePendingInvites.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300 shrink-0" />
                 <span>
-                  Pendientes ({totalPendingPct}%)
+                  Pendientes:{' '}
+                  <strong className="font-mono text-gray-900">{totalPendingPct}%</strong>
                 </span>
               </div>
             )
           ) : (
             unassignedPct > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706] border border-amber-300 shrink-0" />
                 <span>
-                  Sin asignar / Pendiente ({unassignedPct}%)
+                  Sin asignar:{' '}
+                  <strong className="font-mono text-gray-900">{unassignedPct}%</strong>
                 </span>
               </div>
             )
@@ -550,7 +547,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-lottery font-medium mt-0.5">
                   <ShieldCheck className="h-3 w-3" />
-                  <span>ACEPTADA · Custodio físico</span>
+                  <span>ACEPTADA</span>
                 </div>
               </div>
             </div>
@@ -975,29 +972,6 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           </div>
         )}
       </div>
-
-      {/* 5. Botón Inferior: "Añadir participación" */}
-      {isOwner && ticketStatus !== 'LIQUIDADO' && (
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => setShowCreateSheet(true)}
-            disabled={ownerPct <= 0}
-            className={`w-full py-3 px-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-98 ${
-              ownerPct > 0
-                ? 'bg-lottery hover:bg-lottery-dark text-white'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-            }`}
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>
-              {ownerPct > 0
-                ? `Añadir participación (hasta ${ownerPct}% disponible)`
-                : '100% de la propiedad distribuida'}
-            </span>
-          </button>
-        </div>
-      )}
 
       {/* Modal / Bottom Sheet para crear participaciones */}
       <CreateParticipationSheet
