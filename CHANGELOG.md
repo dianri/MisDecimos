@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.62] - 2026-11-25
+
+### Changed
+- **Pantalla Principal sin Pestañas ni Filtros (`TicketsPage.tsx`):**
+  - Eliminado cualquier botón o filtro de archivados en `TicketsPage.tsx` para mostrar exclusivamente el listado unificado de décimos y participaciones activas junto con el botón flotante **`Añadir`**.
+  - Actualizado el toast de confirmación al archivar a **`"Décimo archivado en tu cuenta. Puedes consultarlo en Mi Perfil."`**.
+- **Gestión de `Décimos archivados` en `Mi Perfil` (`ProfilePage.tsx`, `AppShell.tsx`, `archivedTickets.ts`):**
+  - Añadida sección desplegable **`Décimos archivados (X)`** encima del bloque de versión en `ProfilePage.tsx`, con acceso directo al detalle (`/billetes/:id`), botón **`Restaurar`** (`ArchiveRestore`, `min-h-[44px]`) con toast *"Décimo restaurado a tu pantalla principal."* y botón **`Eliminar`** (`Trash2`, `min-h-[44px]`) exclusivo para el propietario (`owner_id === user.id`).
+- **Insignia `ARCHIVADO` en Cabecera de Detalle (`TicketDetailPage.tsx`):**
+  - Verificada la carga de décimos archivados desde **Mi Perfil** mostrando la etiqueta discreta **`ARCHIVADO`** en la cabecera superior.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/archivedTickets.test.ts`):**
+  - Cobertura de exclusión estricta de archivados en la pantalla principal, mensaje de confirmación con referencia a `Mi Perfil`, restauración y permisos de borrado del propietario.
+
 ## [1.0.61] - 2026-11-25
 
 ### Changed
