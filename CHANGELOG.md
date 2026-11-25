@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.73] - 2026-11-25
+
+### Changed
+- **Swipe Izquierdo `Renunciar` / `Solicitar renuncia` y Filos Finos de `3px` en Detalle (`OwnershipBreakdownCard.tsx`, `SwipeableShareCard.tsx`, `ownershipShareSwipe.ts`):**
+  - Reducido el filo lateral izquierdo de `PROPIETARIO` (Verde Granito `#3A5245`) y `COTITULAR` (Oro Cava `#C5A880`) a `3px` (`w-[3px]`) dentro de `rounded-[22px] overflow-hidden`.
+  - Eliminados los botones inline *"Renunciar a mi participación"* y *"Solicitar renuncia"* del interior de las tarjetas de participación, sustituidos por un gesto de deslizamiento hacia la izquierda con filo derecho de `3px` en Rojo Coral (`#D04848`) que revela **`Renunciar`** o **`Solicitar renuncia`**.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/ownershipShareSwipe.test.ts`):**
+  - Verificación de `resolveParticipantShareSwipeAction` y `getShareSwipeActionLabel` para renuncia directa del cotitular, solicitud de renuncia del propietario y bloqueo en décimos liquidados o con renuncia pendiente.
+
 ## [1.0.72] - 2026-11-25
 
 ### Changed

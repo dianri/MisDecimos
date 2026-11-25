@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.72` (Producción Estable · Nombre de App Simplificado a MisDecimos)  
+**Versión Actual:** `1.0.73` (Producción Estable · Swipe Renunciar y Filos 3px en Detalle)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.72`)  
+**Rama de Producción:** `main` (Tag `v1.0.73`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
