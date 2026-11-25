@@ -10,14 +10,15 @@ import { PushPermissionModal } from '../pwa/PushPermissionModal'
 import { VersionBadge } from '../common/VersionBadge'
 import { syncPushSubscription } from '../../lib/pushNotifications'
 import { TicketsPage } from '../../pages/TicketsPage'
+import { PrizesPage } from '../../pages/PrizesPage'
 import { TicketDetailPage } from '../../pages/TicketDetailPage'
 import { AlertsPage } from '../../pages/AlertsPage'
 import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
 import { DecimoIcon } from '../icons/DecimoIcon'
-import { Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
+import { Trophy, Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
 
-export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
+export type TabType = 'billetes' | 'premios' | 'alertas' | 'auditoria' | 'perfil'
 
 interface NavItem {
   id: TabType
@@ -27,6 +28,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'billetes', label: 'Décimos', icon: DecimoIcon },
+  { id: 'premios', label: 'Premios', icon: Trophy },
   { id: 'alertas', label: 'Alertas', icon: Bell },
 ]
 
@@ -343,6 +345,11 @@ export const AppShell: React.FC = () => {
             />
           )
         )}
+        {activeTab === 'premios' && (
+          <PrizesPage
+            onSelectTicket={(ticketId) => navigateTo({ tab: 'billetes', ticketId })}
+          />
+        )}
         {activeTab === 'alertas' && (
           <AlertsPage
             onBack={goBack}
@@ -438,7 +445,7 @@ export const AppShell: React.FC = () => {
         aria-label="Navegación principal móvil"
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
       >
-        <div className="max-w-xl mx-auto px-2 h-16 flex items-center justify-around">
+        <div className="max-w-xl mx-auto px-2 h-16 grid grid-cols-3 items-center">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
             const isActive = activeTab === id
             return (
@@ -446,7 +453,7 @@ export const AppShell: React.FC = () => {
                 key={id}
                 type="button"
                 onClick={() => navigateTo({ tab: id, ticketId: null })}
-                className={`flex flex-col items-center justify-center w-16 py-1 transition-all ${
+                className={`min-h-[44px] w-full flex flex-col items-center justify-center py-1 transition-all ${
                   isActive
                     ? 'text-lottery font-bold'
                     : 'text-gray-400 hover:text-gray-600 font-medium'
@@ -459,9 +466,8 @@ export const AppShell: React.FC = () => {
                 >
                   <Icon className="h-5 w-5" />
                   {id === 'alertas' && unreadAlertsCount > 0 && (
-                    <span className="absolute top-1 right-2 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                    <span className="absolute -top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
+                      {unreadAlertsCount > 99 ? '99+' : unreadAlertsCount}
                     </span>
                   )}
                 </div>
