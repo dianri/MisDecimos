@@ -59,12 +59,37 @@ export function resolveShareButtonNavigation(params: {
   }
 }
 
+export const SELECT_SHARE_TOAST_TITLE = 'Selecciona una participación para compartir'
+export const SELECT_SHARE_TOAST_SUBTITLE =
+  'Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código.'
+
 /**
  * Extrae el flag selectShareToShare del estado de navegación del historial.
  */
 export function hasSelectShareToShareFlag(historyState: unknown): boolean {
   if (!historyState || typeof historyState !== 'object') return false
   return Boolean((historyState as { selectShareToShare?: boolean }).selectShareToShare)
+}
+
+/**
+ * Evalúa si debe dispararse el toast de selección de participación al cargar el detalle
+ * y devuelve el estado de historial limpio sin `selectShareToShare`.
+ */
+export function consumeSelectShareToast(params: {
+  historyState: unknown
+  isTicketLoaded: boolean
+  alreadyTriggered: boolean
+}): { shouldTrigger: boolean; cleanedState: Record<string, unknown> | null } {
+  const { historyState, isTicketLoaded, alreadyTriggered } = params
+  if (!isTicketLoaded || alreadyTriggered || !hasSelectShareToShareFlag(historyState)) {
+    return { shouldTrigger: false, cleanedState: null }
+  }
+  const nextState =
+    historyState && typeof historyState === 'object'
+      ? { ...(historyState as Record<string, unknown>) }
+      : {}
+  delete nextState.selectShareToShare
+  return { shouldTrigger: true, cleanedState: nextState }
 }
 
 /**

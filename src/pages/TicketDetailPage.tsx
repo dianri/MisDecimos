@@ -16,7 +16,11 @@ import {
   simulateTicketPrize,
   resetTicketPrizeSimulation,
 } from '../services/prizeService'
-import { hasSelectShareToShareFlag } from '../lib/cardQuickActions'
+import {
+  consumeSelectShareToast,
+  SELECT_SHARE_TOAST_TITLE,
+  SELECT_SHARE_TOAST_SUBTITLE,
+} from '../lib/cardQuickActions'
 import type { Database } from '../types/database.types'
 import {
   ArrowLeft,
@@ -30,7 +34,6 @@ import {
   CheckCircle2,
   Sparkles,
   RotateCcw,
-  Share2,
   X,
 } from 'lucide-react'
 
@@ -70,20 +73,42 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
     return false
   })
-  const [showSelectShareBanner, setShowSelectShareBanner] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return hasSelectShareToShareFlag(window.history.state)
-    }
-    return false
-  })
+  const [shareSelectToast, setShareSelectToast] = useState<{
+    title: string
+    subtitle: string
+  } | null>(null)
+  const hasTriggeredShareToastRef = useRef(false)
 
+  // Disparar toast flotante al entrar con selectShareToShare: true una vez cargado el décimo
   useEffect(() => {
-    if (typeof window !== 'undefined' && hasSelectShareToShareFlag(window.history.state)) {
-      const nextState = { ...window.history.state }
-      delete nextState.selectShareToShare
-      window.history.replaceState(nextState, '', window.location.href)
+    if (typeof window === 'undefined' || isLoading || !ticket) return
+
+    const { shouldTrigger, cleanedState } = consumeSelectShareToast({
+      historyState: window.history.state,
+      isTicketLoaded: true,
+      alreadyTriggered: hasTriggeredShareToastRef.current,
+    })
+
+    if (shouldTrigger) {
+      hasTriggeredShareToastRef.current = true
+      setShareSelectToast({
+        title: SELECT_SHARE_TOAST_TITLE,
+        subtitle: SELECT_SHARE_TOAST_SUBTITLE,
+      })
+      if (cleanedState) {
+        window.history.replaceState(cleanedState, '', window.location.href)
+      }
     }
-  }, [])
+  }, [isLoading, ticket])
+
+  // Auto-cierre del toast flotante tras 5 segundos (idéntico a Comprobar sorteo)
+  useEffect(() => {
+    if (!shareSelectToast) return
+    const timer = setTimeout(() => {
+      setShareSelectToast(null)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [shareSelectToast])
 
   const handleAutoOpenHandled = useCallback(() => {
     setAutoOpenCreateShare(false)
@@ -554,35 +579,6 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
         {activeTab === 'propiedad' ? (
           <div className="space-y-3">
-            {showSelectShareBanner && (
-              <div
-                role="status"
-                className="flex items-start justify-between gap-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 shadow-xs animate-in fade-in duration-150"
-              >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700 mt-0.5">
-                    <Share2 className="h-4 w-4" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-emerald-950">
-                      Selecciona una participación para compartir
-                    </p>
-                    <p className="text-[11px] text-emerald-800/90 leading-snug">
-                      Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSelectShareBanner(false)}
-                  aria-label="Cerrar aviso"
-                  className="p-1 text-emerald-700 hover:text-emerald-950 rounded-lg transition shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-
             <OwnershipBreakdownCard
               ticketId={ticket.id}
               ticketNumber={ticket.number}
@@ -705,6 +701,33 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           <p className="text-[11px] leading-relaxed">
             <strong>Protección de cotitulares:</strong> Este décimo cuenta con participaciones aceptadas por terceros. El número y datos del sorteo están bloqueados e inmutables para salvaguardar los derechos de todos los participantes.
           </p>
+        </div>
+      )}
+
+      {/* Toast flotante al acceder desde Compartir con participaciones previas */}
+      {shareSelectToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 md:bottom-6 inset-x-4 max-w-sm mx-auto z-50 px-4 py-3 text-white text-xs font-semibold rounded-2xl shadow-2xl border flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200 bg-emerald-800 border-emerald-600"
+        >
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-bold leading-snug">{shareSelectToast.title}</p>
+              <p className="text-[11px] font-medium text-emerald-100/90 leading-snug">
+                {shareSelectToast.subtitle}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShareSelectToast(null)}
+            className="p-1 text-white/80 hover:text-white transition cursor-pointer shrink-0"
+            title="Cerrar aviso"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
     </div>

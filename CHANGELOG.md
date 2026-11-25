@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.66] - 2026-11-25
+
+### Fixed
+- **Toast Flotante de Selección de Participación en Detalle (`TicketDetailPage.tsx`, `cardQuickActions.ts`):**
+  - Eliminado el banner estático inline en `TicketDetailPage.tsx` al llegar desde el botón **`Compartir`** con participaciones existentes (`selectShareToShare: true`).
+  - Al cargar el décimo, se dispara automáticamente el mismo componente de toast flotante usado en **`Comprobar sorteo`** (`fixed bottom-20 md:bottom-6`, `bg-emerald-800 border-emerald-600`, cierre automático a los 5 segundos) con el título *"Selecciona una participación para compartir"* y subtítulo *"Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código."*, protegido con `useRef` frente a doble disparo en `StrictMode` y limpiando `window.history.state`.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/cardQuickActions.test.ts`):**
+  - Cobertura de `consumeSelectShareToast` validando disparo tras carga del décimo, protección contra doble ejecución en `StrictMode` y limpieza del historial.
+
 ## [1.0.65] - 2026-11-25
 
 ### Changed
