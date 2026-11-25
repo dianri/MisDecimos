@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.70] - 2026-11-25
+
+### Changed
+- **Jerarquía Visual y Acabado Champán en Tarjetas (`TicketListItemCard.tsx`, `ticketCardHelper.ts`, `PrizesPage.tsx`, `RealisticTicketCard.tsx`):**
+  - **Tarjetas Premiadas (`prize_amount_cents > 0`):** Sustituido el relleno sólido marrón-dorado por una superficie champán luminosa (`from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4]` en claro / `from-[#262017] via-[#1F1B15] to-[#1D1D1F]` en oscuro) con borde Oro Cava (`border-[1.5px] border-[#C5A880]`) y bloque de premio en Verde Granito (`#3A5245`).
+  - **Vista previa `RealisticTicketCard` premiada:** Cuerpo limpio (`bg-white dark:bg-[#1D1D1F]`) con borde dorado `1.5px`, cinta superior champán y Sello Digital en Oro Cava.
+  - **Diferenciación `DÉCIMO` vs `PARTICIPACIÓN` y botones interactivos:** Píldora e icono en Verde Granito para `DÉCIMO` y en Oro Cava para `PARTICIPACIÓN`; botones táctiles reales para **`Comprobar sorteo`** (Verde Granito suave con borde) y **`Compartir`** (Oro Cava suave con borde) frente a la insignia neutra de cuota (`100% tuyo` / `Tu cuota: X%`) y `PENDIENTE` discreto.
+
 ## [1.0.69] - 2026-11-25
 
 ### Changed

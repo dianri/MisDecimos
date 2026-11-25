@@ -208,8 +208,8 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
                   onClick={() => onSelectTicket?.(ticket.id)}
                   className={`w-full text-left rounded-[22px] p-5 transition-all active:scale-[0.99] relative overflow-hidden space-y-3 cursor-pointer ${
                     isPrized
-                      ? 'bg-[#C5A880] text-[#1D1D1F] border border-[#C5A880] shadow-sm hover:brightness-[0.98]'
-                      : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm hover:shadow-md'
+                      ? 'bg-gradient-to-br from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4] dark:from-[#262017] dark:via-[#1F1B15] dark:to-[#1D1D1F] border-[1.5px] border-[#C5A880] dark:border-[#C5A880]/75 shadow-[0_4px_16px_rgba(197,168,128,0.18)] text-[#1D1D1F] dark:text-[#F5F5F7] hover:brightness-[0.98]'
+                      : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-[0_2px_10px_rgba(29,29,31,0.04)] dark:shadow-none hover:shadow-md'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -230,18 +230,14 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={`text-2xl font-black tracking-tight tabular-nums leading-none ${
-                              isPrized ? 'text-[#1D1D1F]' : 'text-[#1D1D1F] dark:text-[#F5F5F7]'
-                            }`}
-                          >
+                          <span className="text-2xl font-black tracking-tight tabular-nums leading-none text-[#1D1D1F] dark:text-[#F5F5F7]">
                             {ticket.number}
                           </span>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                              isPrized
-                                ? 'bg-[#1D1D1F]/10 text-[#1D1D1F]'
-                                : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75'
+                              isOwner
+                                ? 'bg-[#3A5245]/10 text-[#3A5245] dark:bg-[#3A5245]/25 dark:text-[#96BFA9]'
+                                : 'bg-[#C5A880]/18 text-[#7C5F35] dark:bg-[#C5A880]/20 dark:text-[#E2CCA8]'
                             }`}
                           >
                             {isOwner ? 'Propio' : `Participación · ${userPercentage}%`}
@@ -250,7 +246,7 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
                         <p
                           className={`text-[11px] truncate mt-1 ${
                             isPrized
-                              ? 'text-[#1D1D1F]/75'
+                              ? 'text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70'
                               : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
                           }`}
                         >
@@ -280,14 +276,14 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
                   <div
                     className={`flex items-center justify-between gap-2 pt-2.5 border-t text-[11px] ${
                       isPrized
-                        ? 'border-[#1D1D1F]/15'
+                        ? 'border-[#C5A880]/35'
                         : 'border-black/[0.06] dark:border-white/[0.08]'
                     }`}
                   >
                     <div
                       className={`flex items-center gap-1.5 ${
                         isPrized
-                          ? 'text-[#1D1D1F]/75'
+                          ? 'text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70'
                           : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
                       }`}
                     >
