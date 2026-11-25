@@ -18,7 +18,7 @@ const currencyFormatter = new Intl.NumberFormat('es-ES', {
 /**
  * Resuelve la lógica de presentación visual de las tarjetas de billetes en el listado,
  * siguiendo el sistema "Titanio, Oro Cava y Verde Granito" (estilo minimalista Apple).
- * - Si está premiado (prizeAmountCents > 0): toda la superficie cambia a fondo sólido Oro Cava (#C5A880).
+ * - Si está premiado (prizeAmountCents > 0): superficie champán luminosa con borde Oro Cava (#C5A880).
  * - Si está comprobado sin premio: muestra píldora [✓ Comprobado] en Verde Granito (#3A5245).
  */
 export function resolveTicketCardPresentation(params: {
@@ -63,7 +63,7 @@ export function resolveTicketCardPresentation(params: {
       case 'PENDIENTE':
       default:
         statusBadgeClasses =
-          'bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 border border-transparent'
+          'bg-transparent border border-[#1D1D1F]/15 dark:border-[#F5F5F7]/15 text-[#1D1D1F]/55 dark:text-[#F5F5F7]/55'
         break
     }
   }
@@ -71,8 +71,8 @@ export function resolveTicketCardPresentation(params: {
   const swipeEdgeClasses = 'border-l-4 border-l-[#3A5245] border-r-4 border-r-[#D04848]'
 
   const containerClasses = isPrized
-    ? `bg-[#C5A880] text-[#1D1D1F] rounded-[22px] border-y border-y-[#C5A880] ${swipeEdgeClasses} shadow-sm p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
-    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08] ${swipeEdgeClasses} shadow-sm p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
+    ? `bg-gradient-to-br from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4] dark:from-[#262017] dark:via-[#1F1B15] dark:to-[#1D1D1F] border-[1.5px] border-[#C5A880] dark:border-[#C5A880]/75 ${swipeEdgeClasses} shadow-[0_4px_16px_rgba(197,168,128,0.18)] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
+    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08] ${swipeEdgeClasses} shadow-[0_2px_10px_rgba(29,29,31,0.04)] dark:shadow-none p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
 
   return {
     isPrized,

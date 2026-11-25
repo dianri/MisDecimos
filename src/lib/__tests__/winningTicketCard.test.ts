@@ -12,10 +12,11 @@ test('resolveTicketCardPresentation - billete pendiente sin premio', () => {
   assert.strictEqual(result.isPrized, false)
   assert.strictEqual(result.isCheckedWithoutPrize, false)
   assert.strictEqual(result.statusBadgeLabel, 'PENDIENTE')
+  assert.ok(result.statusBadgeClasses.includes('bg-transparent'))
   assert.ok(result.containerClasses.includes('bg-white'))
   assert.ok(result.containerClasses.includes('dark:bg-[#1D1D1F]'))
   assert.ok(result.containerClasses.includes('rounded-[22px]'))
-  assert.ok(!result.containerClasses.includes('bg-[#C5A880]'))
+  assert.ok(!result.containerClasses.includes('from-[#FCF9F3]'))
 })
 
 test('resolveTicketCardPresentation - billete validado sin premio muestra [✓ Comprobado] en Verde Granito', () => {
@@ -32,7 +33,7 @@ test('resolveTicketCardPresentation - billete validado sin premio muestra [✓ C
   assert.ok(result.containerClasses.includes('bg-white'))
 })
 
-test('resolveTicketCardPresentation - billete premiado cambia toda su superficie a Oro Cava (#C5A880)', () => {
+test('resolveTicketCardPresentation - billete premiado usa superficie champán luminosa con borde Oro Cava (#C5A880)', () => {
   const result = resolveTicketCardPresentation({
     prizeAmountCents: 100000, // 1.000,00 €
     status: 'VALIDADO',
@@ -45,8 +46,9 @@ test('resolveTicketCardPresentation - billete premiado cambia toda su superficie
   assert.strictEqual(result.userPrizeFormatted, '500,00 €')
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
   assert.ok(result.statusBadgeClasses.includes('bg-[#3A5245]'))
-  assert.ok(result.containerClasses.includes('bg-[#C5A880]'))
-  assert.ok(result.containerClasses.includes('text-[#1D1D1F]'))
+  assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
+  assert.ok(result.containerClasses.includes('dark:from-[#262017]'))
+  assert.ok(result.containerClasses.includes('border-[#C5A880]'))
   assert.ok(result.containerClasses.includes('rounded-[22px]'))
 })
 
@@ -88,10 +90,10 @@ test('resolveTicketCardPresentation - billete premiado liquidado (LIQUIDADO)', (
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.statusBadgeLabel, 'LIQUIDADO')
   assert.ok(result.statusBadgeClasses.includes('bg-[#3A5245]'))
-  assert.ok(result.containerClasses.includes('bg-[#C5A880]'))
+  assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
 })
 
-test('resolveTicketCardPresentation - billete archivado premiado preserva fondo Oro Cava', () => {
+test('resolveTicketCardPresentation - billete archivado premiado preserva fondo champán Oro Cava', () => {
   const result = resolveTicketCardPresentation({
     prizeAmountCents: 150000,
     status: 'VALIDADO',
@@ -102,5 +104,5 @@ test('resolveTicketCardPresentation - billete archivado premiado preserva fondo 
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
   assert.strictEqual(result.userPrizeFormatted, '375,00 €')
-  assert.ok(result.containerClasses.includes('bg-[#C5A880]'))
+  assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
 })
