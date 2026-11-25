@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.78` (Producción Estable · Extracción de Errores Edge Function y Simulación Determinista)  
+**Versión Actual:** `1.0.79` (Producción Estable · Botón Manual y Paleta Oficial en Escáner)  
 **Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.78`)  
+**Rama de Producción:** `main` (Tag `v1.0.79`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.79] - 2026-11-25
+
+### Changed
+- **Botón Manual y Paleta Oficial en el Escáner (`BarcodeScannerModal.tsx`):**
+  - Sustituido el icono `<Ticket />` por `<DecimoIcon />` (`w-4 h-4 shrink-0`) y acortada la etiqueta a **`Añadir manual`** con `whitespace-nowrap` y `px-3 py-3 text-sm font-medium` para evitar truncados en móviles estrechos (360 px).
+  - Alineadas las superficies del modal con **Carbon Black (`#1D1D1F`)** y **Negro puro (`#000000`)** con borde `border-[#F5F5F7]/10`, marco de enfoque y esquinas en **Verde Granito (`#3A5245` / `#7AA38D`)** y botón **`Tengo un código`** en **Oro Cava (`#C5A880`)**.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/scannerModal.test.ts`):**
+  - Verificación de etiqueta `"Añadir manual"`, uso de `<DecimoIcon />` y paleta oficial en `BarcodeScannerModal.tsx`.
+
 ## [1.0.78] - 2026-11-25
 
 ### Fixed
