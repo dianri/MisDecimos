@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.58] - 2026-11-25
+
+### Added
+- **Gestos de Deslizar (Swipe) en Tarjetas de Décimos (`SwipeableTicketCard.tsx`, `swipeCardState.ts`, `TicketsPage.tsx`):**
+  - **Deslizar hacia la derecha:** Revela el botón **Archivar** / **Restaurar** en el fondo izquierdo (`bg-emerald-600`). La acción solo se ejecuta al pulsar el botón revelado.
+  - **Deslizar hacia la izquierda:** Revela el botón **Eliminar** en el fondo derecho (`bg-rose-600`). Solicita confirmación explícita y valida que no existan participaciones aceptadas antes de borrar.
+  - **Ergonomía de scroll y cierre:** Bloqueo direccional que preserva el scroll vertical de la página (`touch-pan-y`), apertura exclusiva de una sola tarjeta a la vez y cierre automático al pulsar sobre la tarjeta abierta.
+- **Tests Unitarios (`src/lib/__tests__/swipeCardState.test.ts`):**
+  - 5 nuevos tests cubriendo el cálculo de desplazamiento, umbrales de apertura/cierre, bloqueo direccional horizontal/vertical, cierre al pulsar tarjeta abierta y transición *"Tengo un código"* del escáner.
+
+### Changed
+- **Botón `Añadir` a Ancho Completo y Escáner Unificado (`TicketsPage.tsx`, `BarcodeScannerModal.tsx`, `TicketFormModal.tsx`):**
+  - Expandido el botón verde **`Añadir`** a ancho completo (`w-full`) en la pantalla principal y eliminada la sección separada *"Añadir una Participación"*.
+  - Unificado el flujo dentro del modal de escáner con los botones **`Tengo un código`** y **`Añadir décimo manual`** (eliminando *"Subir foto del código"* en todas las instancias, incluida la pestaña *"Escanear Código"* del formulario manual).
+- **Simplificación de Ficha de Detalle y Reparto (`TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `PrizeCheckCard.tsx`):**
+  - Eliminados de la ficha de detalle los botones **Comprobar premio**, **Archivar décimo** y **Eliminar**, manteniendo la visualización completa de premio si `prize_amount_cents > 0` y el disparador oculto de 5 toques sobre el sello para el panel de diagnóstico.
+  - Eliminado el botón inferior **Añadir participación** (conservando la apertura automática desde `Compartir` vía `openCreateShare`).
+  - Limpiado el gráfico rosco eliminando *"DISTRIBUIDO"* / *"Propiedad Distribuida"* para mostrar el porcentaje de cada persona de forma directa y eliminada la etiqueta *"Custodio físico"* de la tarjeta del propietario.
+
 ## [1.0.57] - 2026-11-25
 
 ### Changed

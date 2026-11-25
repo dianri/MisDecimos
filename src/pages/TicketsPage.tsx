@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { TicketListItemCard } from '../components/tickets/TicketListItemCard'
+import { SwipeableTicketCard } from '../components/tickets/SwipeableTicketCard'
 import { TicketFormModal } from '../components/tickets/TicketFormModal'
 import { InviteClaimModal } from '../components/tickets/InviteClaimModal'
 import { BarcodeScannerModal } from '../components/tickets/BarcodeScannerModal'
@@ -18,11 +19,10 @@ import {
   evaluateQuickPrizeCheckPrecondition,
   formatQuickPrizeCheckToast,
 } from '../lib/cardQuickActions'
+import { resolveScannerHaveCodeTransition } from '../lib/swipeCardState'
 import { checkTicketPrize } from '../services/prizeService'
 import {
   Ticket,
-  KeyRound,
-  QrCode,
   Users,
   Archive,
   Loader2,
@@ -98,6 +98,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [toastVariant, setToastVariant] = useState<'success' | 'warning'>('success')
   const [pendingInviteTicketIds, setPendingInviteTicketIds] = useState<Set<string>>(new Set())
   const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
+  const [openSwipeTicketId, setOpenSwipeTicketId] = useState<string | null>(null)
 
   // Auto-cierre del toast de confirmación tras 5 segundos
   useEffect(() => {
@@ -310,6 +311,64 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const handleSwipeArchive = async (ticketId: string, isCurrentlyArchived: boolean) => {
+    try {
+      const nextArchive = !isCurrentlyArchived
+      const { error } = await supabase.rpc('toggle_archive_ticket', {
+        p_ticket_id: ticketId,
+        p_archive: nextArchive,
+      })
+
+      if (error) throw error
+
+      setToastVariant('success')
+      setClaimToastMsg(nextArchive ? 'Décimo archivado en tu cuenta.' : 'Décimo desarchivado.')
+      await loadTickets()
+    } catch (err: unknown) {
+      console.error('Error al archivar décimo:', err)
+      setToastVariant('warning')
+      setClaimToastMsg(
+        err instanceof Error ? err.message : 'No se pudo actualizar el estado de archivo.'
+      )
+    }
+  }
+
+  const handleSwipeDelete = async (
+    ticketId: string,
+    isOwnerTicket: boolean,
+    participantsCount: number,
+    ticketStatus: string
+  ) => {
+    if (!isOwnerTicket || participantsCount > 1 || ticketStatus === 'LIQUIDADO') {
+      setToastVariant('warning')
+      setClaimToastMsg(
+        'Solo el propietario puede eliminar décimos sin participaciones aceptadas ni liquidados.'
+      )
+      return
+    }
+
+    if (
+      !confirm(
+        '¿Estás seguro de que deseas eliminar este décimo? Esta acción no se puede deshacer.'
+      )
+    ) {
+      return
+    }
+
+    try {
+      const { error } = await supabase.from('tickets').delete().eq('id', ticketId)
+      if (error) throw error
+
+      setToastVariant('success')
+      setClaimToastMsg('Décimo eliminado correctamente.')
+      await loadTickets()
+    } catch (err: unknown) {
+      console.error('Error eliminando décimo:', err)
+      setToastVariant('warning')
+      setClaimToastMsg(err instanceof Error ? err.message : 'No se pudo eliminar el décimo.')
+    }
+  }
+
   return (
     <div className="space-y-6 pb-12 max-w-xl mx-auto">
       {/* 1. Tarjeta Resumen Superior */}
@@ -346,52 +405,20 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         </div>
       </div>
 
-      {/* 2. Bloques de Acción */}
-      <div className="space-y-3">
-        {/* Sección: AÑADIR UN DÉCIMO (Botón único centrado) */}
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              setScannedTicketData(null)
-              setIsTicketScannerOpen(true)
-            }}
-            aria-label="Añadir décimo"
-            className="mx-auto min-h-[48px] px-8 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-900/15 transition"
-          >
-            <Camera className="w-4.5 h-4.5 text-white shrink-0" />
-            <span>Añadir</span>
-          </button>
-        </div>
-
-        {/* Sección: AÑADIR UNA PARTICIPACIÓN */}
-        <div className="space-y-1.5 pt-1">
-          <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase px-1">
-            Añadir una Participación
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setClaimInitialCode(null)
-                setIsClaimModalOpen(true)
-              }}
-              className="flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 hover:border-gray-300 shadow-xs active:scale-98 transition"
-            >
-              <KeyRound className="h-4 w-4 text-gold-600" />
-              <span>Tengo un código</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsQrScannerOpen(true)}
-              className="flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 hover:border-gray-300 shadow-xs active:scale-98 transition"
-            >
-              <QrCode className="h-4 w-4 text-lottery" />
-              <span>Escanear QR de invitación</span>
-            </button>
-          </div>
-        </div>
+      {/* 2. Bloque de Acción Único a Ancho Completo */}
+      <div>
+        <button
+          type="button"
+          onClick={() => {
+            setScannedTicketData(null)
+            setIsTicketScannerOpen(true)
+          }}
+          aria-label="Añadir décimo"
+          className="w-full min-h-[48px] px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-900/15 transition"
+        >
+          <Camera className="w-4.5 h-4.5 text-white shrink-0" />
+          <span>Añadir</span>
+        </button>
       </div>
 
       {/* 3. Pestañas de Filtrado */}
@@ -454,20 +481,37 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           ) : (
             <div className="space-y-3">
               {misDecimos.map((item) => (
-                <TicketListItemCard
+                <SwipeableTicketCard
                   key={item.ticket.id}
-                  ticket={item.ticket}
-                  userPercentage={item.userPercentage}
-                  participantsCount={item.participantsCount}
-                  hasParticipations={
-                    item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
-                  }
+                  ticketId={item.ticket.id}
                   isArchived={item.isArchived}
-                  isCheckingPrize={checkingTicketId === item.ticket.id}
-                  onClick={handleTicketClick}
-                  onShareClick={handleQuickShare}
-                  onCheckPrizeClick={handleQuickPrizeCheck}
-                />
+                  openSwipeTicketId={openSwipeTicketId}
+                  onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
+                  onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
+                  onDeleteClick={(id) =>
+                    handleSwipeDelete(
+                      id,
+                      item.isOwner,
+                      item.participantsCount,
+                      item.ticket.status
+                    )
+                  }
+                  onCardClick={handleTicketClick}
+                >
+                  <TicketListItemCard
+                    ticket={item.ticket}
+                    userPercentage={item.userPercentage}
+                    participantsCount={item.participantsCount}
+                    hasParticipations={
+                      item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
+                    }
+                    isArchived={item.isArchived}
+                    isCheckingPrize={checkingTicketId === item.ticket.id}
+                    onClick={handleTicketClick}
+                    onShareClick={handleQuickShare}
+                    onCheckPrizeClick={handleQuickPrizeCheck}
+                  />
+                </SwipeableTicketCard>
               ))}
             </div>
           )
@@ -485,20 +529,37 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           ) : (
             <div className="space-y-3">
               {misParticipaciones.map((item) => (
-                <TicketListItemCard
+                <SwipeableTicketCard
                   key={item.ticket.id}
-                  ticket={item.ticket}
-                  userPercentage={item.userPercentage}
-                  participantsCount={item.participantsCount}
-                  hasParticipations={
-                    item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
-                  }
+                  ticketId={item.ticket.id}
                   isArchived={item.isArchived}
-                  isCheckingPrize={checkingTicketId === item.ticket.id}
-                  onClick={handleTicketClick}
-                  onShareClick={handleQuickShare}
-                  onCheckPrizeClick={handleQuickPrizeCheck}
-                />
+                  openSwipeTicketId={openSwipeTicketId}
+                  onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
+                  onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
+                  onDeleteClick={(id) =>
+                    handleSwipeDelete(
+                      id,
+                      item.isOwner,
+                      item.participantsCount,
+                      item.ticket.status
+                    )
+                  }
+                  onCardClick={handleTicketClick}
+                >
+                  <TicketListItemCard
+                    ticket={item.ticket}
+                    userPercentage={item.userPercentage}
+                    participantsCount={item.participantsCount}
+                    hasParticipations={
+                      item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
+                    }
+                    isArchived={item.isArchived}
+                    isCheckingPrize={checkingTicketId === item.ticket.id}
+                    onClick={handleTicketClick}
+                    onShareClick={handleQuickShare}
+                    onCheckPrizeClick={handleQuickPrizeCheck}
+                  />
+                </SwipeableTicketCard>
               ))}
             </div>
           )
@@ -515,20 +576,37 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           ) : (
             <div className="space-y-3">
               {misArchivados.map((item) => (
-                <TicketListItemCard
+                <SwipeableTicketCard
                   key={item.ticket.id}
-                  ticket={item.ticket}
-                  userPercentage={item.userPercentage}
-                  participantsCount={item.participantsCount}
-                  hasParticipations={
-                    item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
-                  }
+                  ticketId={item.ticket.id}
                   isArchived={true}
-                  isCheckingPrize={checkingTicketId === item.ticket.id}
-                  onClick={handleTicketClick}
-                  onShareClick={handleQuickShare}
-                  onCheckPrizeClick={handleQuickPrizeCheck}
-                />
+                  openSwipeTicketId={openSwipeTicketId}
+                  onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
+                  onArchiveClick={(id) => handleSwipeArchive(id, true)}
+                  onDeleteClick={(id) =>
+                    handleSwipeDelete(
+                      id,
+                      item.isOwner,
+                      item.participantsCount,
+                      item.ticket.status
+                    )
+                  }
+                  onCardClick={handleTicketClick}
+                >
+                  <TicketListItemCard
+                    ticket={item.ticket}
+                    userPercentage={item.userPercentage}
+                    participantsCount={item.participantsCount}
+                    hasParticipations={
+                      item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
+                    }
+                    isArchived={true}
+                    isCheckingPrize={checkingTicketId === item.ticket.id}
+                    onClick={handleTicketClick}
+                    onShareClick={handleQuickShare}
+                    onCheckPrizeClick={handleQuickPrizeCheck}
+                  />
+                </SwipeableTicketCard>
               ))}
             </div>
           )
@@ -552,14 +630,24 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           setClaimInitialCode(inviteCode)
           setIsClaimModalOpen(true)
         }}
+        onRequestScanner={() => {
+          setIsAddTicketOpen(false)
+          setIsTicketScannerOpen(true)
+        }}
       />
 
-      {/* Escáner de décimo abierto desde el botón único Añadir */}
+      {/* Escáner unificado abierto desde el botón Añadir o desde Escanear Código */}
       <BarcodeScannerModal
         isOpen={isTicketScannerOpen}
         mode="TICKET_BARCODE"
         onClose={() => setIsTicketScannerOpen(false)}
         onScanSuccess={handleUnifiedBarcodeScanned}
+        onHaveCode={() => {
+          const next = resolveScannerHaveCodeTransition()
+          if (next.closeScanner) setIsTicketScannerOpen(false)
+          if (next.resetClaimCode) setClaimInitialCode(null)
+          if (next.openClaimModal) setIsClaimModalOpen(true)
+        }}
         onManualEntry={() => {
           setIsTicketScannerOpen(false)
           setScannedTicketData(null)

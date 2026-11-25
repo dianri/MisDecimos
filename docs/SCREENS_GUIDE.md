@@ -115,13 +115,17 @@ flowchart TD
     - **Banner de Premio Integrado:** Recuadro destacado verde esmeralda (`bg-emerald-600/10 border border-emerald-500/25 rounded-2xl`) con icono `Trophy` que resalta con gran jerarquía el importe personal del usuario (ej. **`750,00 € tuyos`**) y el premio total del décimo (`Décimo: 1.000,00 €`). En caso de participación renunciada previa, muestra de forma transparente `Cuota: Renunciada (0,00 €)`.
     - **Consistencia Total:** Se aplica con idéntico diseño en las pestañas **Décimos**, **Participaciones** y **Archivados**.
 
-### Acciones en Tarjetas y Botones Principales:
+### Acciones en Tarjetas y Botón Principal:
+- **Gestos Swipe en Tarjetas (`<SwipeableTicketCard />`):**
+  - **Deslizar hacia la derecha:** Revela en el fondo izquierdo el botón **Archivar** / **Restaurar** (la acción se ejecuta únicamente al pulsar el botón).
+  - **Deslizar hacia la izquierda:** Revela en el fondo derecho el botón **Eliminar** (solicita confirmación antes de borrar).
+  - Solo una tarjeta permanece abierta a la vez; pulsar una tarjeta abierta cierra el desplazamiento sin navegar.
 - **Acciones Rápidas en Cada Tarjeta (`<TicketListItemCard />`):**
   - **Botón `Compartir`:** Situado a la derecha de la fecha del sorteo (con `e.stopPropagation()`). Si el décimo no tiene participaciones ni invitaciones pendientes, navega al detalle abriendo automáticamente el modal de nueva participación (`openCreateShare: true`); si ya tiene participaciones, abre el detalle para elegir cuál compartir.
   - **Botón `Comprobar sorteo`:** Situado en la esquina inferior izquierda (con `e.stopPropagation()`). Si la fecha del sorteo es futura (`draw_date > hoy`), muestra un aviso claro sin invocar red; si ya se celebró (`draw_date <= hoy`), ejecuta la Edge Function `check-prizes`, actualiza el estado del décimo y notifica el resultado en un toast.
-1. **Botón Único Centrado `Añadir` (Escáner Inteligente + Acceso Manual):**
-   - Botón único verde corporativo centrado (`bg-emerald-700 hover:bg-emerald-800 text-white`) que abre instantáneamente la cámara trasera mediante [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx).
-   - Dentro del visor de cámara, el botón inferior **"Añadir décimo manual"** cierra el escáner y abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) directamente en el formulario manual.
+1. **Botón Único de Ancho Completo `Añadir` (Escáner Unificado):**
+   - Botón verde corporativo a ancho completo (`w-full bg-emerald-700 hover:bg-emerald-800 text-white`) que abre instantáneamente la cámara trasera mediante [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx).
+   - Dentro del visor de cámara unificado (también invocado desde *"Escanear Código"* en el formulario manual), se muestran los botones inferiores **"Tengo un código"** (abre el modal de reclamación por PIN/QR) y **"Añadir décimo manual"** (abre [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx)).
      - **Enrutamiento y Autocompletado Inteligente:** Si el usuario enfoca un décimo físico de SELAE, el parser descompone la estructura canónica `1 + 3 + 1 + 2 + 3 + 6 + 4` (juego `5`, sorteo `102` Navidad / `002` El Niño, año `2020 + d`, fracción, serie, número de 5 cifras y control), autoselecciona de inmediato el **Tipo de Sorteo** (**Navidad** o **El Niño**), la **Fecha del Sorteo** (`YYYY-12-22` o `YYYY-01-06`), número, serie, fracción y precio oficial (20 €), abriendo [`TicketFormModal.tsx`](../src/components/tickets/TicketFormModal.tsx) en la pestaña `'manual'` con el banner verde esmeralda: *"Código leído correctamente — Verifica los datos antes de guardar"*. Si por el contrario el usuario enfoca un código QR de invitación o participación, el escáner lo detecta de forma inteligente y abre directamente [`InviteClaimModal.tsx`](../src/components/tickets/InviteClaimModal.tsx) con el código precargado y verificado.
      - **Tolerancia y Aviso Inline:** Si se lee un código desconocido, se muestra un aviso visual en la parte superior del visor sin interrumpir la cámara ni cerrar el modal, permitiendo corregir el encuadre.
      - **Recuperación Automática de Segundo Plano (`visibilitychange`):** Al cambiar de aplicación o apagar la pantalla, la cámara libera limpiamente sus pistas para evitar el bloqueo del hardware en Android. Al regresar a la PWA, tras 350 ms de estabilización, el escáner se reactiva automáticamente. Cuenta con hasta 2 reintentos silenciosos ante errores transitorios y oculta el fotograma congelado en caso de requerir intervención del usuario.
@@ -161,9 +165,9 @@ flowchart TD
 3. **Boleto Realista y Metadatos Técnicos:**
    - Tarjeta visual completa del décimo (`RealisticTicketCard`) con sello digital interactivo (5 pulsaciones para panel de diagnóstico en custodios).
    - Fila de metadatos inferiores (`FECHA SORTEO` y `ORIGEN: Escáner GS1-128 / Manual`).
-4. **Comprobador Oficial de Premios:** Tarjeta contextual de escrutinio (`PrizeCheckCard`) con bloqueo preventivo pre-sorteo, importes netos/brutos y confirmación de cobro.
-5. **Panel Diagnóstico de Simulación:** Panel desplegable púrpura para simular premios y restablecer estados de prueba.
-6. **Acciones de Gestión y Salvaguardas:** Botones de archivar/desarchivar y eliminar (si no hay terceros aceptados), junto con el aviso de seguridad de *Protección de cotitulares*.
+4. **Tarjeta de Premio Oficial (condicional):** Si el décimo tiene premio (`prize_amount_cents > 0`), muestra la tarjeta esmeralda de resultado, desglose proporcional y confirmación de cobro (sin botón de comprobación manual, ya unificado en el listado).
+5. **Panel Diagnóstico de Simulación:** Panel desplegable púrpura (oculto, accesible con 5 toques sobre el sello digital del décimo) para simular premios y restablecer estados de prueba.
+6. **Salvaguarda de Cotitulares:** Aviso de protección cuando existen participaciones aceptadas.
 
 ### Módulos Integrados en el Detalle:
 
