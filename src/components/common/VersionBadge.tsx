@@ -5,9 +5,13 @@ import { Wifi, WifiOff, RefreshCw, X, ShieldCheck, Terminal, Clock } from 'lucid
 
 interface VersionBadgeProps {
   className?: string
+  variant?: 'floating' | 'inline'
 }
 
-export const VersionBadge: React.FC<VersionBadgeProps> = ({ className }) => {
+export const VersionBadge: React.FC<VersionBadgeProps> = ({
+  className,
+  variant = 'floating',
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   useModalBackHandler({ isOpen, onClose: () => setIsOpen(false), modalKey: 'version_diag_modal' })
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -109,12 +113,19 @@ export const VersionBadge: React.FC<VersionBadgeProps> = ({ className }) => {
 
   return (
     <>
-      {/* Badge fijo y discreto */}
+      {/* Badge de versión (solo visible en Mi Perfil cuando es inline) */}
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
-        className={`fixed z-40 flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-white/90 px-2.5 py-1 text-[11px] font-mono text-gray-600 shadow-sm backdrop-blur-sm transition-all hover:border-lottery-400 hover:text-lottery-700 hover:shadow ${
-          className || 'bottom-20 right-3'
-        }`}
+        className={
+          variant === 'inline'
+            ? `mx-auto flex items-center justify-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-4 py-2.5 text-xs font-mono text-gray-600 shadow-xs transition-all hover:border-lottery-400 hover:text-lottery-700 hover:shadow-sm ${
+                className || ''
+              }`
+            : `fixed z-40 flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-white/90 px-2.5 py-1 text-[11px] font-mono text-gray-600 shadow-sm backdrop-blur-sm transition-all hover:border-lottery-400 hover:text-lottery-700 hover:shadow ${
+                className || 'bottom-20 right-3'
+              }`
+        }
         title="Información de compilación y diagnóstico"
       >
         <span

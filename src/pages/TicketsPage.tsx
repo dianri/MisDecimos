@@ -11,6 +11,7 @@ import { classifyScannedPayload } from '../lib/scanPayloadClassifier'
 import { useSearchParams } from '../hooks/useSearchParams'
 import {
   classifyUserTickets,
+  buildUnifiedActiveTicketsList,
   type UserTicketListsAndMetrics,
   type TicketRow,
   type OwnershipShareRow,
@@ -25,7 +26,6 @@ import { resolveScannerHaveCodeTransition } from '../lib/swipeCardState'
 import { checkTicketPrize } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
-  Users,
   Archive,
   Loader2,
   Camera,
@@ -255,10 +255,11 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
   // Listas extraídas del clasificador reactivo
   const {
-    misDecimos,
-    misParticipaciones,
+    activeTickets,
     misArchivados,
   } = ticketLists
+
+  const unifiedActiveTickets = buildUnifiedActiveTicketsList(activeTickets)
 
   const handleTicketClick = (ticketId: string) => {
     if (onSelectTicket) {
@@ -372,9 +373,140 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   }
 
   return (
-    <div className="space-y-4 pb-12 max-w-xl mx-auto">
-      {/* 1. Bloque de Acción Único a Ancho Completo */}
-      <div>
+    <div className="space-y-4 pb-32 max-w-xl mx-auto">
+      {/* Cabecera de listado unificado (sin subpestañas Décimos/Participaciones) */}
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-base font-extrabold text-gray-900 tracking-tight">
+          {activeTab === 'archivados'
+            ? `Archivados (${misArchivados.length})`
+            : `Mis Décimos y Participaciones (${unifiedActiveTickets.length})`}
+        </h2>
+
+        {(misArchivados.length > 0 || activeTab === 'archivados') && (
+          <button
+            type="button"
+            onClick={() =>
+              handleTabChange(activeTab === 'archivados' ? 'decimos' : 'archivados')
+            }
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-gray-200 bg-white text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition"
+          >
+            <Archive className="h-3.5 w-3.5 text-gray-500" />
+            <span>
+              {activeTab === 'archivados'
+                ? 'Ver activos'
+                : `Archivados (${misArchivados.length})`}
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* Listado unificado o archivados */}
+      {isLoading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="h-6 w-6 animate-spin text-lottery" />
+        </div>
+      ) : activeTab === 'archivados' ? (
+        misArchivados.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
+            <Archive className="mx-auto w-10 h-10 text-gray-300" />
+            <h3 className="text-sm font-bold text-gray-800">Sin décimos archivados</h3>
+            <p className="text-xs text-gray-400 max-w-xs mx-auto">
+              Los décimos que decidas ocultar u archivar se mostrarán aquí.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {misArchivados.map((item) => (
+              <SwipeableTicketCard
+                key={item.ticket.id}
+                ticketId={item.ticket.id}
+                isArchived={true}
+                allowDelete={item.isOwner}
+                openSwipeTicketId={openSwipeTicketId}
+                onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
+                onArchiveClick={(id) => handleSwipeArchive(id, true)}
+                onDeleteClick={(id) =>
+                  handleSwipeDelete(
+                    id,
+                    item.isOwner,
+                    item.participantsCount,
+                    item.ticket.status
+                  )
+                }
+                onCardClick={handleTicketClick}
+              >
+                <TicketListItemCard
+                  ticket={item.ticket}
+                  userPercentage={item.userPercentage}
+                  isOwner={item.isOwner}
+                  participantsCount={item.participantsCount}
+                  hasParticipations={hasThirdPartyParticipations({
+                    ticketId: item.ticket.id,
+                    shares: allShares,
+                    pendingInviteTicketIds,
+                  })}
+                  isArchived={true}
+                  isCheckingPrize={checkingTicketId === item.ticket.id}
+                  onShareClick={handleQuickShare}
+                  onCheckPrizeClick={handleQuickPrizeCheck}
+                />
+              </SwipeableTicketCard>
+            ))}
+          </div>
+        )
+      ) : unifiedActiveTickets.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
+          <DecimoIcon className="mx-auto w-10 h-10 text-gray-300" />
+          <h3 className="text-sm font-bold text-gray-800">
+            No tienes décimos ni participaciones
+          </h3>
+          <p className="text-xs text-gray-400 max-w-xs mx-auto">
+            Pulsa el botón Añadir abajo para escanear un décimo, introducirlo manualmente o canjear un código.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {unifiedActiveTickets.map((item) => (
+            <SwipeableTicketCard
+              key={item.ticket.id}
+              ticketId={item.ticket.id}
+              isArchived={item.isArchived}
+              allowDelete={item.isOwner}
+              openSwipeTicketId={openSwipeTicketId}
+              onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
+              onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
+              onDeleteClick={(id) =>
+                handleSwipeDelete(
+                  id,
+                  item.isOwner,
+                  item.participantsCount,
+                  item.ticket.status
+                )
+              }
+              onCardClick={handleTicketClick}
+            >
+              <TicketListItemCard
+                ticket={item.ticket}
+                userPercentage={item.userPercentage}
+                isOwner={item.isOwner}
+                participantsCount={item.participantsCount}
+                hasParticipations={hasThirdPartyParticipations({
+                  ticketId: item.ticket.id,
+                  shares: allShares,
+                  pendingInviteTicketIds,
+                })}
+                isArchived={item.isArchived}
+                isCheckingPrize={checkingTicketId === item.ticket.id}
+                onShareClick={handleQuickShare}
+                onCheckPrizeClick={handleQuickPrizeCheck}
+              />
+            </SwipeableTicketCard>
+          ))}
+        </div>
+      )}
+
+      {/* Botón flotante "Añadir" justo encima de BottomNav */}
+      <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-6 left-4 right-4 z-30 max-w-lg mx-auto">
         <button
           type="button"
           onClick={() => {
@@ -382,206 +514,11 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
             setIsTicketScannerOpen(true)
           }}
           aria-label="Añadir décimo"
-          className="w-full min-h-[48px] px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-900/15 transition"
+          className="w-full min-h-[48px] px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 transition"
         >
           <Camera className="w-4.5 h-4.5 text-white shrink-0" />
           <span>Añadir</span>
         </button>
-      </div>
-
-      {/* 3. Pestañas de Filtrado */}
-      <div className="space-y-3 pt-2">
-        <div className="flex border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => handleTabChange('decimos')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
-              activeTab === 'decimos'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <DecimoIcon className="h-3.5 w-3.5" />
-            <span>Décimos ({misDecimos.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange('participaciones')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
-              activeTab === 'participaciones'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span>Participaciones ({misParticipaciones.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange('archivados')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
-              activeTab === 'archivados'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Archive className="h-3.5 w-3.5" />
-            <span>Archivados ({misArchivados.length})</span>
-          </button>
-        </div>
-
-        {/* 4. Listado de Billetes según Pestaña */}
-        {isLoading ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="h-6 w-6 animate-spin text-lottery" />
-          </div>
-        ) : activeTab === 'decimos' ? (
-          misDecimos.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
-              <DecimoIcon className="mx-auto w-10 h-10 text-gray-300" />
-              <h3 className="text-sm font-bold text-gray-800">No tienes décimos propios</h3>
-              <p className="text-xs text-gray-400 max-w-xs mx-auto">
-                Registra tu primer décimo con la cámara o introduciendo los datos manualmente.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {misDecimos.map((item) => (
-                <SwipeableTicketCard
-                  key={item.ticket.id}
-                  ticketId={item.ticket.id}
-                  isArchived={item.isArchived}
-                  openSwipeTicketId={openSwipeTicketId}
-                  onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
-                  onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
-                  onDeleteClick={(id) =>
-                    handleSwipeDelete(
-                      id,
-                      item.isOwner,
-                      item.participantsCount,
-                      item.ticket.status
-                    )
-                  }
-                  onCardClick={handleTicketClick}
-                >
-                  <TicketListItemCard
-                    ticket={item.ticket}
-                    userPercentage={item.userPercentage}
-                    participantsCount={item.participantsCount}
-                    hasParticipations={hasThirdPartyParticipations({
-                      ticketId: item.ticket.id,
-                      shares: allShares,
-                      pendingInviteTicketIds,
-                    })}
-                    isArchived={item.isArchived}
-                    isCheckingPrize={checkingTicketId === item.ticket.id}
-                    onShareClick={handleQuickShare}
-                    onCheckPrizeClick={handleQuickPrizeCheck}
-                  />
-                </SwipeableTicketCard>
-              ))}
-            </div>
-          )
-        ) : activeTab === 'participaciones' ? (
-          misParticipaciones.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
-              <div className="mx-auto w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm font-bold text-gray-800">Sin participaciones</h3>
-              <p className="text-xs text-gray-400 max-w-xs mx-auto">
-                Aquí aparecerán los décimos en los que participas con otros propietarios.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {misParticipaciones.map((item) => (
-                <SwipeableTicketCard
-                  key={item.ticket.id}
-                  ticketId={item.ticket.id}
-                  isArchived={item.isArchived}
-                  openSwipeTicketId={openSwipeTicketId}
-                  onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
-                  onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
-                  onDeleteClick={(id) =>
-                    handleSwipeDelete(
-                      id,
-                      item.isOwner,
-                      item.participantsCount,
-                      item.ticket.status
-                    )
-                  }
-                  onCardClick={handleTicketClick}
-                >
-                  <TicketListItemCard
-                    ticket={item.ticket}
-                    userPercentage={item.userPercentage}
-                    participantsCount={item.participantsCount}
-                    hasParticipations={hasThirdPartyParticipations({
-                      ticketId: item.ticket.id,
-                      shares: allShares,
-                      pendingInviteTicketIds,
-                    })}
-                    isArchived={item.isArchived}
-                    isCheckingPrize={checkingTicketId === item.ticket.id}
-                    onShareClick={handleQuickShare}
-                    onCheckPrizeClick={handleQuickPrizeCheck}
-                  />
-                </SwipeableTicketCard>
-              ))}
-            </div>
-          )
-        ) : (
-          /* Pestaña: Archivados */
-          misArchivados.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
-              <Archive className="mx-auto w-10 h-10 text-gray-300" />
-              <h3 className="text-sm font-bold text-gray-800">Sin décimos archivados</h3>
-              <p className="text-xs text-gray-400 max-w-xs mx-auto">
-                Los décimos que decidas ocultar u archivar se mostrarán aquí.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {misArchivados.map((item) => (
-                <SwipeableTicketCard
-                  key={item.ticket.id}
-                  ticketId={item.ticket.id}
-                  isArchived={true}
-                  openSwipeTicketId={openSwipeTicketId}
-                  onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
-                  onArchiveClick={(id) => handleSwipeArchive(id, true)}
-                  onDeleteClick={(id) =>
-                    handleSwipeDelete(
-                      id,
-                      item.isOwner,
-                      item.participantsCount,
-                      item.ticket.status
-                    )
-                  }
-                  onCardClick={handleTicketClick}
-                >
-                  <TicketListItemCard
-                    ticket={item.ticket}
-                    userPercentage={item.userPercentage}
-                    participantsCount={item.participantsCount}
-                    hasParticipations={hasThirdPartyParticipations({
-                      ticketId: item.ticket.id,
-                      shares: allShares,
-                      pendingInviteTicketIds,
-                    })}
-                    isArchived={true}
-                    isCheckingPrize={checkingTicketId === item.ticket.id}
-                    onShareClick={handleQuickShare}
-                    onCheckPrizeClick={handleQuickPrizeCheck}
-                  />
-                </SwipeableTicketCard>
-              ))}
-            </div>
-          )
-        )}
       </div>
 
       {/* Modales */}

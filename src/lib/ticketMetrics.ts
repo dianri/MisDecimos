@@ -95,3 +95,17 @@ export function classifyUserTickets(
     totalPremiosGanados,
   }
 }
+
+/**
+ * Ordena el listado unificado de Décimos propios activos y Participaciones activas
+ * por fecha de sorteo (más reciente primero) y fecha de creación descendente.
+ */
+export function buildUnifiedActiveTicketsList(
+  activeTickets: TicketItemWithMeta[]
+): TicketItemWithMeta[] {
+  return [...activeTickets].sort((a, b) => {
+    const drawCmp = b.ticket.draw_date.localeCompare(a.ticket.draw_date)
+    if (drawCmp !== 0) return drawCmp
+    return b.ticket.created_at.localeCompare(a.ticket.created_at)
+  })
+}
