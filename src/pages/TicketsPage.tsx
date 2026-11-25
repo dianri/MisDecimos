@@ -13,16 +13,18 @@ import {
   classifyUserTickets,
   type UserTicketListsAndMetrics,
   type TicketRow,
+  type OwnershipShareRow,
 } from '../lib/ticketMetrics'
 import {
   resolveShareButtonNavigation,
   evaluateQuickPrizeCheckPrecondition,
   formatQuickPrizeCheckToast,
+  hasThirdPartyParticipations,
 } from '../lib/cardQuickActions'
 import { resolveScannerHaveCodeTransition } from '../lib/swipeCardState'
 import { checkTicketPrize } from '../services/prizeService'
+import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
-  Ticket,
   Users,
   Archive,
   Loader2,
@@ -97,6 +99,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [claimToastMsg, setClaimToastMsg] = useState<string | null>(null)
   const [toastVariant, setToastVariant] = useState<'success' | 'warning'>('success')
   const [pendingInviteTicketIds, setPendingInviteTicketIds] = useState<Set<string>>(new Set())
+  const [allShares, setAllShares] = useState<OwnershipShareRow[]>([])
   const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
   const [openSwipeTicketId, setOpenSwipeTicketId] = useState<string | null>(null)
 
@@ -211,6 +214,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
 
       const archivedTicketIds = new Set((hidesData || []).map((h) => h.ticket_id))
 
+      setAllShares(sharesData || [])
       const metrics = classifyUserTickets(
         ticketsData || [],
         sharesData || [],
@@ -433,7 +437,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                 : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
-            <Ticket className="h-3.5 w-3.5" />
+            <DecimoIcon className="h-3.5 w-3.5" />
             <span>Décimos ({misDecimos.length})</span>
           </button>
 
@@ -472,7 +476,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         ) : activeTab === 'decimos' ? (
           misDecimos.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2">
-              <Ticket className="mx-auto w-10 h-10 text-gray-300" />
+              <DecimoIcon className="mx-auto w-10 h-10 text-gray-300" />
               <h3 className="text-sm font-bold text-gray-800">No tienes décimos propios</h3>
               <p className="text-xs text-gray-400 max-w-xs mx-auto">
                 Registra tu primer décimo con la cámara o introduciendo los datos manualmente.
@@ -502,12 +506,13 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                     ticket={item.ticket}
                     userPercentage={item.userPercentage}
                     participantsCount={item.participantsCount}
-                    hasParticipations={
-                      item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
-                    }
+                    hasParticipations={hasThirdPartyParticipations({
+                      ticketId: item.ticket.id,
+                      shares: allShares,
+                      pendingInviteTicketIds,
+                    })}
                     isArchived={item.isArchived}
                     isCheckingPrize={checkingTicketId === item.ticket.id}
-                    onClick={handleTicketClick}
                     onShareClick={handleQuickShare}
                     onCheckPrizeClick={handleQuickPrizeCheck}
                   />
@@ -550,12 +555,13 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                     ticket={item.ticket}
                     userPercentage={item.userPercentage}
                     participantsCount={item.participantsCount}
-                    hasParticipations={
-                      item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
-                    }
+                    hasParticipations={hasThirdPartyParticipations({
+                      ticketId: item.ticket.id,
+                      shares: allShares,
+                      pendingInviteTicketIds,
+                    })}
                     isArchived={item.isArchived}
                     isCheckingPrize={checkingTicketId === item.ticket.id}
-                    onClick={handleTicketClick}
                     onShareClick={handleQuickShare}
                     onCheckPrizeClick={handleQuickPrizeCheck}
                   />
@@ -597,12 +603,13 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                     ticket={item.ticket}
                     userPercentage={item.userPercentage}
                     participantsCount={item.participantsCount}
-                    hasParticipations={
-                      item.participantsCount > 1 || pendingInviteTicketIds.has(item.ticket.id)
-                    }
+                    hasParticipations={hasThirdPartyParticipations({
+                      ticketId: item.ticket.id,
+                      shares: allShares,
+                      pendingInviteTicketIds,
+                    })}
                     isArchived={true}
                     isCheckingPrize={checkingTicketId === item.ticket.id}
-                    onClick={handleTicketClick}
                     onShareClick={handleQuickShare}
                     onCheckPrizeClick={handleQuickPrizeCheck}
                   />

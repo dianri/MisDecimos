@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Database } from '../../types/database.types'
-import { Ticket, Archive, Calendar, Trophy, Sparkles, Share2, Search, Loader2 } from 'lucide-react'
+import { DecimoIcon } from '../icons/DecimoIcon'
+import { Archive, Calendar, Trophy, Sparkles, Share2, Search, Loader2 } from 'lucide-react'
 import { resolveTicketCardPresentation } from '../../lib/ticketCardHelper'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -8,12 +9,12 @@ type TicketRow = Database['public']['Tables']['tickets']['Row']
 export interface TicketListItemCardProps {
   ticket: TicketRow
   userPercentage: number
-  participantsCount: number
+  participantsCount?: number
   hasParticipations?: boolean
   isArchived?: boolean
   isRenounced?: boolean
   isCheckingPrize?: boolean
-  onClick: (ticketId: string) => void
+  onClick?: (ticketId: string) => void
   onShareClick?: (ticketId: string, hasParticipations: boolean) => void
   onCheckPrizeClick?: (ticket: TicketRow) => void
 }
@@ -21,7 +22,6 @@ export interface TicketListItemCardProps {
 export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   ticket,
   userPercentage,
-  participantsCount,
   hasParticipations,
   isArchived = false,
   isRenounced = false,
@@ -48,7 +48,12 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
 
   return (
     <div
-      onClick={() => onClick(ticket.id)}
+      onClick={(e) => {
+        if ((e.target as HTMLElement | null)?.closest('button, a, [data-no-card-nav="true"]')) {
+          return
+        }
+        onClick?.(ticket.id)
+      }}
       className={containerClasses}
     >
       {/* Barra superior de acento dorado/esmeralda si está premiado */}
@@ -73,7 +78,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             ) : isArchived ? (
               <Archive className="w-4 h-4" />
             ) : (
-              <Ticket className="w-5 h-5" />
+              <DecimoIcon className="w-5 h-5" />
             )}
           </div>
           <div>
@@ -192,9 +197,13 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
 
           <button
             type="button"
+            data-no-card-nav="true"
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
-              onShareClick?.(ticket.id, hasParticipations ?? participantsCount > 1)
+              onShareClick?.(ticket.id, hasParticipations ?? false)
             }}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-[11px] font-bold transition active:scale-95 shrink-0"
           >
@@ -206,7 +215,11 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
         <div className="flex items-center justify-between gap-2 pt-0.5">
           <button
             type="button"
+            data-no-card-nav="true"
             disabled={isCheckingPrize}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
               onCheckPrizeClick?.(ticket)

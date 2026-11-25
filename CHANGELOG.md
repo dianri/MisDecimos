@@ -5,6 +5,24 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.59] - 2026-11-25
+
+### Fixed
+- **Aislamiento de Eventos en Botones de Tarjeta (`SwipeableTicketCard.tsx`, `TicketListItemCard.tsx`, `TicketsPage.tsx`, `cardQuickActions.ts`):**
+  - Sustituido `onClickCapture` por `onClick` (fase de burbujeo) con guarda `closest('button, a, [data-no-card-nav="true"]')` y aislamiento explícito de `onTouchStart`, `onTouchEnd`, `onPointerDown` y `onClick` en **`Compartir`** y **`Comprobar sorteo`** para evitar aperturas accidentales de la ficha al pulsarlos.
+  - **`Compartir`:** Calcula participaciones de terceros excluyendo al propietario (`role !== 'PROPIETARIO'` y `status !== 'RENUNCIADA'`). Sin participaciones de terceros abre directamente el modal de creación (`openCreateShare: true`); con participaciones existentes abre la ficha del décimo.
+  - **`Comprobar sorteo`:** Nunca navega al detalle; ejecuta la validación contra `check-prizes` directamente desde la tarjeta mostrando spinner y toast con el resultado (`¡Premiado! · [Categoría] ([Importe])` o `Comprobado · Sin premio en el sorteo oficial del DD/MM/AAAA`).
+
+### Changed
+- **Nuevo Icono Oficial de Décimo (`DecimoIcon.tsx`, `AppShell.tsx`, `TicketsPage.tsx`, `TicketListItemCard.tsx`):**
+  - Creado componente SVG limpio `<DecimoIcon />` (décimo rectangular sin muescas de tómbola, marco interior, sello circular y líneas de numeración) sustituyendo a `Ticket` en barra inferior, pestañas y tarjetas.
+- **Filos Visuales de Deslizamiento en Tarjetas (`ticketCardHelper.ts`, `SwipeableTicketCard.tsx`):**
+  - Añadido borde lateral verde a la izquierda (`border-l-4 border-l-emerald-600`) y rojo a la derecha (`border-r-4 border-r-rose-500`) con `rounded-2xl overflow-hidden` como pista visual intuitiva para **Archivar** (deslizar derecha) y **Eliminar** (deslizar izquierda).
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/cardQuickActions.test.ts`):**
+  - Cobertura de `hasThirdPartyParticipations` (ignorando `PROPIETARIO` y `RENUNCIADA`) y formato actualizado de toast de premio.
+
 ## [1.0.58] - 2026-11-25
 
 ### Added
