@@ -5,6 +5,11 @@ import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
 import { CreateParticipationSheet } from './CreateParticipationSheet'
 import { ShareInviteModal } from './ShareInviteModal'
+import { SwipeableShareCard } from './SwipeableShareCard'
+import {
+  resolveParticipantShareSwipeAction,
+  getShareSwipeActionLabel,
+} from '../../lib/ownershipShareSwipe'
 import {
   RefreshCw,
   QrCode,
@@ -83,6 +88,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [activeShareInvite, setActiveShareInvite] = useState<PendingInvite | null>(null)
   const [activeMenuShareId, setActiveMenuShareId] = useState<string | null>(null)
+  const [openSwipeShareId, setOpenSwipeShareId] = useState<string | null>(null)
   const [renouncingShare, setRenouncingShare] = useState<OwnershipShare | null>(null)
   const [isRenouncing, setIsRenouncing] = useState(false)
   const menuContainerRef = useRef<HTMLDivElement>(null)
@@ -529,8 +535,8 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       <div className="space-y-3">
         {/* Tarjeta del Propietario */}
         {ownerShare && (
-          <div className="bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] border-l-4 border-l-[#3A5245] rounded-[22px] p-4 flex items-center justify-between relative overflow-hidden shadow-xs">
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#3A5245]" />
+          <div className="bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] rounded-[22px] p-4 flex items-center justify-between relative overflow-hidden shadow-xs">
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#3A5245]" />
 
             <div className="flex items-center gap-3 pl-2">
               <div className="w-10 h-10 rounded-full bg-[#3A5245] text-white flex items-center justify-center font-bold text-xs shadow-inner">
@@ -593,14 +599,42 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           const isMe = share.user_id === user?.id
           const shareDisplayName =
             share.profiles?.display_name || (isMe ? 'Tú (Participante)' : 'Cotitular')
+          const swipeAction = resolveParticipantShareSwipeAction({
+            isOwner,
+            isMe,
+            shareRole: share.role,
+            shareStatus: share.status,
+            waiverRequested: Boolean(share.waiver_requested),
+            ticketStatus,
+            prizeAmountCents,
+          })
+          const swipeActionLabel = getShareSwipeActionLabel(swipeAction)
 
           return (
-            <div
+            <SwipeableShareCard
               key={share.id}
-              className={`bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] border-l-4 border-l-[#C5A880] rounded-[22px] p-4 relative shadow-xs space-y-2.5 transition overflow-hidden ${
-                activeMenuShareId === share.id ? 'z-30' : 'z-10'
-              }`}
+              shareId={share.id}
+              actionLabel={swipeActionLabel}
+              openSwipeShareId={openSwipeShareId}
+              onSwipeOpenChange={setOpenSwipeShareId}
+              isActionDisabled={actionLoadingId === share.id}
+              onActionClick={() => {
+                if (swipeAction === 'renounce') {
+                  setRenouncingShare(share)
+                } else if (swipeAction === 'request_waiver') {
+                  handleRequestWaiver(share.id)
+                }
+              }}
             >
+              <div
+                className={`bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] rounded-[22px] p-4 relative shadow-xs space-y-2.5 transition overflow-hidden ${
+                  activeMenuShareId === share.id ? 'z-30' : 'z-10'
+                }`}
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#C5A880]" />
+                {swipeAction !== null && (
+                  <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-[#D04848]" />
+                )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#C5A880]/20 text-[#1D1D1F] dark:text-[#C5A880] flex items-center justify-center font-bold text-xs">
@@ -658,13 +692,10 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                     )}
                   </div>
 
-                  {/* Menú de acciones para el Propietario (Solicitar Renuncia / Solicitar Confirmación de Cobro) */}
+                  {/* Menú de acciones para el Propietario (Solicitar Confirmación de Cobro) */}
                   {(() => {
-                    const canRequestWaiver = isOwner && !share.waiver_requested && ticketStatus === 'PENDIENTE'
                     const canRequestPayout = isOwner && prizeAmountCents > 0 && !share.prize_paid_confirmed
-                    const showMoreMenu = canRequestWaiver || canRequestPayout
-
-                    if (!showMoreMenu) return null
+                    if (!canRequestPayout) return null
 
                     return (
                       <div
@@ -679,7 +710,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                               activeMenuShareId === share.id ? null : share.id
                             )
                           }}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                          className="p-1.5 rounded-lg text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
                           title="Opciones del participante"
                           aria-label="Opciones del participante"
                         >
@@ -687,40 +718,23 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                         </button>
 
                         {activeMenuShareId === share.id && (
-                          <div className="absolute right-0 top-full mt-1.5 min-w-[220px] rounded-xl bg-white shadow-xl border border-gray-200 z-40 py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
-                            {canRequestPayout && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuShareId(null)
-                                  handleRequestPrizePayoutConfirmation(share.id)
-                                }}
-                                disabled={actionLoadingId === share.id}
-                                className="w-full text-left py-2.5 px-3.5 text-amber-900 hover:bg-amber-50 flex items-center gap-2 font-medium transition active:bg-amber-100"
-                              >
-                                <BadgeCheck className="h-4 w-4 text-amber-600 shrink-0" />
-                                <span>
-                                  {share.prize_payout_requested_at
-                                    ? 'Reenviar solicitud de cobro'
-                                    : 'Solicitar confirmación de cobro'}
-                                </span>
-                              </button>
-                            )}
-
-                            {canRequestWaiver && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuShareId(null)
-                                  handleRequestWaiver(share.id)
-                                }}
-                                disabled={actionLoadingId === share.id}
-                                className="w-full text-left py-2.5 px-3.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2 font-medium transition active:bg-rose-100"
-                              >
-                                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-                                <span>Solicitar renuncia</span>
-                              </button>
-                            )}
+                          <div className="absolute right-0 top-full mt-1.5 min-w-[220px] rounded-xl bg-white dark:bg-[#1D1D1F] shadow-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 z-40 py-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuShareId(null)
+                                handleRequestPrizePayoutConfirmation(share.id)
+                              }}
+                              disabled={actionLoadingId === share.id}
+                              className="w-full text-left py-2.5 px-3.5 text-[#1D1D1F] dark:text-[#F5F5F7] hover:bg-[#C5A880]/15 flex items-center gap-2 font-medium transition cursor-pointer"
+                            >
+                              <BadgeCheck className="h-4 w-4 text-[#C5A880] shrink-0" />
+                              <span>
+                                {share.prize_payout_requested_at
+                                  ? 'Reenviar solicitud de cobro'
+                                  : 'Solicitar confirmación de cobro'}
+                              </span>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -823,30 +837,8 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
                 </div>
               )}
 
-              {/* Botón de renuncia voluntaria para el participante autenticado */}
-              {isMe &&
-                share.role === 'PARTICIPANTE' &&
-                share.status === 'ACEPTADA' &&
-                ticketStatus !== 'LIQUIDADO' &&
-                !(ticketStatus === 'VALIDADO' && prizeAmountCents > 0) &&
-                !share.waiver_requested && (
-                  <div className="pt-2.5 border-t border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 flex items-center justify-between gap-2">
-                    <span className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 font-medium">
-                      ¿Ya no deseas tu participación?
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setRenouncingShare(share)}
-                      disabled={actionLoadingId === share.id}
-                      className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl text-[11px] font-semibold bg-[#D04848]/10 hover:bg-[#D04848]/20 text-[#D04848] border border-[#D04848]/30 active:scale-95 transition cursor-pointer"
-                      title="Renunciar voluntariamente a mi participación"
-                    >
-                      <LogOut className="h-3.5 w-3.5 text-[#D04848] shrink-0" />
-                      <span>Renunciar a mi participación</span>
-                    </button>
-                  </div>
-                )}
-            </div>
+              </div>
+            </SwipeableShareCard>
           )
         })}
 
