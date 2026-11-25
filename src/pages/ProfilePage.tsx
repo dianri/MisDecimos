@@ -18,6 +18,7 @@ import {
 import { resetPushPromptDismissals } from '../hooks/usePushPermissionPrompt'
 import { usePwaInstall } from '../hooks/usePwaInstall'
 import { useModalBackHandler } from '../hooks/useModalBackHandler'
+import { useTheme, type ThemeMode } from '../context/ThemeContext'
 import { VersionBadge } from '../components/common/VersionBadge'
 import {
   Camera,
@@ -41,6 +42,9 @@ import {
   ChevronDown,
   Archive,
   ArchiveRestore,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react'
 
 export interface ProfilePageProps {
@@ -53,6 +57,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onSelectTicket,
 }) => {
   const { user, profile, signOut, refreshProfile } = useAuth()
+  const { themeMode, setThemeMode } = useTheme()
 
   // Formulario
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
@@ -491,10 +496,57 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     <div className="max-w-xl mx-auto space-y-6 pb-12">
       {/* Cabecera */}
       <div className="space-y-1">
-        <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Mi Perfil</h2>
-        <p className="text-xs text-gray-500">
+        <h2 className="text-xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+          Mi Perfil
+        </h2>
+        <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
           Visible para tus amigos y familiares al compartir décimos y participaciones.
         </p>
+      </div>
+
+      {/* Selector Rápido de Apariencia (Claro / Oscuro / Sistema) */}
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-4 sm:p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">Apariencia</h3>
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+              Elige el modo visual de la aplicación
+            </p>
+          </div>
+        </div>
+
+        <div
+          role="radiogroup"
+          aria-label="Selector de apariencia"
+          className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000]"
+        >
+          {(
+            [
+              { id: 'light', label: 'Claro', icon: Sun },
+              { id: 'dark', label: 'Oscuro', icon: Moon },
+              { id: 'system', label: 'Sistema', icon: Monitor },
+            ] as const
+          ).map(({ id, label, icon: Icon }) => {
+            const active = themeMode === id
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setThemeMode(id as ThemeMode)}
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  active
+                    ? 'bg-[#C5A880] text-[#1D1D1F] shadow-sm'
+                    : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{label}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Avisos de estado */}
@@ -516,7 +568,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       )}
 
       {/* Tarjeta de Avatar y Datos */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-6">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 space-y-6">
         {/* Avatar Circular con Botón de Cámara y Menú de Selección */}
         <div className="flex flex-col items-center">
           <div
@@ -654,8 +706,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               disabled={isSaving || !hasChanges}
               className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold shadow-sm transition ${
                 hasChanges && !isSaving
-                  ? 'bg-lottery text-white hover:bg-lottery-600 active:scale-98 shadow-lottery/20'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-[#C5A880] text-[#1D1D1F] hover:bg-[#B8996E] active:scale-98 cursor-pointer'
+                  : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 cursor-not-allowed'
               }`}
             >
               {isSaving ? (
@@ -672,31 +724,35 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* Sección Dispositivo y Notificaciones */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-5">
-        <div className="flex items-center gap-2.5 border-b border-gray-100 pb-3">
-          <div className="h-8 w-8 rounded-xl bg-lottery-50 text-lottery flex items-center justify-center">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-6 space-y-5">
+        <div className="flex items-center gap-2.5 border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+          <div className="h-8 w-8 rounded-xl bg-[#3A5245]/10 dark:bg-[#3A5245]/30 text-[#3A5245] dark:text-[#F5F5F7] flex items-center justify-center">
             <Smartphone className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-900">Dispositivo y Notificaciones</h3>
-            <p className="text-[11px] text-gray-500">Alertas de sorteos, premios y confirmaciones</p>
+            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              Dispositivo y Notificaciones
+            </h3>
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+              Alertas de sorteos, premios y confirmaciones
+            </p>
           </div>
         </div>
 
         {/* Switch Notificaciones Push */}
-        <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-gray-50">
+        <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               {pushEnabled ? (
-                <Bell className="h-4 w-4 text-emerald-600" />
+                <Bell className="h-4 w-4 text-[#3A5245] dark:text-[#C5A880]" />
               ) : (
-                <BellOff className="h-4 w-4 text-gray-400" />
+                <BellOff className="h-4 w-4 text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40" />
               )}
-              <h4 className="text-xs font-semibold text-gray-900">
+              <h4 className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
                 Notificaciones Push de Sorteos y Participaciones
               </h4>
             </div>
-            <p className="text-[11px] text-gray-500 leading-snug">
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 leading-snug">
               Recibe avisos cuando tus amigos compartan décimos o si tu boleto resulta premiado.
             </p>
             <div className="flex items-center gap-2 pt-1 text-[10px]">
@@ -792,7 +848,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       </div>
 
       {/* 2.5 Acceso al Centro de Auditoría */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 sm:p-5">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-4 sm:p-5">
         <button
           type="button"
           onClick={() => {
@@ -802,59 +858,59 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               window.location.pathname = '/auditoria'
             }
           }}
-          className="w-full flex items-center justify-between gap-3 text-left p-1 rounded-2xl hover:bg-gray-50 transition active:scale-[0.99] cursor-pointer"
+          className="w-full flex items-center justify-between gap-3 text-left p-1 rounded-2xl hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition active:scale-[0.99] cursor-pointer"
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2E6146]/10 text-[#2E6146] shrink-0">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#3A5245]/10 dark:bg-[#3A5245]/30 text-[#3A5245] dark:text-[#F5F5F7] shrink-0">
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex flex-col justify-center">
-              <h3 className="text-sm font-bold text-gray-900 leading-tight">
+              <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7] leading-tight">
                 Centro de Auditoría
               </h3>
-              <p className="text-[11px] text-gray-400 font-medium truncate mt-0.5">
+              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 font-medium truncate mt-0.5">
                 Historial inmutable de movimientos, participaciones y premios
               </p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-gray-400 shrink-0" />
+          <ChevronRight className="h-5 w-5 text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 shrink-0" />
         </button>
       </div>
 
       {/* 3. Tarjeta de Cierre de Sesión */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 sm:p-5">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-4 sm:p-5">
         <button
           type="button"
           onClick={handleSignOut}
           disabled={isLoggingOut}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-rose-200 bg-rose-50/80 text-rose-700 text-xs font-bold hover:bg-rose-100 hover:border-rose-300 transition active:scale-98 disabled:opacity-50 shadow-xs cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-[#D04848]/30 bg-[#D04848]/10 text-[#D04848] text-xs font-bold hover:bg-[#D04848]/15 transition active:scale-98 disabled:opacity-50 shadow-xs cursor-pointer"
         >
           {isLoggingOut ? (
-            <Loader2 className="h-4 w-4 animate-spin text-rose-600" />
+            <Loader2 className="h-4 w-4 animate-spin text-[#D04848]" />
           ) : (
-            <LogOut className="h-4 w-4 text-rose-600" />
+            <LogOut className="h-4 w-4 text-[#D04848]" />
           )}
           <span>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</span>
         </button>
       </div>
 
       {/* Sección Desplegable: Décimos archivados */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setIsArchivedExpanded((prev) => !prev)}
           aria-expanded={isArchivedExpanded}
-          className="w-full min-h-[56px] p-5 flex items-center justify-between text-left hover:bg-gray-50/70 transition cursor-pointer"
+          className="w-full min-h-[56px] p-5 flex items-center justify-between text-left hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 flex items-center justify-center shrink-0">
               <Archive className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">
+              <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
                 Décimos archivados ({archivedTickets.length})
               </h3>
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
                 Consulta, restaura o elimina décimos ocultos
               </p>
             </div>

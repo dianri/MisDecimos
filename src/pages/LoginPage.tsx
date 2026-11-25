@@ -144,8 +144,8 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 space-y-6">
+    <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#000000] flex flex-col items-center justify-center p-4 transition-colors">
+      <div className="w-full max-w-md bg-white dark:bg-[#1D1D1F] rounded-[22px] shadow-xl shadow-black/5 dark:shadow-black/40 border border-black/[0.06] dark:border-white/[0.08] p-8 space-y-6">
         {/* Cabecera / Identidad */}
         <div className="text-center space-y-2">
           <img
@@ -155,22 +155,24 @@ export const LoginPage: React.FC = () => {
             width={80}
             height={80}
           />
-          <h1 className="text-2xl font-extrabold text-lottery tracking-tight">MisDecimos</h1>
-          <p className="text-xs font-medium text-gray-500">
+          <h1 className="text-2xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+            MisDecimos
+          </h1>
+          <p className="text-xs font-medium text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Custodia compartida y reparto de décimos de Lotería
           </p>
         </div>
 
         {/* Notificaciones de error o éxito */}
         {errorMsg && (
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
+          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#D04848]/10 border border-[#D04848]/30 text-[#D04848] text-xs">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#D04848]" />
             <p className="leading-snug">{errorMsg}</p>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs text-center font-medium">
+          <div className="p-3 rounded-xl bg-[#3A5245] text-white text-xs text-center font-medium">
             {successMsg}
           </div>
         )}
@@ -179,11 +181,14 @@ export const LoginPage: React.FC = () => {
         {step === 'email' ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-1.5 text-left">
-              <label htmlFor="email" className="block text-xs font-semibold text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]"
+              >
                 Correo electrónico
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40">
                   <Mail className="h-4 w-4" />
                 </div>
                 <input
@@ -194,10 +199,10 @@ export const LoginPage: React.FC = () => {
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-sm text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lottery/20 focus:border-lottery transition"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-[#F5F5F7] dark:bg-[#000000] text-sm text-[#1D1D1F] dark:text-[#F5F5F7] placeholder-[#1D1D1F]/40 dark:placeholder-[#F5F5F7]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A880]/60 focus:border-[#C5A880] transition"
                 />
               </div>
-              <p className="text-[11px] text-gray-400 pt-0.5">
+              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 pt-0.5">
                 Te enviaremos un código temporal de 6 dígitos sin necesidad de contraseña.
               </p>
             </div>
@@ -205,7 +210,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || !email.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-sm font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-sm font-semibold shadow-sm active:scale-98 transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {isLoading ? (
                 <>

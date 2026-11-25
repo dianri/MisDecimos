@@ -91,31 +91,31 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
   return (
     <div className="space-y-5 pb-12 max-w-xl mx-auto">
       {/* 1. Bloque Superior — Tarjetas KPI (2 columnas) */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 space-y-4">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-black/[0.06] dark:border-white/[0.08] shadow-sm p-5 space-y-4">
         <div>
-          <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-base sm:text-lg font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
             Resumen de Premios
           </h2>
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Balance de tus décimos activos y resultados oficiales comprobados
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-[#F7F9F7] p-3.5 border border-gray-200/50 space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
+          <div className="rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] p-3.5 border border-black/[0.04] dark:border-white/[0.06] space-y-1">
+            <span className="text-[10px] uppercase font-semibold tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Décimos Activos
             </span>
-            <p className="text-2xl font-extrabold font-mono text-lottery">
+            <p className="text-2xl font-black tabular-nums text-[#1D1D1F] dark:text-[#F5F5F7]">
               {summary.activeTicketsCount}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-[#F7F9F7] p-3.5 border border-gray-200/50 space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
+          <div className="rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] p-3.5 border border-black/[0.04] dark:border-white/[0.06] space-y-1">
+            <span className="text-[10px] uppercase font-semibold tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Total Premios
             </span>
-            <p className="text-2xl font-extrabold font-mono text-gold-600">
+            <p className="text-2xl font-black tabular-nums text-[#C5A880]">
               {currencyFormatter.format(summary.totalPrizeEuros)} €
             </p>
           </div>
@@ -125,19 +125,19 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
       {/* 2. Bloque Inferior — Historial de Escrutinio */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Historial de Escrutinio
           </h3>
 
           {/* Filtro rápido con contadores */}
-          <div className="inline-flex rounded-xl bg-gray-100 p-0.5 text-[11px] font-bold">
+          <div className="inline-flex rounded-xl bg-black/[0.05] dark:bg-white/[0.08] p-0.5 text-[11px] font-semibold">
             <button
               type="button"
               onClick={() => setFilter('todos')}
-              className={`px-2.5 py-1 rounded-lg transition ${
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                 filter === 'todos'
-                  ? 'bg-white text-gray-900 shadow-xs'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs'
+                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
               }`}
             >
               Todos ({summary.scrutinizedItems.length})
@@ -145,10 +145,10 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
             <button
               type="button"
               onClick={() => setFilter('premiados')}
-              className={`px-2.5 py-1 rounded-lg transition ${
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                 filter === 'premiados'
-                  ? 'bg-white text-emerald-700 shadow-xs'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white dark:bg-[#1D1D1F] text-[#3A5245] dark:text-[#C5A880] shadow-xs'
+                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
               }`}
             >
               Premiados ({summary.prizedCount})
@@ -156,10 +156,10 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
             <button
               type="button"
               onClick={() => setFilter('sin_premio')}
-              className={`px-2.5 py-1 rounded-lg transition ${
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                 filter === 'sin_premio'
-                  ? 'bg-white text-gray-900 shadow-xs'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs'
+                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
               }`}
             >
               Sin premio ({summary.noPrizeCount})
@@ -169,26 +169,28 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
 
         {isLoading ? (
           <div className="flex justify-center p-12">
-            <Loader2 className="h-6 w-6 animate-spin text-lottery" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#C5A880]" />
           </div>
         ) : summary.scrutinizedItems.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-8 text-center space-y-2.5">
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500">
+          <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-8 text-center space-y-2.5">
+            <div className="mx-auto w-12 h-12 rounded-2xl bg-[#C5A880]/15 flex items-center justify-center text-[#C5A880]">
               <Trophy className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-bold text-gray-800">Sin sorteos comprobados aún</h3>
-            <p className="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              Sin sorteos comprobados aún
+            </h3>
+            <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 max-w-xs mx-auto leading-relaxed">
               Aquí aparecerán tus décimos premiados y el historial de sorteos comprobados en cuanto valides tus décimos.
             </p>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-7 text-center space-y-1.5">
-            <p className="text-xs font-bold text-gray-700">
+          <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-7 text-center space-y-1.5">
+            <p className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
               {filter === 'premiados'
                 ? 'Ningún décimo premiado en este filtro'
                 : 'No hay décimos comprobados sin premio'}
             </p>
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Cambia el filtro superior para ver el resto de resultados.
             </p>
           </div>
@@ -204,23 +206,19 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
                   key={ticket.id}
                   type="button"
                   onClick={() => onSelectTicket?.(ticket.id)}
-                  className={`w-full text-left rounded-2xl p-4 transition-all active:scale-[0.99] relative overflow-hidden space-y-2.5 cursor-pointer ${
+                  className={`w-full text-left rounded-[22px] p-5 transition-all active:scale-[0.99] relative overflow-hidden space-y-3 cursor-pointer ${
                     isPrized
-                      ? 'bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/80 border-2 border-amber-400/85 shadow-md shadow-amber-900/5 hover:border-amber-500'
-                      : 'bg-white border border-gray-100 shadow-sm hover:border-lottery/30 hover:shadow-md'
+                      ? 'bg-[#C5A880] text-[#1D1D1F] border border-[#C5A880] shadow-sm hover:brightness-[0.98]'
+                      : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] border border-black/[0.06] dark:border-white/[0.08] shadow-sm hover:shadow-md'
                   }`}
                 >
-                  {isPrized && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-yellow-400 to-emerald-500" />
-                  )}
-
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${
                           isPrized
-                            ? 'bg-amber-100 text-amber-600 border border-amber-300/80'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                            ? 'bg-[#3A5245] text-[#FFFFFF]'
+                            : 'bg-[#3A5245]/10 dark:bg-[#3A5245]/25 text-[#3A5245] dark:text-[#F5F5F7]'
                         }`}
                       >
                         {isPrized ? (
@@ -232,20 +230,30 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-base font-extrabold font-mono tracking-wider text-gray-900">
+                          <span
+                            className={`text-2xl font-black tracking-tight tabular-nums leading-none ${
+                              isPrized ? 'text-[#1D1D1F]' : 'text-[#1D1D1F] dark:text-[#F5F5F7]'
+                            }`}
+                          >
                             {ticket.number}
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                              isOwner
-                                ? 'bg-lottery-50 text-lottery border-lottery-200'
-                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              isPrized
+                                ? 'bg-[#1D1D1F]/10 text-[#1D1D1F]'
+                                : 'bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75'
                             }`}
                           >
                             {isOwner ? 'Propio' : `Participación · ${userPercentage}%`}
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                        <p
+                          className={`text-[11px] truncate mt-1 ${
+                            isPrized
+                              ? 'text-[#1D1D1F]/75'
+                              : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
+                          }`}
+                        >
                           {ticket.draw_name}
                         </p>
                       </div>
@@ -253,35 +261,48 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
 
                     <div className="text-right shrink-0">
                       {isPrized ? (
-                        <div>
-                          <p className="text-base font-black font-mono text-emerald-700 leading-tight">
+                        <div className="px-2.5 py-1 rounded-xl bg-[#3A5245] text-[#FFFFFF]">
+                          <p className="text-sm font-black tabular-nums leading-tight">
                             {userPrizeFormatted}
                           </p>
-                          <span className="text-[10px] font-bold text-emerald-700/80">
+                          <span className="text-[10px] font-medium text-[#FFFFFF]/80">
                             tu {userPercentage}%
                           </span>
                         </div>
                       ) : (
-                        <p className="text-sm font-extrabold font-mono text-gray-600">0,00 €</p>
+                        <p className="text-sm font-bold tabular-nums text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+                          0,00 €
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-gray-100/80 text-[11px]">
-                    <div className="flex items-center gap-1.5 text-gray-500">
-                      <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                  <div
+                    className={`flex items-center justify-between gap-2 pt-2.5 border-t text-[11px] ${
+                      isPrized
+                        ? 'border-[#1D1D1F]/15'
+                        : 'border-black/[0.06] dark:border-white/[0.08]'
+                    }`}
+                  >
+                    <div
+                      className={`flex items-center gap-1.5 ${
+                        isPrized
+                          ? 'text-[#1D1D1F]/75'
+                          : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
+                      }`}
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
                       <span>{ticket.draw_date}</span>
                     </div>
 
                     {isPrized ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300/80 text-[10px] font-bold">
-                        <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#3A5245] text-[#FFFFFF] text-[10px] font-semibold">
+                        <Sparkles className="w-3 h-3 text-[#C5A880]" />
                         <span>{prizeCategory || 'Décimo premiado'}</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[10px] font-semibold">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        <span>Comprobado · Sin premio</span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#3A5245] text-[#FFFFFF] dark:text-[#F5F5F7] text-[10px] font-semibold">
+                        <span>✓ Comprobado</span>
                       </span>
                     )}
                   </div>

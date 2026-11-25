@@ -16,6 +16,11 @@ import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
 import { DecimoIcon } from '../icons/DecimoIcon'
 import { Trophy, Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
+import {
+  resolveAlertDotPriority,
+  getAlertDotColorClass,
+  type UnreadAlertSummaryItem,
+} from '../../lib/alertBadgePriority'
 
 export type TabType = 'billetes' | 'premios' | 'alertas' | 'auditoria' | 'perfil'
 
@@ -41,7 +46,10 @@ export const AppShell: React.FC = () => {
     navigateToRootWithSearch,
     goBack,
   } = useAndroidBackNavigation()
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState<number>(0)
+  const [unreadAlerts, setUnreadAlerts] = useState<UnreadAlertSummaryItem[]>([])
+  const unreadAlertsCount = unreadAlerts.length
+  const alertDotPriority = resolveAlertDotPriority(unreadAlerts)
+  const alertDotColorClass = getAlertDotColorClass(alertDotPriority)
 
   // Estado del modal de push para coordinar exclusividad mutua con el instalador PWA
   const [isPushModalOpen, setIsPushModalOpen] = useState(false)
@@ -130,14 +138,14 @@ export const AppShell: React.FC = () => {
 
     async function checkUnread() {
       try {
-        const { count, error } = await supabase
+        const { data, error } = await supabase
           .from('notifications')
-          .select('*', { count: 'exact', head: true })
+          .select('type')
           .eq('user_id', user!.id)
           .eq('is_read', false)
 
-        if (!error && typeof count === 'number') {
-          setUnreadAlertsCount(count)
+        if (!error && Array.isArray(data)) {
+          setUnreadAlerts(data)
         }
       } catch (err) {
         console.error('Error verificando alertas no leídas:', err)
@@ -170,9 +178,9 @@ export const AppShell: React.FC = () => {
   const userAvatar = safeImageUrl(profile?.avatar_url)
 
   return (
-    <div className="min-h-screen bg-cream text-gray-900 flex flex-col justify-between selection:bg-lottery selection:text-white pb-24 md:pb-10">
+    <div className="min-h-screen bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col justify-between selection:bg-[#C5A880] selection:text-[#1D1D1F] pb-24 md:pb-10 transition-colors">
       {/* 1. Cabecera Superior Fija */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6">
+      <header className="sticky top-0 z-30 bg-[#F5F5F7]/90 dark:bg-[#000000]/90 backdrop-blur-md border-b border-black/[0.06] dark:border-white/[0.08] pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 px-4 sm:px-6 transition-colors">
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-2">
           {/* Izquierda: Logotipo y Marca MisDecimos -> Inicio (/) (Común Móvil y Escritorio) */}
           <button
@@ -186,7 +194,7 @@ export const AppShell: React.FC = () => {
             }}
             aria-label="Ir a la pantalla principal"
             title="Inicio · Mis Décimos Compartidos"
-            className="flex items-center gap-2 sm:gap-2.5 rounded-xl p-1 -ml-1 hover:bg-black/[0.03] active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 shrink-0"
+            className="flex items-center gap-2 sm:gap-2.5 rounded-xl p-1 -ml-1 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880]/60 shrink-0"
           >
             <img
               src="/logo-4mills.png"
@@ -195,7 +203,9 @@ export const AppShell: React.FC = () => {
               width={36}
               height={36}
             />
-            <span className="text-base sm:text-lg font-bold tracking-tight text-gray-900">MisDecimos</span>
+            <span className="text-base sm:text-lg font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+              MisDecimos
+            </span>
           </button>
 
           {/* Derecha Móvil (< 768px): Perfil de Usuario Compacto */}
@@ -214,24 +224,24 @@ export const AppShell: React.FC = () => {
                   }}
                   aria-label="Abrir mi perfil"
                   title="Ir a mi perfil"
-                  className={`flex items-center gap-2 rounded-xl p-1 sm:px-2 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer ${
+                  className={`flex items-center gap-2 rounded-xl p-1 sm:px-2 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880]/60 cursor-pointer ${
                     isProfileActive
-                      ? 'bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30'
-                      : 'hover:bg-black/[0.03]'
+                      ? 'bg-[#3A5245]/12 dark:bg-[#3A5245]/30 ring-1 ring-[#3A5245]/40'
+                      : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
                   }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs transition-all ${
-                      isProfileActive ? 'ring-2 ring-[#2E6146]/50' : ''
+                    className={`w-8 h-8 rounded-full border border-[#C5A880]/50 overflow-hidden bg-white dark:bg-[#1D1D1F] flex items-center justify-center shrink-0 shadow-xs transition-all ${
+                      isProfileActive ? 'ring-2 ring-[#C5A880]/60' : ''
                     }`}
                   >
                     {userAvatar ? (
                       <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <UserIcon className="w-4 h-4 text-lottery" />
+                      <UserIcon className="w-4 h-4 text-[#1D1D1F] dark:text-[#F5F5F7]" />
                     )}
                   </div>
-                  <span className="text-xs font-bold text-gray-900 truncate max-w-[110px] leading-tight">
+                  <span className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate max-w-[110px] leading-tight">
                     {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
                   </span>
                 </button>
@@ -244,6 +254,7 @@ export const AppShell: React.FC = () => {
             <nav aria-label="Navegación de escritorio" className="flex items-center gap-1.5">
               {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
                 const isActive = activeTab === id && !selectedTicketId
+                const isAlertsBell = id === 'alertas'
                 return (
                   <button
                     key={id}
@@ -251,32 +262,35 @@ export const AppShell: React.FC = () => {
                     onClick={() => navigateTo({ tab: id, ticketId: null })}
                     className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm transition-colors cursor-pointer ${
                       isActive
-                        ? 'bg-[#2E6146]/10 text-[#2E6146] font-semibold'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-black/[0.04] font-medium'
+                        ? 'bg-[#1D1D1F] text-[#F5F5F7] dark:bg-[#F5F5F7] dark:text-[#1D1D1F] font-semibold'
+                        : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] font-medium'
                     }`}
                   >
                     <div className="relative flex items-center justify-center">
-                      <Icon className="w-4 h-4" />
-                      {id === 'alertas' && unreadAlertsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-                        </span>
+                      {isAlertsBell ? (
+                        <Bell
+                          className="w-4 h-4"
+                          strokeWidth={1.75}
+                          fill={isActive ? 'currentColor' : 'none'}
+                        />
+                      ) : (
+                        <Icon className="w-4 h-4" />
+                      )}
+                      {isAlertsBell && alertDotPriority && (
+                        <span
+                          aria-label="Alertas sin leer"
+                          className={`absolute -top-0.5 -right-0.5 w-[7px] h-[7px] rounded-full ${alertDotColorClass} ring-2 ring-[#F5F5F7] dark:ring-[#000000]`}
+                        />
                       )}
                     </div>
                     <span>{label}</span>
-                    {id === 'alertas' && unreadAlertsCount > 0 && (
-                      <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white">
-                        {unreadAlertsCount}
-                      </span>
-                    )}
                   </button>
                 )
               })}
             </nav>
 
             {/* Separador vertical sutil */}
-            <div className="h-6 w-px bg-gray-200 mx-1" aria-hidden="true" />
+            <div className="h-6 w-px bg-black/10 dark:bg-white/10 mx-1" aria-hidden="true" />
 
             {/* Botón de Perfil Compacto en Escritorio */}
             {(() => {
@@ -293,24 +307,24 @@ export const AppShell: React.FC = () => {
                   }}
                   aria-label="Abrir mi perfil"
                   title="Ir a mi perfil"
-                  className={`flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E6146]/40 cursor-pointer ${
+                  className={`flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A880]/60 cursor-pointer ${
                     isProfileActive
-                      ? 'bg-[#2E6146]/[0.08] ring-1 ring-[#2E6146]/30'
-                      : 'hover:bg-black/[0.04]'
+                      ? 'bg-[#3A5245]/12 dark:bg-[#3A5245]/30 ring-1 ring-[#3A5245]/40'
+                      : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
                   }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full border border-lottery/30 overflow-hidden bg-lottery-50 flex items-center justify-center shrink-0 shadow-xs transition-all ${
-                      isProfileActive ? 'ring-2 ring-[#2E6146]/50' : ''
+                    className={`w-8 h-8 rounded-full border border-[#C5A880]/50 overflow-hidden bg-white dark:bg-[#1D1D1F] flex items-center justify-center shrink-0 shadow-xs transition-all ${
+                      isProfileActive ? 'ring-2 ring-[#C5A880]/60' : ''
                     }`}
                   >
                     {userAvatar ? (
                       <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <UserIcon className="w-4 h-4 text-lottery" />
+                      <UserIcon className="w-4 h-4 text-[#1D1D1F] dark:text-[#F5F5F7]" />
                     )}
                   </div>
-                  <span className="text-sm font-bold text-gray-900 truncate max-w-[140px] leading-tight">
+                  <span className="text-sm font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate max-w-[140px] leading-tight">
                     {profile?.display_name || user?.email?.split('@')[0] || 'Mi Cuenta'}
                   </span>
                 </button>
@@ -440,11 +454,12 @@ export const AppShell: React.FC = () => {
       {/* 9. Barra de Navegación Inferior Fija Móvil (< 768px) */}
       <nav
         aria-label="Navegación principal móvil"
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-lg pb-safe"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[#F5F5F7]/95 dark:bg-[#000000]/95 backdrop-blur-md border-t border-black/[0.08] dark:border-white/[0.1] shadow-lg pb-safe transition-colors"
       >
         <div className="max-w-xl mx-auto px-2 h-16 grid grid-cols-3 items-center">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
             const isActive = activeTab === id
+            const isAlertsBell = id === 'alertas'
             return (
               <button
                 key={id}
@@ -452,20 +467,29 @@ export const AppShell: React.FC = () => {
                 onClick={() => navigateTo({ tab: id, ticketId: null })}
                 className={`min-h-[44px] w-full flex flex-col items-center justify-center py-1 transition-all ${
                   isActive
-                    ? 'text-lottery font-bold'
-                    : 'text-gray-400 hover:text-gray-600 font-medium'
+                    ? 'text-[#1D1D1F] dark:text-[#F5F5F7] font-semibold'
+                    : 'text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:text-[#1D1D1F]/80 dark:hover:text-[#F5F5F7]/80 font-medium'
                 }`}
               >
                 <div
                   className={`relative flex items-center justify-center w-10 h-7 rounded-full transition-all ${
-                    isActive ? 'bg-[#E6F0EB]' : 'bg-transparent'
+                    isActive ? 'bg-[#C5A880]/25 dark:bg-[#C5A880]/20' : 'bg-transparent'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  {id === 'alertas' && unreadAlertsCount > 0 && (
-                    <span className="absolute -top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
-                      {unreadAlertsCount > 99 ? '99+' : unreadAlertsCount}
-                    </span>
+                  {isAlertsBell ? (
+                    <Bell
+                      className="h-5 w-5"
+                      strokeWidth={1.75}
+                      fill={isActive ? 'currentColor' : 'none'}
+                    />
+                  ) : (
+                    <Icon className="h-5 w-5" />
+                  )}
+                  {isAlertsBell && alertDotPriority && (
+                    <span
+                      aria-label="Alertas sin leer"
+                      className={`absolute top-0.5 right-1.5 w-[7px] h-[7px] rounded-full ${alertDotColorClass} ring-2 ring-[#F5F5F7] dark:ring-[#000000]`}
+                    />
                   )}
                 </div>
                 <span className="text-[10px] mt-0.5">{label}</span>

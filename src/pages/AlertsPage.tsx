@@ -264,17 +264,17 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
             <button
               type="button"
               onClick={onBack}
-              className="p-2 rounded-2xl bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 active:scale-95 transition shadow-xs"
+              className="p-2 rounded-2xl bg-white dark:bg-[#1D1D1F] border border-black/[0.06] dark:border-white/[0.08] text-[#1D1D1F] dark:text-[#F5F5F7] hover:opacity-80 active:scale-95 transition shadow-xs"
               title="Volver"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
           )}
           <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="text-lg sm:text-xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
               Mis Notificaciones
             </h2>
-            <p className="text-[11px] text-gray-500">
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Avisos de sorteos, participaciones y cobros
             </p>
           </div>
@@ -285,7 +285,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
             type="button"
             onClick={handleMarkAllRead}
             disabled={isMarkingAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-lottery hover:bg-lottery-dark text-white text-xs font-bold shadow-xs active:scale-95 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold shadow-xs active:scale-95 transition cursor-pointer"
           >
             {isMarkingAll ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -301,17 +301,17 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
         <div
           className={`p-3 rounded-2xl text-xs font-medium flex items-center justify-between ${
             actionMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+              ? 'bg-[#3A5245] text-[#FFFFFF]'
               : actionMsg.type === 'info'
-              ? 'bg-amber-50 border border-amber-200 text-amber-800'
-              : 'bg-rose-50 border border-rose-200 text-rose-800'
+              ? 'bg-[#C5A880] text-[#1D1D1F]'
+              : 'bg-[#D04848] text-[#FFFFFF]'
           }`}
         >
           <span>{actionMsg.text}</span>
           <button
             type="button"
             onClick={() => setActionMsg(null)}
-            className="p-1 text-gray-400 hover:text-gray-600"
+            className="p-1 opacity-80 hover:opacity-100"
           >
             <X className="h-3 w-3" />
           </button>
@@ -321,15 +321,15 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
       {/* 2. Listado de Notificaciones */}
       {isLoading ? (
         <div className="flex justify-center items-center py-16">
-          <Loader2 className="h-7 w-7 animate-spin text-lottery" />
+          <Loader2 className="h-7 w-7 animate-spin text-[#C5A880]" />
         </div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-10 text-center space-y-3">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center">
-            <Bell className="w-6 h-6" />
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-10 text-center space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 flex items-center justify-center">
+            <Bell className="w-6 h-6" strokeWidth={1.75} />
           </div>
-          <h3 className="text-sm font-bold text-gray-900">Bandeja al día</h3>
-          <p className="text-xs text-gray-500 max-w-xs mx-auto">
+          <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">Bandeja al día</h3>
+          <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 max-w-xs mx-auto">
             Aquí recibirás notificaciones en tiempo real cuando alguien acepte tus participaciones o se comprueben los sorteos.
           </p>
         </div>
@@ -346,10 +346,10 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
               <div
                 key={item.id}
                 onClick={() => handleCardClick(item)}
-                className={`p-4 rounded-2xl border transition-all relative overflow-hidden cursor-pointer shadow-xs ${
+                className={`p-4 rounded-[22px] border transition-all relative overflow-hidden cursor-pointer shadow-xs ${
                   item.is_read
-                    ? 'bg-white border-gray-200/80 hover:border-gray-300'
-                    : 'bg-white border-lottery/40 border-l-4 border-l-lottery hover:border-lottery shadow-sm'
+                    ? 'bg-white dark:bg-[#1D1D1F] border-black/[0.06] dark:border-white/[0.08]'
+                    : 'bg-white dark:bg-[#1D1D1F] border-[#C5A880] border-l-4 border-l-[#C5A880] shadow-sm'
                 }`}
               >
                 <div className="flex items-start gap-3.5">
@@ -363,19 +363,17 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                   {/* Contenido de la alerta */}
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-start justify-between gap-2">
-                      <h4
-                        className={`text-xs sm:text-sm font-bold truncate ${
-                          item.is_read ? 'text-gray-900' : 'text-gray-950'
-                        }`}
-                      >
+                      <h4 className="text-xs sm:text-sm font-bold truncate text-[#1D1D1F] dark:text-[#F5F5F7]">
                         {item.title}
                       </h4>
-                      <span className="text-[10px] text-gray-400 shrink-0 font-mono">
+                      <span className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 shrink-0 tabular-nums">
                         {formatNotificationTime(item.created_at)}
                       </span>
                     </div>
 
-                    <p className="text-xs text-gray-600 leading-relaxed">{item.body}</p>
+                    <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 leading-relaxed">
+                      {item.body}
+                    </p>
 
                     {/* Acciones directas para solicitudes de renuncia */}
                     {isWaiverRequest && !isRenounced && (
@@ -387,7 +385,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                           type="button"
                           onClick={() => handleRespondWaiver(item, true)}
                           disabled={actionLoadingId === item.id}
-                          className="py-1 px-2.5 rounded-lg bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 hover:bg-emerald-700 active:scale-95 transition shadow-2xs"
+                          className="py-1.5 px-3 rounded-xl bg-[#3A5245] text-[#FFFFFF] text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 active:scale-95 transition"
                         >
                           {actionLoadingId === item.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -401,7 +399,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                           type="button"
                           onClick={() => handleRespondWaiver(item, false)}
                           disabled={actionLoadingId === item.id}
-                          className="py-1 px-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-[11px] font-bold flex items-center gap-1 hover:bg-gray-50 active:scale-95 transition"
+                          className="py-1.5 px-3 rounded-xl border border-black/10 dark:border-white/15 bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] text-[11px] font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition"
                         >
                           <X className="h-3 w-3" />
                           <span>Rechazar</span>
@@ -412,14 +410,14 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                     {/* Indicador de renuncia o enlace al billete */}
                     {isRenounced ? (
                       <div className="pt-1.5 flex items-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-500 text-[10px] font-medium border border-gray-200/80 cursor-default select-none">
-                          <Ban className="h-3 w-3 text-gray-400" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 text-[10px] font-medium cursor-default select-none">
+                          <Ban className="h-3 w-3" />
                           <span>Participación renunciada · Sin acceso</span>
                         </span>
                       </div>
                     ) : (
                       targetTicketId && (
-                        <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-lottery">
+                        <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-[#C5A880]">
                           <span>Ver décimo</span>
                           <ExternalLink className="h-3 w-3" />
                         </div>

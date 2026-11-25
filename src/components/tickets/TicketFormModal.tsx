@@ -470,11 +470,11 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
           </div>
 
           {/* Botón de acción fijo abajo (shrink-0) */}
-          <div className="shrink-0 border-t border-gray-100 bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1D1D1F] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
               <button
                 type="submit"
                 disabled={isLoading || number.length !== 5}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-xs font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold shadow-sm active:scale-98 transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
               >
                 {isLoading ? (
                   <>
