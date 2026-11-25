@@ -4,6 +4,9 @@ import {
   _getActiveModalStackCount,
   _getProgrammaticBackCount,
   _resetModalStackForTesting,
+  _markModalClosedForTesting,
+  isModalBackGuardActive,
+  MODAL_CLOSE_GUARD_COOLDOWN_MS,
 } from '../../hooks/useModalBackHandler.ts'
 
 test('modal stack helpers and initial state', () => {
@@ -60,4 +63,21 @@ test('nested modal stack programmatic close simulation', () => {
 
   assert.equal(parentClosed, true)
   assert.equal(stack.length, 0)
+})
+
+test('isModalBackGuardActive protege durante 300ms tras cerrar el escáner evitando el toast de salida', () => {
+  _resetModalStackForTesting()
+  const t0 = 1_000_000
+
+  assert.equal(isModalBackGuardActive(t0), false)
+
+  // Simular cierre de modal (escáner) en t0
+  _markModalClosedForTesting(t0)
+
+  // Dentro de los 300ms posteriores al cierre, el guardia bloquea el toast de salida
+  assert.equal(isModalBackGuardActive(t0 + 50), true)
+  assert.equal(isModalBackGuardActive(t0 + MODAL_CLOSE_GUARD_COOLDOWN_MS - 1), true)
+
+  // Pasados los 300ms, vuelve a estar inactivo para permitir el detector normal en raíz
+  assert.equal(isModalBackGuardActive(t0 + MODAL_CLOSE_GUARD_COOLDOWN_MS), false)
 })

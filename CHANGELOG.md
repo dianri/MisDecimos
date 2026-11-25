@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.63] - 2026-11-25
+
+### Fixed
+- **Aislamiento de Cierre del Escáner respecto al Aviso de Salida (`useModalBackHandler.ts`, `useAndroidBackNavigation.ts`):**
+  - Añadido guardia temporal `isModalBackGuardActive()` (`MODAL_CLOSE_GUARD_COOLDOWN_MS = 300`) que protege tanto mientras un modal (`BarcodeScannerModal`) está abierto como durante los 300 ms posteriores a su cierre (por botón `X`, `Cancelar`, transición interna o botón Atrás físico), impidiendo que `popstate` dispare el toast *"Pulsa atrás de nuevo para cerrar la aplicación"*.
+- **Aviso Guiado al Compartir Décimo con Participaciones Existentes (`TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `cardQuickActions.ts`):**
+  - Al pulsar **`Compartir`** en una tarjeta que ya tiene participaciones creadas, navega con `state: { selectShareToShare: true }` y muestra inmediatamente el banner informativo **`"Selecciona una participación para compartir"`** (*"Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código."*), limpiando el flag del historial tras mostrarse y asegurando área táctil `min-h-[44px]` en el botón *"Ver QR / Compartir"*.
+
+### Added
+- **Tests Unitarios (`modalBackHandler.test.ts`, `cardQuickActions.test.ts`):**
+  - Verificación de la ventana de protección de 300 ms tras cerrar el escáner (`isModalBackGuardActive`) y del flujo `selectShareToShare: true`.
+
 ## [1.0.62] - 2026-11-25
 
 ### Changed

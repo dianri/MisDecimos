@@ -21,6 +21,11 @@ const activeModalStack: ModalStackEntry[] = []
 // para evitar que los eventos popstate resultantes cierren modales padre en cascada
 let programmaticBackCount = 0
 
+// Marca temporal del último cierre de modal (para evitar el toast de salida durante 300ms)
+let lastModalCloseTimestamp = 0
+
+export const MODAL_CLOSE_GUARD_COOLDOWN_MS = 300
+
 // Indicador para registrar un único listener global de popstate
 let isGlobalListenerAttached = false
 
@@ -31,6 +36,7 @@ function ensureGlobalListener() {
     // Si el popstate fue provocado por un history.back() programático (cierre por código)
     if (programmaticBackCount > 0) {
       programmaticBackCount--
+      lastModalCloseTimestamp = Date.now()
       return
     }
 
@@ -39,11 +45,30 @@ function ensureGlobalListener() {
     const topModal = activeModalStack.pop()
     if (topModal) {
       topModal.closedByPopstate = true
+      lastModalCloseTimestamp = Date.now()
       topModal.onClose()
     }
   })
 
   isGlobalListenerAttached = true
+}
+
+/**
+ * Indica si un modal está actualmente abierto o si se cerró hace menos de 300 ms,
+ * evitando que el detector global de salida de la app dispare el toast de doble retroceso.
+ */
+export function isModalBackGuardActive(
+  now: number = Date.now(),
+  cooldownMs: number = MODAL_CLOSE_GUARD_COOLDOWN_MS
+): boolean {
+  if (activeModalStack.length > 0 || programmaticBackCount > 0) {
+    return true
+  }
+  return lastModalCloseTimestamp > 0 && now - lastModalCloseTimestamp < cooldownMs
+}
+
+export function _markModalClosedForTesting(timestamp: number = Date.now()): void {
+  lastModalCloseTimestamp = timestamp
 }
 
 export function _getActiveModalStackCount(): number {
@@ -57,6 +82,7 @@ export function _getProgrammaticBackCount(): number {
 export function _resetModalStackForTesting(): void {
   activeModalStack.length = 0
   programmaticBackCount = 0
+  lastModalCloseTimestamp = 0
 }
 
 /**
@@ -126,8 +152,11 @@ export function useModalBackHandler({
         // Si se cerró por código (no por hardware back), revertir la entrada del historial
         if (hasHistoryEntryRef.current && !closedByPopstateRef.current && !entry.closedByPopstate) {
           programmaticBackCount++
+          lastModalCloseTimestamp = Date.now()
           hasHistoryEntryRef.current = false
           window.history.back()
+        } else {
+          lastModalCloseTimestamp = Date.now()
         }
       }
       closedByPopstateRef.current = false
@@ -145,8 +174,11 @@ export function useModalBackHandler({
 
         if (hasHistoryEntryRef.current && !closedByPopstateRef.current && !entry.closedByPopstate) {
           programmaticBackCount++
+          lastModalCloseTimestamp = Date.now()
           hasHistoryEntryRef.current = false
           window.history.back()
+        } else {
+          lastModalCloseTimestamp = Date.now()
         }
       }
     }

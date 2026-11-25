@@ -126,7 +126,7 @@ flowchart TD
   - **Deslizar hacia la izquierda:** Revela en el fondo derecho el botón **Eliminar** (solicita confirmación antes de borrar).
   - Solo una tarjeta permanece abierta a la vez; pulsar una tarjeta abierta cierra el desplazamiento sin navegar.
 - **Acciones Rápidas en Cada Tarjeta (`<TicketListItemCard />`):**
-  - **Botón `Compartir`:** Situado a la derecha de la fecha del sorteo (con `e.stopPropagation()`). Si el décimo no tiene participaciones ni invitaciones pendientes, navega al detalle abriendo automáticamente el modal de nueva participación (`openCreateShare: true`); si ya tiene participaciones, abre el detalle para elegir cuál compartir.
+  - **Botón `Compartir`:** Situado a la derecha de la fecha del sorteo (con `e.stopPropagation()`). Si el décimo no tiene participaciones ni invitaciones pendientes, navega al detalle abriendo automáticamente el modal de nueva participación (`openCreateShare: true`); si ya tiene participaciones, navega con `selectShareToShare: true` mostrando el banner guiado **"Selecciona una participación para compartir"** en la cabecera de *Propiedad y Reparto*.
   - **Botón `Comprobar sorteo`:** Situado en la esquina inferior izquierda (con `e.stopPropagation()`). Si la fecha del sorteo es futura (`draw_date > hoy`), muestra un aviso claro sin invocar red; si ya se celebró (`draw_date <= hoy`), ejecuta la Edge Function `check-prizes`, actualiza el estado del décimo y notifica el resultado en un toast.
 1. **Botón Único de Ancho Completo `Añadir` (Escáner Unificado):**
    - Botón verde corporativo a ancho completo (`w-full bg-emerald-700 hover:bg-emerald-800 text-white`) que abre instantáneamente la cámara trasera mediante [`BarcodeScannerModal.tsx`](../src/components/tickets/BarcodeScannerModal.tsx).
