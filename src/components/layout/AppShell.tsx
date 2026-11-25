@@ -14,7 +14,8 @@ import { TicketDetailPage } from '../../pages/TicketDetailPage'
 import { AlertsPage } from '../../pages/AlertsPage'
 import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
-import { Ticket, Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
+import { DecimoIcon } from '../icons/DecimoIcon'
+import { Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
 
 export type TabType = 'billetes' | 'alertas' | 'auditoria' | 'perfil'
 
@@ -25,7 +26,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'billetes', label: 'Décimos', icon: Ticket },
+  { id: 'billetes', label: 'Décimos', icon: DecimoIcon },
   { id: 'alertas', label: 'Alertas', icon: Bell },
 ]
 
