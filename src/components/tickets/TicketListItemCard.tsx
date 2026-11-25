@@ -9,6 +9,7 @@ type TicketRow = Database['public']['Tables']['tickets']['Row']
 export interface TicketListItemCardProps {
   ticket: TicketRow
   userPercentage: number
+  isOwner?: boolean
   participantsCount?: number
   hasParticipations?: boolean
   isArchived?: boolean
@@ -22,6 +23,7 @@ export interface TicketListItemCardProps {
 export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   ticket,
   userPercentage,
+  isOwner = true,
   hasParticipations,
   isArchived = false,
   isRenounced = false,
@@ -42,6 +44,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
     prizeAmountCents: ticket.prize_amount_cents || 0,
     status: ticket.status,
     userPercentage,
+    isOwner,
     isArchived,
     isRenounced,
   })
@@ -82,10 +85,19 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             )}
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="text-xs font-bold text-gray-900 leading-tight">
                 Décimo #{ticket.number}
               </h3>
+              <span
+                className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-wide ${
+                  isOwner
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                    : 'bg-orange-100 text-orange-800 border-orange-200'
+                }`}
+              >
+                {isOwner ? 'Décimo' : 'Participación'}
+              </span>
               {isArchived && isPrized && (
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200">
                   Archivado
@@ -241,7 +253,9 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
                 : 'bg-lottery-50 border-lottery-200 text-lottery'
             }`}
           >
-            {userPercentage === 100 ? '100% tuyo' : `${userPercentage}% tuyo`}
+            {isOwner && userPercentage === 100
+              ? '100% tuyo'
+              : `Tu cuota: ${userPercentage}%`}
           </span>
         </div>
       </div>

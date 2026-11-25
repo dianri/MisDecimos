@@ -12,6 +12,7 @@ import {
 export interface SwipeableTicketCardProps {
   ticketId: string
   isArchived?: boolean
+  allowDelete?: boolean
   openSwipeTicketId: string | null
   onSwipeOpenChange: (ticketId: string | null, side: SwipeSide) => void
   onArchiveClick: (ticketId: string) => void
@@ -23,6 +24,7 @@ export interface SwipeableTicketCardProps {
 export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
   ticketId,
   isArchived = false,
+  allowDelete = true,
   openSwipeTicketId,
   onSwipeOpenChange,
   onArchiveClick,
@@ -74,7 +76,7 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
       setIsDragging(true)
     }
     didDragRef.current = true
-    setDragOffset(clampSwipeOffset(dx, baseOffsetRef.current))
+    setDragOffset(clampSwipeOffset(dx, baseOffsetRef.current, allowDelete))
   }
 
   const handleEnd = () => {
@@ -83,7 +85,7 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
       return
     }
 
-    const { side, snappedOffset } = resolveSwipeSnap(dragOffset)
+    const { side, snappedOffset } = resolveSwipeSnap(dragOffset, allowDelete)
     setIsDragging(false)
     setDragOffset(snappedOffset)
     openSideRef.current = side
@@ -146,28 +148,30 @@ export const SwipeableTicketCard: React.FC<SwipeableTicketCardProps> = ({
         </button>
       </div>
 
-      {/* Fondo derecho: botón Eliminar (revelado al deslizar hacia la izquierda) */}
-      <div
-        className={`absolute inset-y-0 right-0 flex items-center justify-center transition-opacity ${
-          dragOffset < 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        style={{ width: `${SWIPE_ACTION_WIDTH}px` }}
-      >
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            setDragOffset(0)
-            onSwipeOpenChange(null, null)
-            onDeleteClick(ticketId)
-          }}
-          aria-label="Eliminar décimo"
-          className="w-full h-full flex flex-col items-center justify-center gap-1 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] active:scale-95 transition"
+      {/* Fondo derecho: botón Eliminar (revelado al deslizar hacia la izquierda, solo si allowDelete) */}
+      {allowDelete && (
+        <div
+          className={`absolute inset-y-0 right-0 flex items-center justify-center transition-opacity ${
+            dragOffset < 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          style={{ width: `${SWIPE_ACTION_WIDTH}px` }}
         >
-          <Trash2 className="w-5 h-5" />
-          <span>Eliminar</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDragOffset(0)
+              onSwipeOpenChange(null, null)
+              onDeleteClick(ticketId)
+            }}
+            aria-label="Eliminar décimo"
+            className="w-full h-full flex flex-col items-center justify-center gap-1 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] active:scale-95 transition"
+          >
+            <Trash2 className="w-5 h-5" />
+            <span>Eliminar</span>
+          </button>
+        </div>
+      )}
 
       {/* Contenido deslizable de la tarjeta */}
       <div

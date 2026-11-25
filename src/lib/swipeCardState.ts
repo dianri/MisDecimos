@@ -6,24 +6,32 @@ export const SWIPE_OPEN_THRESHOLD = 42
 /**
  * Calcula el desplazamiento horizontal limitado (clamped) durante el arrastre táctil.
  * - dx > 0: desliza hacia la derecha (revela Archivar a la izquierda)
- * - dx < 0: desliza hacia la izquierda (revela Eliminar a la derecha)
+ * - dx < 0: desliza hacia la izquierda (revela Eliminar a la derecha, solo si allowDelete)
  */
-export function clampSwipeOffset(dx: number, baseOffset: number = 0): number {
+export function clampSwipeOffset(
+  dx: number,
+  baseOffset: number = 0,
+  allowDelete: boolean = true
+): number {
   const raw = baseOffset + dx
-  return Math.max(-SWIPE_ACTION_WIDTH, Math.min(SWIPE_ACTION_WIDTH, raw))
+  const minOffset = allowDelete ? -SWIPE_ACTION_WIDTH : 0
+  return Math.max(minOffset, Math.min(SWIPE_ACTION_WIDTH, raw))
 }
 
 /**
  * Determina el estado final (abierto a izquierda, derecha o cerrado) al soltar el dedo.
  */
-export function resolveSwipeSnap(offsetX: number): {
+export function resolveSwipeSnap(
+  offsetX: number,
+  allowDelete: boolean = true
+): {
   side: SwipeSide
   snappedOffset: number
 } {
   if (offsetX >= SWIPE_OPEN_THRESHOLD) {
     return { side: 'left', snappedOffset: SWIPE_ACTION_WIDTH }
   }
-  if (offsetX <= -SWIPE_OPEN_THRESHOLD) {
+  if (allowDelete && offsetX <= -SWIPE_OPEN_THRESHOLD) {
     return { side: 'right', snappedOffset: -SWIPE_ACTION_WIDTH }
   }
   return { side: null, snappedOffset: 0 }

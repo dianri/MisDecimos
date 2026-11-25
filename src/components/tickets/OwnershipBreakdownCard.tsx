@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Check,
   X,
+  UserPlus,
   Loader2,
   ShieldCheck,
   Clock,
@@ -57,6 +58,7 @@ import {
   DONUT_RADIUS,
   DONUT_STROKE_WIDTH,
 } from '../../lib/ownershipSegments'
+import { shouldShowCreateParticipationButton } from '../../lib/cardQuickActions'
 
 export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   ticketId,
@@ -972,6 +974,24 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Botón "Crear participación" para el propietario cuando queda porcentaje disponible */}
+      {shouldShowCreateParticipationButton({
+        isOwner,
+        ticketStatus,
+        availablePercentage: ownerPct,
+      }) && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setShowCreateSheet(true)}
+            className="w-full min-h-[44px] py-3 px-4 rounded-2xl bg-lottery hover:bg-lottery-dark text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span>Crear participación (hasta {ownerPct}% disponible)</span>
+          </button>
+        </div>
+      )}
 
       {/* Modal / Bottom Sheet para crear participaciones */}
       <CreateParticipationSheet

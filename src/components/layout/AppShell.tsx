@@ -7,7 +7,6 @@ import { usePushPermissionPrompt } from '../../hooks/usePushPermissionPrompt'
 import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt'
 import { PwaInstallBanner } from '../pwa/PwaInstallBanner'
 import { PushPermissionModal } from '../pwa/PushPermissionModal'
-import { VersionBadge } from '../common/VersionBadge'
 import { syncPushSubscription } from '../../lib/pushNotifications'
 import { TicketsPage } from '../../pages/TicketsPage'
 import { PrizesPage } from '../../pages/PrizesPage'
@@ -368,9 +367,6 @@ export const AppShell: React.FC = () => {
           />
         )}
       </main>
-
-      {/* 4. Badge Anti-Caché flotante (por encima de la barra inferior en móvil) */}
-      <VersionBadge className="bottom-20 md:bottom-6 right-3" />
 
       {/* 5. Modal de Solicitud Inteligente de Notificaciones Push */}
       <PushPermissionModal

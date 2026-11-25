@@ -12,6 +12,7 @@ import {
 import { resetPushPromptDismissals } from '../hooks/usePushPermissionPrompt'
 import { usePwaInstall } from '../hooks/usePwaInstall'
 import { useModalBackHandler } from '../hooks/useModalBackHandler'
+import { VersionBadge } from '../components/common/VersionBadge'
 import {
   Camera,
   User,
@@ -732,6 +733,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigateToAudit }) =
           )}
           <span>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</span>
         </button>
+      </div>
+
+      {/* Información de versión integrada al pie de Mi Perfil */}
+      <div className="pt-2 flex justify-center">
+        <VersionBadge variant="inline" />
       </div>
 
       {/* Menú de Selección de Foto de Perfil (Action Sheet / Bottom Sheet) */}
