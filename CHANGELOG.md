@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.65] - 2026-11-25
+
+### Changed
+- **Recuperación del Flujo de Reinstalación PWA (`main.tsx`, `usePwaInstall.ts`, `usePwaInstallPrompt.ts`, `PwaInstallBanner.tsx`):**
+  - En modo navegador (`!display-mode: standalone` y `!navigator.standalone`), limpia automáticamente cualquier marca residual de instalación previa (`misdecimos_pwa_installed`) en `localStorage` tanto al arranque (`main.tsx`) como en los hooks `usePwaInstall` y `usePwaInstallPrompt`, evitando que el flujo quede bloqueado si el usuario desinstaló la PWA.
+  - Sustituido el descarte permanente del banner automático por una caducidad temporal de **7 días** (`PWA_DISMISS_TTL_MS`), migrando y limpiando automáticamente cualquier antiguo flag `'true'` en `misdecimos_pwa_prompt_dismissed`.
+  - Actualizado el botón secundario de `PwaInstallBanner.tsx` a *«Ahora no»* y verificada la integración en `ProfilePage.tsx` para mostrar el botón *«Instalar aplicación en tu dispositivo»* únicamente fuera de modo standalone, disparando `deferredPrompt.prompt()` si está disponible o abriendo el modal de pasos manuales en caso de enfriamiento del navegador o iOS Safari.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/pwaInstallPrompt.test.ts`):**
+  - Verificación de limpieza automática de `misdecimos_pwa_installed` en modo navegador, caducidad temporal de 7 días para `isPwaPromptDismissed` y migración de descartes permanentes heredados.
+
 ## [1.0.64] - 2026-11-25
 
 ### Changed

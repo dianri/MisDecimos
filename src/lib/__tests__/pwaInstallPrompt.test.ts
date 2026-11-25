@@ -6,11 +6,14 @@ import {
   incrementPwaPromptCount,
   resetPwaPromptCount,
   isPwaInstalled,
-  isPwaPromptPermanentlyDismissed,
+  isPwaPromptDismissed,
+  dismissPwaPromptTemporarily,
+  clearStalePwaInstalledState,
   checkGetInstalledRelatedApps,
   PWA_PROMPT_COUNT_KEY,
   PWA_INSTALLED_KEY,
   PWA_DISMISSED_KEY,
+  PWA_DISMISS_TTL_MS,
 } from '../../hooks/usePwaInstallPrompt.ts'
 
 // Mocking minimal browser globals for Node test environment
@@ -112,31 +115,37 @@ test('PWA prompt count management', () => {
   globalThis.window = originalWindow
 })
 
-test('isPwaInstalled - detects installed flags and standalone modes', () => {
+test('isPwaInstalled - ignores and clears stale PWA_INSTALLED_KEY in browser mode', () => {
   const originalWindow = globalThis.window
   const originalDocument = globalThis.document
+  const originalLocalStorage = globalThis.localStorage
   const mockLocalStorage = new MockStorage()
 
-  // Case 1: localStorage has PWA_INSTALLED_KEY
+  // Case 1: Browser mode with stale PWA_INSTALLED_KEY -> must clear key and return false
   mockLocalStorage.setItem(PWA_INSTALLED_KEY, 'true')
   globalThis.window = {
     localStorage: mockLocalStorage,
     matchMedia: () => ({ matches: false }),
-    navigator: {},
+    navigator: { standalone: false },
   } as unknown as Window & typeof globalThis
+  globalThis.document = { referrer: '' } as unknown as Document
   globalThis.localStorage = mockLocalStorage as unknown as Storage
-  assert.equal(isPwaInstalled(), true)
+  assert.equal(isPwaInstalled(), false)
+  assert.equal(mockLocalStorage.getItem(PWA_INSTALLED_KEY), null)
 
-  // Case 2: display-mode: standalone
-  mockLocalStorage.clear()
+  // Case 2: display-mode: standalone (keeps PWA_INSTALLED_KEY if present)
+  mockLocalStorage.setItem(PWA_INSTALLED_KEY, 'true')
   globalThis.window = {
     localStorage: mockLocalStorage,
     matchMedia: (query: string) => ({ matches: query === '(display-mode: standalone)' }),
     navigator: {},
   } as unknown as Window & typeof globalThis
+  assert.equal(clearStalePwaInstalledState(), false)
+  assert.equal(mockLocalStorage.getItem(PWA_INSTALLED_KEY), 'true')
   assert.equal(isPwaInstalled(), true)
 
   // Case 3: iOS standalone property
+  mockLocalStorage.clear()
   globalThis.window = {
     localStorage: mockLocalStorage,
     matchMedia: () => ({ matches: false }),
@@ -155,21 +164,36 @@ test('isPwaInstalled - detects installed flags and standalone modes', () => {
 
   globalThis.window = originalWindow
   globalThis.document = originalDocument
+  globalThis.localStorage = originalLocalStorage
 })
 
-test('isPwaPromptPermanentlyDismissed - checks PWA_DISMISSED_KEY in localStorage', () => {
+test('isPwaPromptDismissed - enforces 7-day temporary expiration and migrates legacy permanent flag', () => {
   const originalWindow = globalThis.window
+  const originalLocalStorage = globalThis.localStorage
   const mockLocalStorage = new MockStorage()
 
   globalThis.window = { localStorage: mockLocalStorage } as unknown as Window & typeof globalThis
   globalThis.localStorage = mockLocalStorage as unknown as Storage
 
-  assert.equal(isPwaPromptPermanentlyDismissed(), false)
+  const t0 = 1_700_000_000_000
+  assert.equal(isPwaPromptDismissed(t0), false)
 
+  // Legacy permanent 'true' value is cleared and treated as not dismissed
   mockLocalStorage.setItem(PWA_DISMISSED_KEY, 'true')
-  assert.equal(isPwaPromptPermanentlyDismissed(), true)
+  assert.equal(isPwaPromptDismissed(t0), false)
+  assert.equal(mockLocalStorage.getItem(PWA_DISMISSED_KEY), null)
+
+  // Temporary 7-day dismissal
+  const expiresAt = dismissPwaPromptTemporarily(t0)
+  assert.equal(expiresAt, t0 + PWA_DISMISS_TTL_MS)
+  assert.equal(isPwaPromptDismissed(t0 + 6 * 24 * 60 * 60 * 1000), true)
+
+  // Expired after 7 days -> clears key and returns false
+  assert.equal(isPwaPromptDismissed(t0 + PWA_DISMISS_TTL_MS), false)
+  assert.equal(mockLocalStorage.getItem(PWA_DISMISSED_KEY), null)
 
   globalThis.window = originalWindow
+  globalThis.localStorage = originalLocalStorage
 })
 
 test('checkGetInstalledRelatedApps - detects installed apps via navigator API', async () => {
