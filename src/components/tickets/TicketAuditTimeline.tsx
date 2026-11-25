@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import type { Database } from '../../types/database.types'
+import { DecimoIcon } from '../icons/DecimoIcon'
 import {
   RefreshCw,
   Clock,
-  Ticket,
   Barcode,
   UserPlus,
   Users,
@@ -49,10 +49,10 @@ interface ActionConfig {
 const ACTION_CONFIGS: Record<string, ActionConfig> = {
   DECIMO_CREADO: {
     title: 'Décimo registrado',
-    icon: Ticket,
-    colorClass: 'text-lottery',
-    bgClass: 'bg-lottery-50',
-    borderClass: 'border-lottery-200',
+    icon: DecimoIcon,
+    colorClass: 'text-[#3A5245] dark:text-[#C5A880]',
+    bgClass: 'bg-[#3A5245]/10 dark:bg-[#C5A880]/15',
+    borderClass: 'border-[#3A5245]/20 dark:border-[#C5A880]/30',
   },
   ESCANEO_CODIGO_BARRAS: {
     title: 'Escaneo GS1-128',
@@ -233,40 +233,40 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
           HISTORIAL DE EVENTOS ({events.length})
         </h3>
         <button
           type="button"
           onClick={handleManualRefresh}
           disabled={isRefreshing}
-          className="p-1.5 rounded-xl border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition active:scale-95"
+          className="p-1.5 rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition active:scale-95 cursor-pointer"
           title="Actualizar eventos"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-lottery' : ''}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-[#C5A880]' : ''}`} />
         </button>
       </div>
 
       {events.length === 0 ? (
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center space-y-2">
-          <Clock className="h-8 w-8 text-gray-300 mx-auto" />
-          <p className="text-xs font-semibold text-gray-600">Sin eventos de auditoría</p>
-          <p className="text-[11px] text-gray-400">
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] p-8 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-center space-y-2">
+          <Clock className="h-8 w-8 text-[#1D1D1F]/30 dark:text-[#F5F5F7]/30 mx-auto" />
+          <p className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">Sin eventos de auditoría</p>
+          <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Todas las acciones críticas quedan registradas de forma inmutable.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm space-y-5 relative">
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 p-5 shadow-sm space-y-5 relative">
           {/* Línea vertical del timeline */}
-          <div className="absolute left-[33px] top-7 bottom-7 w-0.5 bg-gray-200/80 -z-0" />
+          <div className="absolute left-[33px] top-7 bottom-7 w-0.5 bg-[#1D1D1F]/10 dark:bg-[#F5F5F7]/10 -z-0" />
 
           {events.map((evt) => {
             const config = ACTION_CONFIGS[evt.action] || {
               title: formatFallbackActionTitle(evt.action),
               icon: Clock,
-              colorClass: 'text-gray-700',
-              bgClass: 'bg-gray-100',
-              borderClass: 'border-gray-200',
+              colorClass: 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+              bgClass: 'bg-[#F5F5F7] dark:bg-[#2C2C2E]',
+              borderClass: 'border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10',
             }
 
             const Icon = config.icon
@@ -293,33 +293,33 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
                 </div>
 
                 {/* Contenido del Evento */}
-                <div className="flex-1 bg-gray-50/70 border border-gray-200/60 rounded-2xl p-3 space-y-1">
+                <div className="flex-1 bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 rounded-2xl p-3 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-gray-900">{config.title}</span>
+                    <span className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">{config.title}</span>
 
                     {evt.percentage !== null && evt.percentage !== undefined && (
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white border border-gray-200 text-gray-800 shadow-2xs">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] shadow-2xs">
                         {evt.percentage}%
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-gray-500 pt-0.5">
-                    <span className="font-medium text-gray-600 truncate max-w-[180px]">
+                  <div className="flex items-center justify-between text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 pt-0.5">
+                    <span className="font-medium truncate max-w-[180px]">
                       {evt.actor?.display_name || evt.actor?.email || 'Sistema / Usuario'}
                     </span>
-                    <span className="font-mono text-[10px] text-gray-400 shrink-0">
+                    <span className="tabular-nums text-[10px] shrink-0">
                       {formatTimestamp(evt.created_at)}
                     </span>
                   </div>
 
                   {/* Metadatos adicionales si existen detalles visibles */}
                   {meta && hasVisibleMetadata && (
-                    <div className="text-[10px] text-gray-500 font-mono bg-white/70 p-2 rounded-xl mt-1.5 border border-gray-100 space-y-0.5">
+                    <div className="text-[10px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 font-mono bg-white dark:bg-[#1D1D1F] p-2 rounded-xl mt-1.5 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 space-y-0.5">
                       {hasPrize && (
                         <p>
                           Premio total:{' '}
-                          <strong className="text-lottery font-bold">
+                          <strong className="text-[#3A5245] dark:text-[#C5A880] font-bold">
                             {(Number(meta.prize_amount_cents) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                           </strong>
                         </p>
@@ -330,7 +330,7 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
                       {hasShortCode && (
                         <p>
                           Código:{' '}
-                          <strong className="tracking-wider text-gray-800">
+                          <strong className="tracking-wider text-[#1D1D1F] dark:text-[#F5F5F7]">
                             {String(meta.short_code)}
                           </strong>
                         </p>

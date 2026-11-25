@@ -294,10 +294,10 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
       {/* 1. Cabecera y Sello de Garantía */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-lg sm:text-xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
             Centro de Auditoría y Trazabilidad
           </h2>
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Registro inmutable de operaciones y custodia compartida
           </p>
         </div>
@@ -306,24 +306,24 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
           type="button"
           onClick={loadAuditEvents}
           disabled={isRefreshing}
-          className="p-2 rounded-2xl bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 active:scale-95 transition shadow-xs"
+          className="p-2 rounded-2xl bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:opacity-80 active:scale-95 transition shadow-xs cursor-pointer"
           title="Actualizar registro"
         >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-lottery' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-[#C5A880]' : ''}`} />
         </button>
       </div>
 
       {/* Sello de Garantía Criptográfica */}
-      <div className="p-4 rounded-3xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between gap-3 shadow-xs">
+      <div className="p-4 rounded-[22px] bg-[#3A5245]/10 dark:bg-[#3A5245]/25 border border-[#3A5245]/30 flex items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-10 h-10 rounded-2xl bg-[#3A5245] text-white flex items-center justify-center shrink-0 shadow-sm">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-emerald-950">
+            <h3 className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
               Garantía de Integridad en PostgreSQL
             </h3>
-            <p className="text-[11px] text-emerald-800">
+            <p className="text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
               Cada acción queda sellada con hora, autor y trazabilidad inmutable.
             </p>
           </div>
@@ -332,7 +332,7 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
         <button
           type="button"
           onClick={() => setShowGuarantees(!showGuarantees)}
-          className="p-1.5 rounded-xl bg-white/80 border border-emerald-200 text-emerald-900 text-xs font-bold hover:bg-white transition flex items-center gap-1 shrink-0"
+          className="p-1.5 rounded-xl bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] text-xs font-bold hover:opacity-80 transition flex items-center gap-1 shrink-0 cursor-pointer"
         >
           <span>{showGuarantees ? 'Ocultar' : '¿Cómo funciona?'}</span>
           {showGuarantees ? (
@@ -401,7 +401,7 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
       {/* 3. Buscador y Filtros Rápidos */}
       <div className="space-y-2.5">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40">
             <Search className="h-4 w-4" />
           </div>
           <input
@@ -409,13 +409,13 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
             placeholder="Buscar por Nº de décimo, sorteo, usuario o código..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-gray-200 bg-white text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lottery/20 focus:border-lottery transition shadow-xs"
+            className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-white dark:bg-[#1D1D1F] text-xs text-[#1D1D1F] dark:text-[#F5F5F7] placeholder-[#1D1D1F]/40 dark:placeholder-[#F5F5F7]/40 focus:outline-none focus:ring-2 focus:ring-[#C5A880]/40 focus:border-[#C5A880] transition shadow-xs"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -435,10 +435,10 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id as FilterCategory)}
-              className={`px-3 py-1.5 rounded-xl border whitespace-nowrap transition active:scale-95 ${
+              className={`px-3 py-1.5 rounded-xl border whitespace-nowrap transition active:scale-95 cursor-pointer ${
                 selectedCategory === cat.id
-                  ? 'bg-lottery text-white border-lottery shadow-xs'
-                  : 'bg-white text-gray-600 border-gray-200/80 hover:bg-gray-50'
+                  ? 'bg-[#C5A880] text-[#1D1D1F] border-[#C5A880] shadow-xs'
+                  : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 hover:opacity-80'
               }`}
             >
               {cat.label}
@@ -450,15 +450,17 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
       {/* 4. Feed Cronológico Global de Auditoría */}
       {isLoading ? (
         <div className="flex justify-center items-center py-16">
-          <Loader2 className="h-7 w-7 animate-spin text-lottery" />
+          <Loader2 className="h-7 w-7 animate-spin text-[#C5A880]" />
         </div>
       ) : filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-10 text-center space-y-3">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-[#1D1D1F]/15 dark:border-[#F5F5F7]/15 p-10 text-center space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F]/40 dark:text-[#F5F5F7]/40 flex items-center justify-center">
             <Clock className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-gray-900">Sin registros coincidentes</h3>
-          <p className="text-xs text-gray-500 max-w-xs mx-auto">
+          <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+            Sin registros coincidentes
+          </h3>
+          <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 max-w-xs mx-auto">
             Prueba a cambiar los filtros o el término de búsqueda.
           </p>
         </div>
@@ -469,9 +471,9 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
               title: evt.action.replace(/_/g, ' '),
               category: 'ALL',
               icon: Clock,
-              colorClass: 'text-gray-700',
-              bgClass: 'bg-gray-100',
-              borderClass: 'border-gray-200',
+              colorClass: 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+              bgClass: 'bg-[#F5F5F7] dark:bg-[#2C2C2E]',
+              borderClass: 'border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10',
             }
 
             const Icon = config.icon
@@ -480,7 +482,7 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
             return (
               <div
                 key={evt.id}
-                className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs space-y-2.5 transition hover:border-gray-300"
+                className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 p-4 shadow-xs space-y-2.5 transition"
               >
                 {/* Cabecera de la tarjeta: Píldora del décimo + Fecha */}
                 <div className="flex items-center justify-between gap-2">
@@ -488,20 +490,22 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
                     <button
                       type="button"
                       onClick={() => onSelectTicket && onSelectTicket(evt.ticket!.id)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gray-50 hover:bg-lottery-50 hover:text-lottery text-gray-700 border border-gray-200 text-[10px] font-bold font-mono transition active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[10px] font-bold font-mono transition active:scale-95 cursor-pointer"
                       title="Ver detalles del décimo"
                     >
-                      <Ticket className="h-3 w-3 text-lottery" />
+                      <Ticket className="h-3 w-3 text-[#3A5245] dark:text-[#C5A880]" />
                       <span>
                         Nº {evt.ticket.number} · {evt.ticket.draw_name}
                       </span>
                       <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                     </button>
                   ) : (
-                    <span className="text-[10px] text-gray-400 font-mono">Boleto general</span>
+                    <span className="text-[10px] text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 font-mono">
+                      Boleto general
+                    </span>
                   )}
 
-                  <span className="text-[10px] text-gray-400 font-mono">
+                  <span className="text-[10px] text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 font-mono">
                     {formatFullDate(evt.created_at)}
                   </span>
                 </div>
@@ -516,18 +520,20 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
 
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-gray-900">{config.title}</span>
+                      <span className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                        {config.title}
+                      </span>
 
                       {evt.percentage !== null && evt.percentage !== undefined && (
-                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-gray-100 text-gray-800 border border-gray-200">
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
                           {evt.percentage}%
                         </span>
                       )}
                     </div>
 
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
                       Ejecutado por:{' '}
-                      <strong className="text-gray-800">
+                      <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">
                         {evt.actor?.display_name || evt.actor?.email || 'Sistema'}
                       </strong>
                     </p>

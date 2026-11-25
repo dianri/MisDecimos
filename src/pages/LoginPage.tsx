@@ -210,7 +210,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || !email.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-sm font-semibold shadow-sm active:scale-98 transition disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-sm font-semibold shadow-sm active:scale-98 transition disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -229,11 +229,12 @@ export const LoginPage: React.FC = () => {
           /* Paso 2: Código OTP de 6 dígitos */
           <form onSubmit={handleVerifyOtp} className="space-y-5">
             <div className="space-y-2 text-center">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 text-[11px] font-medium">
                 <KeyRound className="h-3.5 w-3.5" /> Código de verificación
               </div>
-              <p className="text-xs text-gray-500">
-                Introduce el código de 6 dígitos enviado a <strong className="text-gray-800">{email}</strong>
+              <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+                Introduce el código de 6 dígitos enviado a{' '}
+                <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">{email}</strong>
               </p>
             </div>
 
@@ -249,7 +250,7 @@ export const LoginPage: React.FC = () => {
                   value={digit}
                   onChange={(e) => handleOtpChange(idx, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(idx, e)}
-                  className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold font-mono rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lottery focus:border-lottery transition shadow-sm"
+                  className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold font-mono rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] focus:outline-none focus:ring-2 focus:ring-[#C5A880]/40 focus:border-[#C5A880] transition shadow-sm"
                 />
               ))}
             </div>
@@ -257,7 +258,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || otp.join('').length !== 6}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-lottery text-white text-sm font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-sm font-semibold shadow-sm active:scale-98 transition disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -270,11 +271,11 @@ export const LoginPage: React.FC = () => {
             </button>
 
             {/* Acciones secundarias: reenviar y cambiar email */}
-            <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 pt-2 border-t border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
               <button
                 type="button"
                 onClick={() => setStep('email')}
-                className="hover:text-lottery font-medium transition"
+                className="hover:text-[#C5A880] font-medium transition cursor-pointer"
               >
                 Cambiar correo
               </button>
@@ -283,7 +284,7 @@ export const LoginPage: React.FC = () => {
                 type="button"
                 onClick={() => handleSendOtp()}
                 disabled={countdown > 0 || isLoading}
-                className="flex items-center gap-1 font-medium text-lottery hover:text-lottery-600 transition disabled:text-gray-400 disabled:pointer-events-none"
+                className="flex items-center gap-1 font-medium text-[#1D1D1F] dark:text-[#F5F5F7] hover:text-[#C5A880] transition disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
               >
                 <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
                 {countdown > 0 ? `Reenviar (${countdown}s)` : 'Reenviar código'}

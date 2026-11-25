@@ -7,7 +7,7 @@ import {
   type PrizesFilterType,
 } from '../lib/prizesSummary'
 import type { TicketRow, OwnershipShareRow } from '../lib/ticketMetrics'
-import { Trophy, CheckCircle2, Calendar, Loader2, Sparkles } from 'lucide-react'
+import { Trophy, CheckCircle2, Calendar, Loader2 } from 'lucide-react'
 
 export interface PrizesPageProps {
   onSelectTicket?: (ticketId: string) => void
@@ -297,7 +297,7 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
 
                     {isPrized ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#3A5245] text-[#FFFFFF] text-[10px] font-semibold">
-                        <Sparkles className="w-3 h-3 text-[#C5A880]" />
+                        <Trophy className="w-3 h-3 text-[#C5A880]" />
                         <span>{prizeCategory || 'Décimo premiado'}</span>
                       </span>
                     ) : (

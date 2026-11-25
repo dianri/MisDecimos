@@ -165,22 +165,26 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] animate-in slide-in-from-bottom duration-200"
+        className="w-full max-w-md rounded-t-[22px] sm:rounded-[22px] bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] animate-in slide-in-from-bottom duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Cabecera Bottom Sheet (shrink-0 siempre visible arriba) */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-[#F5F5F7]/60 dark:bg-[#2C2C2E]/60 shrink-0">
           <div>
-            <h3 className="text-sm font-bold text-gray-900">Nueva Participación</h3>
-            <p className="text-[11px] text-gray-500">
+            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              Nueva Participación
+            </h3>
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Disponible para repartir:{' '}
-              <strong className="text-lottery font-mono">{availablePercentage}%</strong>
+              <strong className="text-[#3A5245] dark:text-[#C5A880] font-mono">
+                {availablePercentage}%
+              </strong>
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+            className="rounded-lg p-1.5 text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -189,15 +193,15 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
         {/* Cuerpo central con scroll interno overscroll-contain */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
           {/* Selector de modo estilo píldora: 1. Partes iguales | 2. Porcentaje manual */}
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-gray-100 text-xs font-semibold">
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-xs font-semibold">
             {/* 1. Primera pestaña (izquierda): Partes iguales */}
             <button
               type="button"
               onClick={() => setMode('equal')}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition cursor-pointer ${
                 mode === 'equal'
-                  ? 'bg-white text-lottery shadow-sm font-bold'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm font-bold'
+                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
               }`}
             >
               <PieChart className="h-3.5 w-3.5" />
@@ -208,10 +212,10 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
             <button
               type="button"
               onClick={() => setMode('manual')}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition cursor-pointer ${
                 mode === 'manual'
-                  ? 'bg-white text-lottery shadow-sm font-bold'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm font-bold'
+                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
               }`}
             >
               <Sliders className="h-3.5 w-3.5" />
@@ -386,7 +390,7 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
         </div>
 
         {/* Pie fijo con botón de acción (shrink-0 con env(safe-area-inset-bottom)) */}
-        <div className="shrink-0 border-t border-gray-100 bg-white px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-white dark:bg-[#1D1D1F] px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           {mode === 'equal' ? (
             <button
               type="button"

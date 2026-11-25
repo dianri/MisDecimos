@@ -282,32 +282,36 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
         <div
-          className="w-full max-w-md rounded-3xl bg-white border border-gray-100 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
+          className="w-full max-w-md rounded-[22px] bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
           role="dialog"
           aria-modal="true"
         >
           {/* Cabecera del modal (shrink-0) */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50 shrink-0">
+          <div className="flex items-center justify-between p-5 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 bg-[#F5F5F7]/60 dark:bg-[#2C2C2E]/60 shrink-0">
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#3A5245] text-white shadow-sm">
                 <DecimoIcon className="h-4 w-4" />
               </span>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">Registrar Décimo</h3>
-                <p className="text-[11px] text-gray-500">Añade tu décimo para compartir cuotas</p>
+                <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                  Registrar Décimo
+                </h3>
+                <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+                  Añade tu décimo para compartir cuotas
+                </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+              className="rounded-lg p-1.5 text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* Selector de modo: Escáner vs Manual (shrink-0) */}
-          <div className="p-4 pb-2 shrink-0 border-b border-gray-50 bg-white">
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-gray-100 text-xs font-semibold">
+          <div className="p-4 pb-2 shrink-0 border-b border-[#1D1D1F]/5 dark:border-[#F5F5F7]/5 bg-white dark:bg-[#1D1D1F]">
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => {
@@ -319,10 +323,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
                     setIsScannerOpen(true)
                   }
                 }}
-                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition cursor-pointer ${
                   tab === 'scan'
-                    ? 'bg-white text-lottery shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm'
+                    : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
                 }`}
               >
                 <Camera className="h-3.5 w-3.5" />
@@ -332,10 +336,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
               <button
                 type="button"
                 onClick={() => setTab('manual')}
-                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition ${
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition cursor-pointer ${
                   tab === 'manual'
-                    ? 'bg-white text-lottery shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-sm'
+                    : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
                 }`}
               >
                 <Edit3 className="h-3.5 w-3.5" />

@@ -32,7 +32,6 @@ import {
   Barcode,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   RotateCcw,
   X,
 } from 'lucide-react'
@@ -498,16 +497,18 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             type="button"
             onClick={handleBack}
             aria-label="Volver atrás"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 active:scale-95 transition shadow-xs shrink-0"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-2xl bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:opacity-80 active:scale-95 transition shadow-xs shrink-0 cursor-pointer"
             title="Volver"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-extrabold text-gray-900 tracking-tight truncate">
+            <h2 className="text-base sm:text-lg font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight truncate">
               Detalles del Décimo
             </h2>
-            <p className="text-[11px] text-gray-500 truncate">#{ticket.number} · {ticket.draw_name}</p>
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 truncate">
+              #{ticket.number} · {ticket.draw_name}
+            </p>
           </div>
         </div>
 
@@ -546,14 +547,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       {/* 2. Pestañas de PROPIEDAD e HISTORIAL */}
       <div className="space-y-2.5 sm:space-y-4">
-        <div className="grid grid-cols-2 border-b border-gray-200">
+        <div className="grid grid-cols-2 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
           <button
             type="button"
             onClick={() => setActiveTab('propiedad')}
-            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition ${
+            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'propiedad'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
+                ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
+                : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <Users className="h-3.5 w-3.5 shrink-0" />
@@ -565,10 +566,10 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('historial')}
-            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition ${
+            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'historial'
-                ? 'border-lottery text-lottery'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
+                ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
+                : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <Shield className="h-3.5 w-3.5 shrink-0" />
@@ -611,13 +612,16 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         />
 
         {/* Fila inferior de metadatos */}
-        <div className="flex items-center justify-between text-xs px-2 text-gray-500">
-          <div className="flex items-center gap-1.5 font-mono text-[11px]">
-            <Calendar className="h-3.5 w-3.5 text-gray-400" />
-            <span>FECHA SORTEO: <strong className="text-gray-800">{ticket.draw_date}</strong></span>
+        <div className="flex items-center justify-between text-xs px-2 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+          <div className="flex items-center gap-1.5 tabular-nums text-[11px]">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>
+              FECHA SORTEO:{' '}
+              <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">{ticket.draw_date}</strong>
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 font-semibold text-lottery text-[11px]">
+          <div className="flex items-center gap-1.5 font-semibold text-[#3A5245] dark:text-[#C5A880] text-[11px]">
             <Barcode className="h-3.5 w-3.5" />
             <span>ORIGEN: {ticket.origin === 'BARCODE_GS1' ? 'Escáner GS1-128' : 'Manual'}</span>
           </div>
@@ -638,25 +642,27 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       {/* 5. Panel Diagnóstico: Modo Prueba de Premio (propietario en DEV o 5 taps en Sello Digital) */}
       {isOwner && showSimulationPanel && (
-        <div className="bg-purple-50/90 border border-purple-200/90 rounded-2xl p-4 text-purple-950 space-y-3 shadow-xs animate-in fade-in zoom-in-95 duration-150">
+        <div className="bg-white dark:bg-[#1D1D1F] border border-[#C5A880]/40 rounded-[22px] p-4 text-[#1D1D1F] dark:text-[#F5F5F7] space-y-3 shadow-xs animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-purple-100 text-purple-700">
-                <Sparkles className="h-4 w-4" />
+              <div className="p-1.5 rounded-lg bg-[#C5A880]/20 text-[#C5A880]">
+                <Shield className="h-4 w-4" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-purple-900 leading-tight">
+                <h4 className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7] leading-tight">
                   Modo Prueba de Premio
                 </h4>
-                <p className="text-[10px] text-purple-700">Panel de diagnóstico para el custodio</p>
+                <p className="text-[10px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+                  Panel de diagnóstico
+                </p>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-purple-200/80 text-purple-900 tracking-wider">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase bg-[#C5A880]/20 text-[#1D1D1F] dark:text-[#F5F5F7] tracking-wider">
               Diagnóstico
             </span>
           </div>
 
-          <p className="text-[11px] text-purple-900/80 leading-relaxed">
+          <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 leading-relaxed">
             Permite simular un premio oficial para validar el reparto proporcional en euros, el cobro de cotitulares y las notificaciones Web Push, o restablecer el décimo a su estado pendiente original.
           </p>
 
@@ -665,13 +671,9 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
               type="button"
               onClick={() => handleSimulatePrize(1000)}
               disabled={isSimulating}
-              className="flex-1 py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-xs disabled:opacity-50 cursor-pointer"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-98 transition shadow-xs disabled:opacity-45 cursor-pointer"
             >
-              {isSimulating ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
+              {isSimulating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <span>Simular premio (1.000 €)</span>
             </button>
 
@@ -679,13 +681,13 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
               type="button"
               onClick={handleResetSimulation}
               disabled={isSimulating}
-              className="py-2.5 px-3 rounded-xl bg-white border border-purple-300 text-purple-800 hover:bg-purple-100/60 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition disabled:opacity-50 cursor-pointer"
+              className="py-2.5 px-3 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] hover:opacity-80 text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-98 transition disabled:opacity-45 cursor-pointer"
               title="Restablecer décimo a estado pendiente sin premio"
             >
               {isSimulating ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <RotateCcw className="h-3.5 w-3.5 text-purple-700" />
+                <RotateCcw className="h-3.5 w-3.5" />
               )}
               <span>Restablecer</span>
             </button>
@@ -695,10 +697,10 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       {/* 6. Aviso de seguridad si tiene cotitulares activos */}
       {hasAcceptedThirdPartyShares && (
-        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-start gap-2.5">
-          <Lock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-[11px] leading-relaxed">
-            <strong>Protección de cotitulares:</strong> Este décimo cuenta con participaciones aceptadas por terceros. El número y datos del sorteo están bloqueados e inmutables para salvaguardar los derechos de todos los participantes.
+        <div className="p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] text-xs flex items-start gap-2.5">
+          <Lock className="h-4 w-4 text-[#C5A880] shrink-0 mt-0.5" />
+          <p className="text-[11px] leading-relaxed text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80">
+            <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">Protección de cotitulares:</strong> Este décimo cuenta con participaciones aceptadas por terceros. El número y datos del sorteo están bloqueados e inmutables para salvaguardar los derechos de todos los participantes.
           </p>
         </div>
       )}
