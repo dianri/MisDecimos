@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.76] - 2026-11-25
+
+### Changed
+- **Rediseño UX/UI del Modal «Código de Invitación» (`InviteClaimModal.tsx`):**
+  - Nueva jerarquía de acciones para evitar rechazos accidentales: botón principal full-width **«Reclamar {percentage}%»** en **Oro Cava (`#C5A880`)**, botón secundario neutro **«Volver»** debajo y enlace de texto discreto **«Rechazar participación»** en **Rojo Coral (`#D04848`)** con confirmación en dos pasos (*"¿Confirmar rechazo? Pulsa de nuevo para rechazar"* durante 4 segundos).
+  - Píldora de cuota (`{percentage}% cuota`) en **Verde Granito (`#3A5245`)** con `whitespace-nowrap shrink-0` alineada arriba a la derecha y formato español del importe proporcional (`Importe participación: 5,00 € (de 20,00 €)`).
+  - Sustituido el icono antiguo de ticket por `<DecimoIcon />` en contenedor circular Verde Granito, adaptado el icono de llave a Oro Cava y aplicado soporte completo Modo Claro y Modo Oscuro OLED (`rounded-[24px]`, `rounded-[18px]`, `dark:bg-[#1D1D1F]`).
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/inviteClaimModal.test.ts`):**
+  - Verificación de jerarquía de botones, confirmación previa al rechazo, uso de `<DecimoIcon />`, píldora de cuota en una sola línea y formato español de euros.
+
 ## [1.0.75] - 2026-11-25
 
 ### Fixed

@@ -6,7 +6,17 @@ import {
   rejectInvite,
   type InvitePreviewResult,
 } from '../../services/inviteService'
-import { X, KeyRound, Ticket, Loader2, AlertCircle } from 'lucide-react'
+import { X, KeyRound, Loader2, AlertCircle } from 'lucide-react'
+import { DecimoIcon } from '../icons/DecimoIcon'
+
+const DEFAULT_TICKET_EURO = 20
+
+function formatEuroAmount(amount: number): string {
+  return `${amount.toLocaleString('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} €`
+}
 
 type TicketPreview = InvitePreviewResult
 
@@ -34,10 +44,12 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   const [preview, setPreview] = useState<TicketPreview | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState<'claiming' | 'rejecting' | null>(null)
+  const [confirmReject, setConfirmReject] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     const raw = (initialInviteCode || initialCode || '').trim()
+    setConfirmReject(false)
     if (raw) {
       setCode(raw)
       handleCheckCode(raw)
@@ -48,6 +60,14 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
       setIsSubmitting(null)
     }
   }, [initialCode, initialInviteCode, isOpen])
+
+  useEffect(() => {
+    if (!confirmReject) return
+    const timer = setTimeout(() => {
+      setConfirmReject(false)
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [confirmReject])
 
   // 1. Previsualizar invitación (p_confirm = false)
   const handleCheckCode = async (codeToCheck?: string) => {
@@ -132,14 +152,14 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-sm rounded-[22px] bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
+        className="w-full max-w-sm rounded-[24px] bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90dvh]"
         role="dialog"
         aria-modal="true"
       >
         {/* Cabecera (shrink-0) */}
-        <div className="flex items-center justify-between p-5 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#C5A880]/20 text-[#C5A880]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C5A880]/15 text-[#8C6D43] dark:bg-[#C5A880]/20 dark:text-[#E2CCA8]">
               <KeyRound className="h-4 w-4" />
             </span>
             <div>
@@ -218,20 +238,22 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
           ) : (
             /* Tarjeta de Confirmación de Participación */
             <div className="space-y-4">
-              <div className="rounded-2xl border border-[#3A5245]/30 bg-[#F5F5F7] dark:bg-[#2C2C2E] p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#3A5245] dark:text-[#C5A880]">
-                    <Ticket className="h-4 w-4" />
-                    <span className="text-xs font-extrabold uppercase tracking-wide">
+              <div className="rounded-[18px] bg-[#F5F5F7] dark:bg-[#2C2C2E]/70 border border-[#1D1D1F]/[0.06] dark:border-[#F5F5F7]/[0.08] p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#3A5245]/10 text-[#3A5245] dark:bg-[#3A5245]/25 dark:text-[#96BFA9]">
+                      <DecimoIcon className="h-4 w-4" />
+                    </span>
+                    <span className="text-xs font-extrabold uppercase tracking-wide text-[#1D1D1F] dark:text-[#F5F5F7] leading-snug">
                       {preview.draw_name}
                     </span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#3A5245] text-white text-xs font-bold font-mono">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#3A5245] text-white text-xs font-bold font-mono whitespace-nowrap shrink-0">
                     {preview.percentage}% cuota
                   </span>
                 </div>
 
-                <div className="text-center py-2 bg-white dark:bg-[#1D1D1F] rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 shadow-xs">
+                <div className="text-center py-2.5 bg-white dark:bg-[#1D1D1F] rounded-xl border border-[#1D1D1F]/[0.06] dark:border-[#F5F5F7]/[0.08] shadow-xs">
                   <p className="text-[10px] font-bold tracking-widest text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 uppercase">
                     Número
                   </p>
@@ -240,12 +262,21 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                   </p>
                 </div>
 
-                <div className="text-xs text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 space-y-1">
+                <div className="text-xs text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 space-y-1.5">
                   <p>
                     Compartido por:{' '}
                     <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">
                       {preview.owner_name}
                     </strong>
+                  </p>
+                  <p>
+                    Importe participación:{' '}
+                    <span className="font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] whitespace-nowrap">
+                      {formatEuroAmount((DEFAULT_TICKET_EURO * Number(preview.percentage)) / 100)}
+                    </span>{' '}
+                    <span className="whitespace-nowrap text-[#1D1D1F]/55 dark:text-[#F5F5F7]/55">
+                      (de {formatEuroAmount(DEFAULT_TICKET_EURO)})
+                    </span>
                   </p>
                   <p>
                     Fecha del sorteo:{' '}
@@ -261,48 +292,60 @@ export const InviteClaimModal: React.FC<InviteClaimModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPreview(null)}
-                    disabled={isSubmitting !== null}
-                    className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition active:scale-98 disabled:opacity-50 cursor-pointer"
-                  >
-                    Volver
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleConfirmAccept}
-                    disabled={isSubmitting !== null}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-lottery text-white text-xs font-semibold shadow-md shadow-lottery/20 hover:bg-lottery-600 active:scale-98 transition disabled:opacity-50 cursor-pointer"
-                  >
-                    {isSubmitting === 'claiming' ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Reclamando...</span>
-                      </>
-                    ) : (
-                      <span>Reclamar {preview.percentage}%</span>
-                    )}
-                  </button>
-                </div>
+              <div className="flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleConfirmAccept}
+                  disabled={isSubmitting !== null}
+                  className="w-full py-3.5 rounded-full bg-[#C5A880] hover:bg-[#B8996F] text-[#1D1D1F] text-sm font-semibold shadow-sm flex items-center justify-center gap-2 active:scale-[0.99] transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmitting === 'claiming' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Reclamando...</span>
+                    </>
+                  ) : (
+                    <span>Reclamar {preview.percentage}%</span>
+                  )}
+                </button>
 
                 <button
                   type="button"
-                  onClick={handleRejectInvite}
+                  onClick={() => {
+                    setConfirmReject(false)
+                    setPreview(null)
+                  }}
                   disabled={isSubmitting !== null}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition active:scale-98 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3 rounded-full bg-[#1D1D1F]/[0.05] hover:bg-[#1D1D1F]/[0.10] dark:bg-[#F5F5F7]/[0.08] dark:hover:bg-[#F5F5F7]/[0.14] text-[#1D1D1F] dark:text-[#F5F5F7] text-sm font-medium active:scale-[0.99] transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isSubmitting === 'rejecting' ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Rechazando...</span>
-                    </>
-                  ) : (
-                    <span>Rechazar participación</span>
-                  )}
+                  Volver
                 </button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!confirmReject) {
+                        setConfirmReject(true)
+                        return
+                      }
+                      handleRejectInvite()
+                    }}
+                    disabled={isSubmitting !== null}
+                    className="mt-2 text-xs font-medium text-[#D04848]/80 hover:text-[#D04848] hover:underline underline-offset-4 py-1.5 inline-flex items-center justify-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmitting === 'rejecting' ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Rechazando...</span>
+                      </>
+                    ) : confirmReject ? (
+                      <span>¿Confirmar rechazo? Pulsa de nuevo para rechazar</span>
+                    ) : (
+                      <span>Rechazar participación</span>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}
