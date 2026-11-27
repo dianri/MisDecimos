@@ -48,8 +48,8 @@ test('resolveTicketCardPresentation - billete premiado usa superficie champán l
 
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.isUserActive, true)
-  assert.strictEqual(result.totalPrizeFormatted, '1.000,00 €')
-  assert.strictEqual(result.userPrizeFormatted, '500,00 €')
+  assert.strictEqual(result.totalPrizeFormatted, '1.000,00\u00A0€')
+  assert.strictEqual(result.userPrizeFormatted, '500,00\u00A0€')
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
   assert.ok(result.statusBadgeClasses.includes('bg-[#3A5245]'))
   assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
@@ -67,8 +67,8 @@ test('resolveTicketCardPresentation - billete premiado 100% propietario', () => 
 
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.isUserActive, true)
-  assert.strictEqual(result.totalPrizeFormatted, '400,00 €')
-  assert.strictEqual(result.userPrizeFormatted, '400,00 €')
+  assert.strictEqual(result.totalPrizeFormatted, '400,00\u00A0€')
+  assert.strictEqual(result.userPrizeFormatted, '400,00\u00A0€')
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
 })
 
@@ -82,8 +82,8 @@ test('resolveTicketCardPresentation - billete premiado con participación renunc
 
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.isUserActive, false)
-  assert.strictEqual(result.totalPrizeFormatted, '1.000,00 €')
-  assert.strictEqual(result.userPrizeFormatted, '0,00 €')
+  assert.strictEqual(result.totalPrizeFormatted, '1.000,00\u00A0€')
+  assert.strictEqual(result.userPrizeFormatted, '0,00\u00A0€')
 })
 
 test('resolveTicketCardPresentation - billete premiado liquidado (LIQUIDADO)', () => {
@@ -109,7 +109,7 @@ test('resolveTicketCardPresentation - billete archivado premiado preserva fondo 
 
   assert.strictEqual(result.isPrized, true)
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
-  assert.strictEqual(result.userPrizeFormatted, '375,00 €')
+  assert.strictEqual(result.userPrizeFormatted, '375,00\u00A0€')
   assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
 })
 
@@ -187,8 +187,9 @@ test('Marca "Mis Décimos", filtro en pantalla principal y tarjeta sin cabecera 
   assert.ok(!card.includes('{/* Cabecera */}'))
   assert.ok(card.includes('Banknote'))
   assert.ok(card.includes('Clover'))
-  assert.ok(card.includes('Has ganado {userPrizeFormatted}'))
-  assert.ok(card.includes('De un total de {totalPrizeFormatted}'))
+  assert.ok(card.includes('Has ganado <span className="whitespace-nowrap">{userPrizeFormatted}</span>'))
+  assert.ok(card.includes('De un total de <span className="whitespace-nowrap">{totalPrizeFormatted}</span>'))
+  assert.ok(card.includes('!(isPrized || isCheckedWithoutPrize)'))
   assert.ok(card.includes("'COBRADO' : 'PREMIADO'"))
   assert.ok(card.includes('No premiado'))
   assert.ok(card.includes('formatDrawLabel(ticket.draw_date)'))

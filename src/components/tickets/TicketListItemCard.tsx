@@ -111,12 +111,12 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             <div className="min-w-0">
               {isUserActive ? (
                 <>
-                  <p className="text-base font-black tabular-nums leading-tight text-[#FFFFFF]">
-                    Has ganado {userPrizeFormatted}
+                  <p className="text-[15px] sm:text-base font-black tabular-nums leading-tight text-[#FFFFFF] whitespace-nowrap">
+                    Has ganado <span className="whitespace-nowrap">{userPrizeFormatted}</span>
                   </p>
                   {isShared && (
                     <p className="text-[11px] text-[#FFFFFF]/75 truncate">
-                      De un total de {totalPrizeFormatted}
+                      De un total de <span className="whitespace-nowrap">{totalPrizeFormatted}</span>
                     </p>
                   )}
                 </>
@@ -182,28 +182,30 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              data-no-card-nav="true"
-              disabled={isCheckingPrize}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                onCheckPrizeClick?.(ticket)
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-[#3A5245]/12 hover:bg-[#3A5245]/20 active:scale-[0.98] text-[#2B3F34] dark:bg-[#3A5245]/30 dark:hover:bg-[#3A5245]/40 dark:text-[#A8CEB9] border border-[#3A5245]/25 font-semibold transition-all disabled:opacity-60 shrink-0 cursor-pointer"
-            >
-              {isCheckingPrize ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Search className="w-3.5 h-3.5" />
-              )}
-              <span>{isCheckingPrize ? 'Comprobando...' : 'Comprobar sorteo'}</span>
-            </button>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {!(isPrized || isCheckedWithoutPrize) && (
+              <button
+                type="button"
+                data-no-card-nav="true"
+                disabled={isCheckingPrize}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCheckPrizeClick?.(ticket)
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-[#3A5245]/12 hover:bg-[#3A5245]/20 active:scale-[0.98] text-[#2B3F34] dark:bg-[#3A5245]/30 dark:hover:bg-[#3A5245]/40 dark:text-[#A8CEB9] border border-[#3A5245]/25 font-semibold transition-all disabled:opacity-60 shrink-0 cursor-pointer"
+              >
+                {isCheckingPrize ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Search className="w-3.5 h-3.5" />
+                )}
+                <span>{isCheckingPrize ? 'Comprobando...' : 'Comprobar sorteo'}</span>
+              </button>
+            )}
 
             {isOwner && isPrized && (
               <button
@@ -235,7 +237,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             )}
           </div>
 
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums bg-[#1D1D1F]/[0.05] dark:bg-[#F5F5F7]/[0.07] text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75">
+          <span className="ml-auto px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums bg-[#1D1D1F]/[0.05] dark:bg-[#F5F5F7]/[0.07] text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75 shrink-0 whitespace-nowrap">
             {isOwner && userPercentage === 100
               ? '100% tuyo'
               : `Tu cuota: ${userPercentage}%`}

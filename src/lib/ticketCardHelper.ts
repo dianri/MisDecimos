@@ -44,10 +44,10 @@ export function resolveTicketCardPresentation(params: {
     params.isOwner === false || params.userPercentage < 100 || Boolean(params.hasParticipations)
   const isCollected = Boolean(params.isCollected) || params.status === 'LIQUIDADO'
 
-  const totalPrizeFormatted = `${currencyFormatter.format(params.prizeAmountCents / 100)} €`
+  const totalPrizeFormatted = `${currencyFormatter.format(params.prizeAmountCents / 100)}\u00A0€`
 
   const userPrizeCents = Math.round((params.prizeAmountCents * params.userPercentage) / 100)
-  const userPrizeFormatted = `${currencyFormatter.format(userPrizeCents / 100)} €`
+  const userPrizeFormatted = `${currencyFormatter.format(userPrizeCents / 100)}\u00A0€`
 
   let statusBadgeLabel = params.status
   let statusBadgeClasses = ''
