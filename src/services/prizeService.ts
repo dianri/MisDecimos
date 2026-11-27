@@ -118,3 +118,61 @@ export async function confirmPrizePayoutReceived(
 
   return data as unknown as ConfirmPrizePayoutResult
 }
+
+/**
+ * Permite al propietario/custodio marcar o desmarcar su propia participación como cobrada.
+ * Si el décimo no tiene participaciones de terceros, sincroniza también el estado LIQUIDADO/VALIDADO.
+ */
+export async function toggleOwnerPrizeCollected(params: {
+  ticketId: string
+  userId: string
+  nextCollected: boolean
+  hasThirdPartyParticipants?: boolean
+}): Promise<void> {
+  const nowIso = new Date().toISOString()
+
+  const { error: shareErr } = await supabase
+    .from('ownership_shares')
+    .update({
+      prize_paid_confirmed: params.nextCollected,
+      prize_paid_confirmed_at: params.nextCollected ? nowIso : null,
+      updated_at: nowIso,
+    })
+    .eq('ticket_id', params.ticketId)
+    .eq('user_id', params.userId)
+
+  if (shareErr) {
+    console.error('Error actualizando estado de cobro del propietario:', shareErr)
+    throw new Error(shareErr.message || 'No se pudo actualizar el estado de cobro.')
+  }
+
+  if (!params.hasThirdPartyParticipants) {
+    const { error: ticketErr } = await supabase
+      .from('tickets')
+      .update({
+        status: params.nextCollected ? 'LIQUIDADO' : 'VALIDADO',
+        updated_at: nowIso,
+      })
+      .eq('id', params.ticketId)
+      .eq('owner_id', params.userId)
+
+    if (ticketErr) {
+      console.error('Error sincronizando estado del décimo:', ticketErr)
+      throw new Error(ticketErr.message || 'No se pudo sincronizar el estado del décimo.')
+    }
+  } else if (!params.nextCollected) {
+    const { error: revertTicketErr } = await supabase
+      .from('tickets')
+      .update({
+        status: 'VALIDADO',
+        updated_at: nowIso,
+      })
+      .eq('id', params.ticketId)
+      .eq('owner_id', params.userId)
+      .eq('status', 'LIQUIDADO')
+
+    if (revertTicketErr) {
+      console.warn('Aviso al revertir estado LIQUIDADO del décimo:', revertTicketErr)
+    }
+  }
+}

@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.88] - 2026-11-27
+
+### Added
+- **Acción «Marcar cobrado» para el Propietario (`TicketListItemCard.tsx`, `TicketsPage.tsx`, `PrizeCheckCard.tsx`, `prizeService.ts`):**
+  - Añadido el botón píldora **`Marcar cobrado`** / **`Cobrado`** en tarjetas de propietario con premio (`> 0 €`) y en el detalle (`PrizeCheckCard.tsx`), con actualización optimista, persistencia en `ownership_shares.prize_paid_confirmed` (y `LIQUIDADO`/`VALIDADO` cuando no hay terceros), cambio de pastilla `PREMIADO` ↔ `COBRADO`, posibilidad de revertir si se pulsó por error y actualización inmediata del total **`Cobrado`** en Premios.
+- **Tests Unitarios (`winningTicketCard.test.ts`, `prizesSummary.test.ts`):**
+  - Verificación de `isCollected`, restricción a `isOwner && isPrized`, reversión del cálculo `Cobrado` y estructura Bento de `PrizesPage.tsx`.
+
+### Changed
+- **Diseño *Apple Wallet / Bento Grid* en «Premios» (`PrizesPage.tsx`):**
+  - Rediseñada la vista manteniendo únicamente las 6 métricas clave: **Hero Card** financiera en *Apple Cava Granite* con **`Ganado`**, píldora de balance neto (`Ganado - Jugado`), **`Jugado`**, **`Cobrado`** y barra de progreso `Cobrado / Ganado`; y rejilla inferior de 3 widgets Bento para **`Décimos totales`**, **`Comprobados`** (`X / Y` con barra de progreso) y **`Compartidos`**.
+
 ## [1.0.87] - 2026-11-27
 
 ### Fixed

@@ -240,3 +240,30 @@ test('resolveTicketCardPresentation - restaura bordes originales sin filos paste
   assert.ok(partPrized.containerClasses.includes('border-[1.5px] border-[#C5A880]'))
   assert.ok(!partPrized.containerClasses.includes('#BFD1E5'))
 })
+
+test('TicketListItemCard y resolveTicketCardPresentation - acción Marcar cobrado exclusiva del propietario con premio', () => {
+  const uncollectedOwner = resolveTicketCardPresentation({
+    prizeAmountCents: 100000,
+    status: 'VALIDADO',
+    userPercentage: 100,
+    isOwner: true,
+    isCollected: false,
+  })
+  assert.strictEqual(uncollectedOwner.isCollected, false)
+
+  const collectedOwner = resolveTicketCardPresentation({
+    prizeAmountCents: 100000,
+    status: 'VALIDADO',
+    userPercentage: 50,
+    isOwner: true,
+    isCollected: true,
+  })
+  assert.strictEqual(collectedOwner.isCollected, true)
+
+  const card = readFileSync(resolve(process.cwd(), 'src/components/tickets/TicketListItemCard.tsx'), 'utf8')
+  const ticketsPage = readFileSync(resolve(process.cwd(), 'src/pages/TicketsPage.tsx'), 'utf8')
+  assert.ok(card.includes('isOwner && isPrized'), 'Botón Marcar cobrado debe restringirse a isOwner && isPrized')
+  assert.ok(card.includes("isCollected ? 'COBRADO' : 'PREMIADO'"))
+  assert.ok(card.includes("isCollected ? 'Cobrado' : 'Marcar cobrado'"))
+  assert.ok(ticketsPage.includes('toggleOwnerPrizeCollected'))
+})
