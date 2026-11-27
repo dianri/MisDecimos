@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.87] - 2026-11-27
+
+### Fixed
+- **Reversión de Bordes Pastel Superior/Inferior en Tarjetas (`ticketCardHelper.ts`, `winningTicketCard.test.ts`):**
+  - Eliminados los filos pastel superior e inferior (`#B6D0C0` y `#BFD1E5`) y restaurados los bordes originales de las tarjetas: borde sutil del tema (`border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08]`) en tarjetas normales y borde cálido Oro Cava (`border-[1.5px] border-[#C5A880]`) en tarjetas premiadas, manteniendo las franjas laterales características y el estilo neutro de la etiqueta `Participación`.
+
 ## [1.0.86] - 2026-11-27
 
 ### Changed
