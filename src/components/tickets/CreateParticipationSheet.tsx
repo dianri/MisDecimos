@@ -2,6 +2,7 @@ import React from 'react'
 import { supabase } from '../../lib/supabase'
 import { sanitizeText } from '../../lib/sanitize'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
+import { sortCreatedInvitations, type ShareableInviteItem } from '../../lib/shareBatchHelper'
 import {
   X,
   Sliders,
@@ -20,16 +21,8 @@ export interface CreateParticipationSheetProps {
   drawName: string
   availablePercentage: number
   onClose: () => void
-  onInviteCreated: (invite: {
-    id: string
-    short_code: string
-    invite_token: string
-    percentage: number
-    label?: string | null
-    ticketNumber?: string
-    drawName?: string
-  }) => void
-  onEqualSplitComplete: () => void
+  onInviteCreated: (invite: ShareableInviteItem) => void
+  onEqualSplitComplete: (createdInvitations: ShareableInviteItem[]) => void
 }
 
 export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> = ({
@@ -142,7 +135,31 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
 
       if (error) throw error
 
-      onEqualSplitComplete()
+      // Recuperar las invitaciones recién creadas (ordenadas por Parte 2, Parte 3...)
+      const { data: createdRows, error: fetchErr } = await supabase
+        .from('pending_invites')
+        .select('*')
+        .eq('ticket_id', ticketId)
+        .eq('status', 'PENDIENTE')
+        .order('created_at', { ascending: true })
+
+      if (fetchErr) {
+        console.warn('No se pudieron recuperar las invitaciones recién creadas:', fetchErr)
+      }
+
+      const mappedInvites: ShareableInviteItem[] = sortCreatedInvitations(
+        (createdRows || []).map((row) => ({
+          id: row.id,
+          short_code: row.short_code,
+          invite_token: row.invite_token,
+          percentage: Number(row.percentage),
+          label: row.label,
+          ticketNumber,
+          drawName,
+        }))
+      )
+
+      onEqualSplitComplete(mappedInvites)
       onClose()
     } catch (err: unknown) {
       console.error('Error creando reparto a partes iguales:', err)

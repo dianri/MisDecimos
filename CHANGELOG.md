@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.90] - 2026-11-27
+
+### Added
+- **Apertura Automática de «Compartir Participación» y Selector de Lote con Avance Automático (`CreateParticipationSheet.tsx`, `OwnershipBreakdownCard.tsx`, `ShareInviteModal.tsx`, `shareBatchHelper.ts`):**
+  - Al crear participaciones (tanto en **Partes iguales** como en **Porcentaje manual**), el modal **Compartir Participación** se abre automáticamente con las invitaciones recién creadas.
+  - Cuando el lote tiene **1 única invitación**, se mantiene exactamente la vista individual actual sin selectores extra.
+  - Cuando el lote tiene **2 o más invitaciones**, se muestra el selector *Apple Cava Granite* (`Invitación X de Y · Código único por persona`, píldoras `Parte 2`, `Parte 3`...) y al pulsar **Enviar por WhatsApp**, **Copiar código** u **Otras aplicaciones del sistema**, marca la invitación con `✓` y avanza automáticamente al siguiente código pendiente, mostrando el aviso `"Todas las invitaciones han sido compartidas"` y el botón **`Listo`** al completar el lote.
+- **Tests Unitarios (`src/lib/__tests__/shareBatchModal.test.ts`):**
+  - Cobertura de `sortCreatedInvitations`, `findNextPendingInviteIndex`, apertura automática y flujo de avance en `ShareInviteModal.tsx`.
+
 ## [1.0.89] - 2026-11-27
 
 ### Changed
