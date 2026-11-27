@@ -4,6 +4,7 @@ export interface TicketCardPresentation {
   isPrized: boolean
   isCheckedWithoutPrize: boolean
   isShared: boolean
+  isCollected: boolean
   totalPrizeFormatted: string
   userPrizeFormatted: string
   isUserActive: boolean
@@ -30,6 +31,7 @@ export function resolveTicketCardPresentation(params: {
   userPercentage: number
   isOwner?: boolean
   hasParticipations?: boolean
+  isCollected?: boolean
   isArchived?: boolean
   isRenounced?: boolean
   lastCheckedAt?: string | null
@@ -40,6 +42,7 @@ export function resolveTicketCardPresentation(params: {
     !isPrized && (params.status === 'VALIDADO' || Boolean(params.lastCheckedAt))
   const isShared =
     params.isOwner === false || params.userPercentage < 100 || Boolean(params.hasParticipations)
+  const isCollected = Boolean(params.isCollected) || params.status === 'LIQUIDADO'
 
   const totalPrizeFormatted = `${currencyFormatter.format(params.prizeAmountCents / 100)} €`
 
@@ -84,6 +87,7 @@ export function resolveTicketCardPresentation(params: {
     isPrized,
     isCheckedWithoutPrize,
     isShared,
+    isCollected,
     totalPrizeFormatted,
     userPrizeFormatted,
     isUserActive,

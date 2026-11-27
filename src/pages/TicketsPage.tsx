@@ -25,7 +25,7 @@ import {
 import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../lib/swipeCardState'
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { filterHomeTickets, type HomeTicketFilter } from '../lib/ticketCardHelper'
-import { checkTicketPrize } from '../services/prizeService'
+import { checkTicketPrize, toggleOwnerPrizeCollected } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
   Loader2,
@@ -74,6 +74,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [pendingInviteTicketIds, setPendingInviteTicketIds] = useState<Set<string>>(new Set())
   const [allShares, setAllShares] = useState<OwnershipShareRow[]>([])
   const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
+  const [togglingCollectedTicketId, setTogglingCollectedTicketId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<HomeTicketFilter>('todos')
   const [openSwipeTicketId, setOpenSwipeTicketId] = useState<string | null>(null)
 
@@ -285,6 +286,56 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const handleToggleOwnerCollected = async (
+    ticket: TicketRow,
+    currentlyCollected: boolean,
+    hasParticipations: boolean
+  ) => {
+    if (!user?.id || togglingCollectedTicketId) return
+    const nextCollected = !currentlyCollected
+    const previousShares = allShares
+
+    // Actualización optimista en memoria
+    setTogglingCollectedTicketId(ticket.id)
+    setAllShares((prev) =>
+      prev.map((share) =>
+        share.ticket_id === ticket.id && share.user_id === user.id
+          ? {
+              ...share,
+              prize_paid_confirmed: nextCollected,
+              prize_paid_confirmed_at: nextCollected ? new Date().toISOString() : null,
+            }
+          : share
+      )
+    )
+
+    try {
+      await toggleOwnerPrizeCollected({
+        ticketId: ticket.id,
+        userId: user.id,
+        nextCollected,
+        hasThirdPartyParticipants: hasParticipations,
+      })
+
+      setToastVariant('success')
+      setClaimToastMsg(
+        nextCollected
+          ? 'Premio marcado como cobrado.'
+          : 'Premio desmarcado como pendiente de cobro.'
+      )
+      await loadTickets()
+    } catch (err: unknown) {
+      setAllShares(previousShares)
+      console.error('Error actualizando cobro del propietario:', err)
+      setToastVariant('warning')
+      setClaimToastMsg(
+        err instanceof Error ? err.message : 'No se pudo actualizar el estado de cobro.'
+      )
+    } finally {
+      setTogglingCollectedTicketId(null)
+    }
+  }
+
   const handleSwipeArchive = async (ticketId: string, isCurrentlyArchived: boolean) => {
     try {
       const nextArchive = !isCurrentlyArchived
@@ -449,44 +500,59 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         </div>
       ) : (
         <div className="space-y-3 pb-28">
-          {filteredActiveTickets.map((item) => (
-            <SwipeableTicketCard
-              key={item.ticket.id}
-              ticketId={item.ticket.id}
-              isArchived={item.isArchived}
-              allowDelete={true}
-              rightActionMode={resolveSwipeRightAction(item.isOwner)}
-              openSwipeTicketId={openSwipeTicketId}
-              onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
-              onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
-              onDeleteClick={(id) =>
-                handleSwipeDelete(
-                  id,
-                  item.isOwner,
-                  item.participantsCount,
-                  item.ticket.status
-                )
-              }
-              onRenounceClick={() => handleSwipeRenounce(item.ticket, item.userPercentage)}
-              onCardClick={handleTicketClick}
-            >
-              <TicketListItemCard
-                ticket={item.ticket}
-                userPercentage={item.userPercentage}
-                isOwner={item.isOwner}
-                participantsCount={item.participantsCount}
-                hasParticipations={hasThirdPartyParticipations({
-                  ticketId: item.ticket.id,
-                  shares: allShares,
-                  pendingInviteTicketIds,
-                })}
+          {filteredActiveTickets.map((item) => {
+            const ownerOrUserShare = allShares.find(
+              (s) =>
+                s.ticket_id === item.ticket.id &&
+                s.user_id === user?.id &&
+                s.status === 'ACEPTADA'
+            )
+            const isItemCollected =
+              Boolean(ownerOrUserShare?.prize_paid_confirmed) ||
+              item.ticket.status === 'LIQUIDADO'
+
+            return (
+              <SwipeableTicketCard
+                key={item.ticket.id}
+                ticketId={item.ticket.id}
                 isArchived={item.isArchived}
-                isCheckingPrize={checkingTicketId === item.ticket.id}
-                onShareClick={handleQuickShare}
-                onCheckPrizeClick={handleQuickPrizeCheck}
-              />
-            </SwipeableTicketCard>
-          ))}
+                allowDelete={true}
+                rightActionMode={resolveSwipeRightAction(item.isOwner)}
+                openSwipeTicketId={openSwipeTicketId}
+                onSwipeOpenChange={(id) => setOpenSwipeTicketId(id)}
+                onArchiveClick={(id) => handleSwipeArchive(id, item.isArchived)}
+                onDeleteClick={(id) =>
+                  handleSwipeDelete(
+                    id,
+                    item.isOwner,
+                    item.participantsCount,
+                    item.ticket.status
+                  )
+                }
+                onRenounceClick={() => handleSwipeRenounce(item.ticket, item.userPercentage)}
+                onCardClick={handleTicketClick}
+              >
+                <TicketListItemCard
+                  ticket={item.ticket}
+                  userPercentage={item.userPercentage}
+                  isOwner={item.isOwner}
+                  participantsCount={item.participantsCount}
+                  hasParticipations={hasThirdPartyParticipations({
+                    ticketId: item.ticket.id,
+                    shares: allShares,
+                    pendingInviteTicketIds,
+                  })}
+                  isArchived={item.isArchived}
+                  isCollected={isItemCollected}
+                  isCheckingPrize={checkingTicketId === item.ticket.id}
+                  isTogglingCollected={togglingCollectedTicketId === item.ticket.id}
+                  onShareClick={handleQuickShare}
+                  onCheckPrizeClick={handleQuickPrizeCheck}
+                  onToggleCollectedClick={handleToggleOwnerCollected}
+                />
+              </SwipeableTicketCard>
+            )
+          })}
         </div>
       )}
 

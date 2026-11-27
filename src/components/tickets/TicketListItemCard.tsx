@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Database } from '../../types/database.types'
-import { Banknote, Clover, Calendar, Share2, Search, Loader2, Users } from 'lucide-react'
+import { Banknote, Clover, Calendar, Share2, Search, Loader2, Users, CheckCircle2 } from 'lucide-react'
 import { formatDrawLabel, resolveTicketCardPresentation } from '../../lib/ticketCardHelper'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -13,10 +13,13 @@ export interface TicketListItemCardProps {
   hasParticipations?: boolean
   isArchived?: boolean
   isRenounced?: boolean
+  isCollected?: boolean
   isCheckingPrize?: boolean
+  isTogglingCollected?: boolean
   onClick?: (ticketId: string) => void
   onShareClick?: (ticketId: string, hasParticipations: boolean) => void
   onCheckPrizeClick?: (ticket: TicketRow) => void
+  onToggleCollectedClick?: (ticket: TicketRow, currentlyCollected: boolean, hasParticipations: boolean) => void
 }
 
 export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
@@ -26,15 +29,19 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   hasParticipations,
   isArchived = false,
   isRenounced = false,
+  isCollected: isCollectedProp = false,
   isCheckingPrize = false,
+  isTogglingCollected = false,
   onClick,
   onShareClick,
   onCheckPrizeClick,
+  onToggleCollectedClick,
 }) => {
   const {
     isPrized,
     isCheckedWithoutPrize,
     isShared,
+    isCollected,
     totalPrizeFormatted,
     userPrizeFormatted,
     isUserActive,
@@ -45,6 +52,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
     userPercentage,
     isOwner,
     hasParticipations,
+    isCollected: isCollectedProp,
     isArchived,
     isRenounced,
     lastCheckedAt: ticket.last_checked_at,
@@ -126,7 +134,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
           </div>
 
           <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-white/15 text-[#FFFFFF] shrink-0">
-            {ticket.status === 'LIQUIDADO' ? 'COBRADO' : 'PREMIADO'}
+            {isCollected ? 'COBRADO' : 'PREMIADO'}
           </span>
         </div>
       ) : isCheckedWithoutPrize ? (
@@ -174,27 +182,58 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            data-no-card-nav="true"
-            disabled={isCheckingPrize}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation()
-              onCheckPrizeClick?.(ticket)
-            }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-[#3A5245]/12 hover:bg-[#3A5245]/20 active:scale-[0.98] text-[#2B3F34] dark:bg-[#3A5245]/30 dark:hover:bg-[#3A5245]/40 dark:text-[#A8CEB9] border border-[#3A5245]/25 font-semibold transition-all disabled:opacity-60 shrink-0 cursor-pointer"
-          >
-            {isCheckingPrize ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Search className="w-3.5 h-3.5" />
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              data-no-card-nav="true"
+              disabled={isCheckingPrize}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                onCheckPrizeClick?.(ticket)
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] bg-[#3A5245]/12 hover:bg-[#3A5245]/20 active:scale-[0.98] text-[#2B3F34] dark:bg-[#3A5245]/30 dark:hover:bg-[#3A5245]/40 dark:text-[#A8CEB9] border border-[#3A5245]/25 font-semibold transition-all disabled:opacity-60 shrink-0 cursor-pointer"
+            >
+              {isCheckingPrize ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Search className="w-3.5 h-3.5" />
+              )}
+              <span>{isCheckingPrize ? 'Comprobando...' : 'Comprobar sorteo'}</span>
+            </button>
+
+            {isOwner && isPrized && (
+              <button
+                type="button"
+                data-no-card-nav="true"
+                disabled={isTogglingCollected}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleCollectedClick?.(ticket, isCollected, hasParticipations ?? false)
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] active:scale-[0.98] font-semibold transition-all disabled:opacity-60 shrink-0 cursor-pointer border ${
+                  isCollected
+                    ? 'bg-[#3A5245] hover:bg-[#2F4338] text-[#FFFFFF] border-[#3A5245]'
+                    : 'bg-[#C5A880]/18 hover:bg-[#C5A880]/28 text-[#73562E] dark:bg-[#C5A880]/18 dark:hover:bg-[#C5A880]/28 dark:text-[#E5CFA9] border-[#C5A880]/45'
+                }`}
+              >
+                {isTogglingCollected ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : isCollected ? (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                ) : (
+                  <Banknote className="w-3.5 h-3.5" />
+                )}
+                <span>{isCollected ? 'Cobrado' : 'Marcar cobrado'}</span>
+              </button>
             )}
-            <span>{isCheckingPrize ? 'Comprobando...' : 'Comprobar sorteo'}</span>
-          </button>
+          </div>
 
           <span className="px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums bg-[#1D1D1F]/[0.05] dark:bg-[#F5F5F7]/[0.07] text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75">
             {isOwner && userPercentage === 100
