@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.84] - 2026-11-27
+
+### Changed
+- **Etiqueta `Participación` Neutra y Filo Superior/Inferior Pastel por Propiedad (`TicketListItemCard.tsx`, `ticketCardHelper.ts`):**
+  - Unificado el estilo de la pastilla **`Participación`** con superficie neutra (`bg-[#FFFFFF] dark:bg-[#2C2C2E]`, borde `#E5E5EA` / `#3A3A3C`, texto `#1D1D1F` / `#F5F5F7`) sin tonos rojizos ni interacción de botón.
+  - Añadido filo fino superior e inferior (`border-y-[1.5px]`) en todas las tarjetas (normales y premiadas): **Verde Salvia clarito** (`#B6D0C0` / `rgba(116,176,139,0.38)`) para décimos propios y **Azul Pizarra clarito** (`#BFD1E5` / `rgba(130,168,214,0.38)`) para participaciones recibidas.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/winningTicketCard.test.ts`):**
+  - Verificación de estilo neutro sin tonos rojizos en `Participación` y bordes pastel diferenciados en décimos propios y participaciones (incluyendo estado premiado).
+
 ## [1.0.83] - 2026-11-27
 
 ### Changed
