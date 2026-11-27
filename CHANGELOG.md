@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.92] - 2026-11-27
+
+### Changed
+- **Navegación Unificada sin `BottomNav` y Nueva Cabecera (`AppShell.tsx`, `useAndroidBackNavigation.ts`):**
+  - Eliminada por completo la barra inferior móvil (`BottomNav`) y la navegación duplicada de escritorio, dejando únicamente el margen inferior necesario para el botón flotante **Añadir** en la vista principal.
+  - Reorganizada la cabecera superior: avatar circular de **Mi Perfil** a la izquierda junto al título **`Mis Décimos`** (que vuelve a `/` y activa el filtro `Todos`), eliminando el nombre de usuario, y colocando la campana de **Notificaciones** con su punto indicador arriba a la derecha.
+  - Redirigida la ruta `/premios` hacia `/?filter=premiados`.
+- **Contadores en Filtros e Integración Hero Card Bento en `Premiados` (`TicketsPage.tsx`, `PrizesHeroCard.tsx`):**
+  - Añadido el contador reactivo a la derecha de cada pestaña (`Todos`, `Premiados`, `Sin premio`).
+  - Integrada la tarjeta financiera principal *Apple Cava Granite* (`Ganado`, balance neto, `Jugado`, `Cobrado` y barra de progreso) en la parte superior de la pestaña **`Premiados`** (sin las 3 tarjetas pequeñas inferiores), seguida del listado ordenado de décimos y participaciones premiados.
+
+### Fixed
+- **Formato de Premio y Pie de Tarjeta en Décimos Comprobados/Premiados (`TicketListItemCard.tsx`, `ticketCardHelper.ts`):**
+  - Añadido espacio duro (`\u00A0€`) y `whitespace-nowrap` en el importe de premio para impedir que el símbolo `€` salte a la siguiente línea en pantallas estrechas.
+  - Ocultada la píldora redundante **Comprobar sorteo** en décimos ya comprobados o premiados para alinear en una sola fila el botón **Marcar cobrado** / **Cobrado** y la cuota de propiedad.
+
 ## [1.0.91] - 2026-11-27
 
 ### Fixed

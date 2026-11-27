@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { TicketListItemCard } from '../components/tickets/TicketListItemCard'
+import { PrizesHeroCard } from '../components/tickets/PrizesHeroCard'
 import { SwipeableTicketCard } from '../components/tickets/SwipeableTicketCard'
 import { TicketFormModal } from '../components/tickets/TicketFormModal'
 import { InviteClaimModal } from '../components/tickets/InviteClaimModal'
@@ -25,6 +26,7 @@ import {
 import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../lib/swipeCardState'
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { filterHomeTickets, type HomeTicketFilter } from '../lib/ticketCardHelper'
+import { buildPrizesSummary } from '../lib/prizesSummary'
 import { checkTicketPrize, toggleOwnerPrizeCollected } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
@@ -36,6 +38,7 @@ import {
 } from 'lucide-react'
 
 export interface TicketsPageProps {
+  resetFilterTrigger?: number
   onSelectTicket?: (
     ticketId: string,
     options?: {
@@ -50,11 +53,12 @@ export interface TicketsPageProps {
 }
 
 export const TicketsPage: React.FC<TicketsPageProps> = ({
+  resetFilterTrigger = 0,
   onSelectTicket,
 }) => {
   const { user } = useAuth()
 
-  const [, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const activeTab: 'decimos' | 'participaciones' | 'archivados' = 'decimos'
   const [ticketLists, setTicketLists] = useState<UserTicketListsAndMetrics>(() =>
     classifyUserTickets([], [], new Set(), '')
@@ -72,11 +76,31 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [claimToastMsg, setClaimToastMsg] = useState<string | null>(null)
   const [toastVariant, setToastVariant] = useState<'success' | 'warning'>('success')
   const [pendingInviteTicketIds, setPendingInviteTicketIds] = useState<Set<string>>(new Set())
+  const [allTickets, setAllTickets] = useState<TicketRow[]>([])
   const [allShares, setAllShares] = useState<OwnershipShareRow[]>([])
+  const [archivedTicketIds, setArchivedTicketIds] = useState<Set<string>>(new Set())
   const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
   const [togglingCollectedTicketId, setTogglingCollectedTicketId] = useState<string | null>(null)
-  const [activeFilter, setActiveFilter] = useState<HomeTicketFilter>('todos')
+  const [activeFilter, setActiveFilter] = useState<HomeTicketFilter>(() => {
+    const initialFilter = searchParams.get('filter')
+    if (initialFilter === 'premiados' || initialFilter === 'sin_premio') {
+      return initialFilter
+    }
+    return 'todos'
+  })
   const [openSwipeTicketId, setOpenSwipeTicketId] = useState<string | null>(null)
+
+  // Al pulsar "Mis Décimos" en la cabecera, volver al filtro Todos
+  useEffect(() => {
+    if (resetFilterTrigger > 0) {
+      setActiveFilter('todos')
+      if (searchParams.get('filter')) {
+        const nextParams = new URLSearchParams(searchParams)
+        nextParams.delete('filter')
+        setSearchParams(nextParams, { replace: true })
+      }
+    }
+  }, [resetFilterTrigger, searchParams, setSearchParams])
 
   // Auto-cierre del toast de confirmación tras 5 segundos
   useEffect(() => {
@@ -187,13 +211,15 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         new Set((pendingInvitesData || []).map((inv) => inv.ticket_id))
       )
 
-      const archivedTicketIds = new Set((hidesData || []).map((h) => h.ticket_id))
+      const nextArchivedIds = new Set((hidesData || []).map((h) => h.ticket_id))
 
+      setAllTickets(ticketsData || [])
+      setArchivedTicketIds(nextArchivedIds)
       setAllShares(sharesData || [])
       const metrics = classifyUserTickets(
         ticketsData || [],
         sharesData || [],
-        archivedTicketIds,
+        nextArchivedIds,
         user.id
       )
 
@@ -438,11 +464,26 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const todosCount = unifiedActiveTickets.length
+  const premiadosCount = useMemo(
+    () => filterHomeTickets(unifiedActiveTickets, 'premiados').length,
+    [unifiedActiveTickets]
+  )
+  const sinPremioCount = useMemo(
+    () => filterHomeTickets(unifiedActiveTickets, 'sin_premio').length,
+    [unifiedActiveTickets]
+  )
+
+  const prizesSummary = useMemo(
+    () => buildPrizesSummary(allTickets, allShares, archivedTicketIds, user?.id || ''),
+    [allTickets, allShares, archivedTicketIds, user?.id]
+  )
+
   const filteredActiveTickets = filterHomeTickets(unifiedActiveTickets, activeFilter)
 
   return (
-    <div className="space-y-4 pb-32 max-w-xl mx-auto">
-      {/* Selector segmentado de filtro (Todos / Premiados / Sin premio) */}
+    <div className="space-y-4 pb-24 max-w-xl mx-auto">
+      {/* Selector segmentado de filtro (Todos / Premiados / Sin premio) con contadores */}
       <div
         role="tablist"
         aria-label="Filtrar décimos por resultado"
@@ -450,9 +491,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       >
         {(
           [
-            { id: 'todos', label: 'Todos' },
-            { id: 'premiados', label: 'Premiados' },
-            { id: 'sin_premio', label: 'Sin premio' },
+            { id: 'todos', label: 'Todos', count: todosCount },
+            { id: 'premiados', label: 'Premiados', count: premiadosCount },
+            { id: 'sin_premio', label: 'Sin premio', count: sinPremioCount },
           ] as const
         ).map((option) => {
           const isActive = activeFilter === option.id
@@ -463,17 +504,25 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveFilter(option.id)}
-              className={`py-2 px-3 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`py-2 px-2 sm:px-3 rounded-xl text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 ${
                 isActive
                   ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] font-semibold shadow-xs'
                   : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] font-medium'
               }`}
             >
-              {option.label}
+              <span>{option.label}</span>
+              <span className="tabular-nums text-[11px] font-bold opacity-70">
+                {option.count}
+              </span>
             </button>
           )
         })}
       </div>
+
+      {/* Hero Card financiera Bento integrada en la pestaña Premiados */}
+      {!isLoading && activeFilter === 'premiados' && (
+        <PrizesHeroCard summary={prizesSummary} />
+      )}
 
       {/* Listado unificado de décimos y participaciones activas */}
       {isLoading ? (
@@ -556,8 +605,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         </div>
       )}
 
-      {/* Botón flotante "Añadir" justo encima de BottomNav */}
-      <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-6 left-4 right-4 z-30 max-w-lg mx-auto">
+      {/* Botón flotante "Añadir" */}
+      <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] md:bottom-6 left-4 right-4 z-30 max-w-lg mx-auto">
         <button
           type="button"
           onClick={() => {
