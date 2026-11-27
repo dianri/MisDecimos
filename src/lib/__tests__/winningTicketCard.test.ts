@@ -54,7 +54,7 @@ test('resolveTicketCardPresentation - billete premiado usa superficie champán l
   assert.ok(result.statusBadgeClasses.includes('bg-[#3A5245]'))
   assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
   assert.ok(result.containerClasses.includes('dark:from-[#262017]'))
-  assert.ok(result.containerClasses.includes('border-[#C5A880]'))
+  assert.ok(result.containerClasses.includes('border-t-[#B6D0C0]'))
   assert.ok(result.containerClasses.includes('rounded-[22px]'))
 })
 
@@ -198,5 +198,45 @@ test('Marca "Mis Décimos", filtro en pantalla principal y tarjeta sin cabecera 
   assert.ok(card.includes('<span>Compartir</span>'))
   assert.ok(card.includes('<span>Participación</span>'))
   assert.ok(card.includes('<Users className="w-3.5 h-3.5 shrink-0" />'))
+  assert.ok(
+    card.includes('bg-[#FFFFFF] dark:bg-[#2C2C2E] border border-[#E5E5EA] dark:border-[#3A3A3C] text-[#1D1D1F] dark:text-[#F5F5F7]'),
+    'La etiqueta Participación debe usar estilo neutro claro/oscuro sin tonos rojizos'
+  )
+  assert.ok(
+    !card.includes('text-rose-') && !card.includes('bg-rose-') && !card.includes('text-red-') && !card.includes('bg-red-') && !card.includes('#D04848'),
+    'La etiqueta Participación no debe usar colores rojizos ni rosados'
+  )
   assert.ok(ticketsPage.includes('space-y-3 pb-28'), 'El listado principal debe incluir pb-28')
+})
+
+test('resolveTicketCardPresentation - filo superior e inferior pastel diferenciado para Décimo vs Participación', () => {
+  const ownNormal = resolveTicketCardPresentation({
+    prizeAmountCents: 0,
+    status: 'PENDIENTE',
+    userPercentage: 100,
+    isOwner: true,
+  })
+  assert.ok(ownNormal.containerClasses.includes('border-y-[1.5px]'))
+  assert.ok(ownNormal.containerClasses.includes('border-t-[#B6D0C0]'))
+  assert.ok(ownNormal.containerClasses.includes('border-b-[#B6D0C0]'))
+
+  const partNormal = resolveTicketCardPresentation({
+    prizeAmountCents: 0,
+    status: 'PENDIENTE',
+    userPercentage: 25,
+    isOwner: false,
+  })
+  assert.ok(partNormal.containerClasses.includes('border-y-[1.5px]'))
+  assert.ok(partNormal.containerClasses.includes('border-t-[#BFD1E5]'))
+  assert.ok(partNormal.containerClasses.includes('border-b-[#BFD1E5]'))
+
+  const partPrized = resolveTicketCardPresentation({
+    prizeAmountCents: 100000,
+    status: 'VALIDADO',
+    userPercentage: 25,
+    isOwner: false,
+  })
+  assert.ok(partPrized.containerClasses.includes('from-[#FCF9F3]'))
+  assert.ok(partPrized.containerClasses.includes('border-t-[#BFD1E5]'))
+  assert.ok(partPrized.containerClasses.includes('border-b-[#BFD1E5]'))
 })
