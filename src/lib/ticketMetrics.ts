@@ -97,15 +97,46 @@ export function classifyUserTickets(
 }
 
 /**
+ * Ordena décimos y participaciones de forma determinista:
+ * 1. Fecha de sorteo más reciente primero (`draw_date` descendente, YYYY-MM-DD).
+ * 2. Dentro del mismo sorteo, número de décimo de menor a mayor (`Number(number)` ascendente).
+ * 3. Desempate determinista por serie, fracción e identificador `id`.
+ */
+export function sortTicketsByDrawAndNumber<
+  T extends {
+    ticket: Pick<TicketRow, 'id' | 'draw_date' | 'number' | 'serie' | 'fraccion'>
+  }
+>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const drawCmp = (b.ticket.draw_date || '').localeCompare(a.ticket.draw_date || '')
+    if (drawCmp !== 0) return drawCmp
+
+    const numA = Number(a.ticket.number)
+    const numB = Number(b.ticket.number)
+    if (Number.isFinite(numA) && Number.isFinite(numB) && numA !== numB) {
+      return numA - numB
+    }
+    const numStrCmp = String(a.ticket.number || '').localeCompare(String(b.ticket.number || ''))
+    if (numStrCmp !== 0) return numStrCmp
+
+    const serieCmp = String(a.ticket.serie || '').localeCompare(String(b.ticket.serie || ''))
+    if (serieCmp !== 0) return serieCmp
+
+    const fraccionCmp = String(a.ticket.fraccion || '').localeCompare(
+      String(b.ticket.fraccion || '')
+    )
+    if (fraccionCmp !== 0) return fraccionCmp
+
+    return a.ticket.id.localeCompare(b.ticket.id)
+  })
+}
+
+/**
  * Ordena el listado unificado de Décimos propios activos y Participaciones activas
- * por fecha de sorteo (más reciente primero) y fecha de creación descendente.
+ * por fecha de sorteo (más reciente primero) y número de décimo (de menor a mayor).
  */
 export function buildUnifiedActiveTicketsList(
   activeTickets: TicketItemWithMeta[]
 ): TicketItemWithMeta[] {
-  return [...activeTickets].sort((a, b) => {
-    const drawCmp = b.ticket.draw_date.localeCompare(a.ticket.draw_date)
-    if (drawCmp !== 0) return drawCmp
-    return b.ticket.created_at.localeCompare(a.ticket.created_at)
-  })
+  return sortTicketsByDrawAndNumber(activeTickets)
 }
