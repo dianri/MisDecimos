@@ -54,7 +54,7 @@ test('resolveTicketCardPresentation - billete premiado usa superficie champán l
   assert.ok(result.statusBadgeClasses.includes('bg-[#3A5245]'))
   assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
   assert.ok(result.containerClasses.includes('dark:from-[#262017]'))
-  assert.ok(result.containerClasses.includes('border-t-[#B6D0C0]'))
+  assert.ok(result.containerClasses.includes('border-[#C5A880]'))
   assert.ok(result.containerClasses.includes('rounded-[22px]'))
 })
 
@@ -209,16 +209,16 @@ test('Marca "Mis Décimos", filtro en pantalla principal y tarjeta sin cabecera 
   assert.ok(ticketsPage.includes('space-y-3 pb-28'), 'El listado principal debe incluir pb-28')
 })
 
-test('resolveTicketCardPresentation - filo superior e inferior pastel diferenciado para Décimo vs Participación', () => {
+test('resolveTicketCardPresentation - restaura bordes originales sin filos pastel superior/inferior', () => {
   const ownNormal = resolveTicketCardPresentation({
     prizeAmountCents: 0,
     status: 'PENDIENTE',
     userPercentage: 100,
     isOwner: true,
   })
-  assert.ok(ownNormal.containerClasses.includes('border-y-[1.5px]'))
-  assert.ok(ownNormal.containerClasses.includes('border-t-[#B6D0C0]'))
-  assert.ok(ownNormal.containerClasses.includes('border-b-[#B6D0C0]'))
+  assert.ok(!ownNormal.containerClasses.includes('#B6D0C0'))
+  assert.ok(!ownNormal.containerClasses.includes('#BFD1E5'))
+  assert.ok(ownNormal.containerClasses.includes('border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08]'))
 
   const partNormal = resolveTicketCardPresentation({
     prizeAmountCents: 0,
@@ -226,9 +226,9 @@ test('resolveTicketCardPresentation - filo superior e inferior pastel diferencia
     userPercentage: 25,
     isOwner: false,
   })
-  assert.ok(partNormal.containerClasses.includes('border-y-[1.5px]'))
-  assert.ok(partNormal.containerClasses.includes('border-t-[#BFD1E5]'))
-  assert.ok(partNormal.containerClasses.includes('border-b-[#BFD1E5]'))
+  assert.ok(!partNormal.containerClasses.includes('#B6D0C0'))
+  assert.ok(!partNormal.containerClasses.includes('#BFD1E5'))
+  assert.ok(partNormal.containerClasses.includes('border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08]'))
 
   const partPrized = resolveTicketCardPresentation({
     prizeAmountCents: 100000,
@@ -237,6 +237,6 @@ test('resolveTicketCardPresentation - filo superior e inferior pastel diferencia
     isOwner: false,
   })
   assert.ok(partPrized.containerClasses.includes('from-[#FCF9F3]'))
-  assert.ok(partPrized.containerClasses.includes('border-t-[#BFD1E5]'))
-  assert.ok(partPrized.containerClasses.includes('border-b-[#BFD1E5]'))
+  assert.ok(partPrized.containerClasses.includes('border-[1.5px] border-[#C5A880]'))
+  assert.ok(!partPrized.containerClasses.includes('#BFD1E5'))
 })

@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.86` (Producción Estable · Limpieza Visual en Notificaciones)  
+**Versión Actual:** `1.0.87` (Producción Estable · Restauración de Bordes Originales en Tarjetas)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.86`)  
+**Rama de Producción:** `main` (Tag `v1.0.87`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

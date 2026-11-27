@@ -75,14 +75,10 @@ export function resolveTicketCardPresentation(params: {
   }
 
   const swipeEdgeClasses = 'border-l-4 border-l-[#3A5245] border-r-4 border-r-[#D04848]'
-  const isOwnerTicket = params.isOwner !== false
-  const ownershipTopBottomBorderClasses = isOwnerTicket
-    ? 'border-y-[1.5px] border-t-[#B6D0C0] border-b-[#B6D0C0] dark:border-t-[rgba(116,176,139,0.38)] dark:border-b-[rgba(116,176,139,0.38)]'
-    : 'border-y-[1.5px] border-t-[#BFD1E5] border-b-[#BFD1E5] dark:border-t-[rgba(130,168,214,0.38)] dark:border-b-[rgba(130,168,214,0.38)]'
 
   const containerClasses = isPrized
-    ? `bg-gradient-to-br from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4] dark:from-[#262017] dark:via-[#1F1B15] dark:to-[#1D1D1F] ${ownershipTopBottomBorderClasses} ${swipeEdgeClasses} shadow-[0_4px_16px_rgba(197,168,128,0.18)] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
-    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] ${ownershipTopBottomBorderClasses} ${swipeEdgeClasses} shadow-[0_2px_10px_rgba(29,29,31,0.04)] dark:shadow-none p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
+    ? `bg-gradient-to-br from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4] dark:from-[#262017] dark:via-[#1F1B15] dark:to-[#1D1D1F] border-[1.5px] border-[#C5A880] dark:border-[#C5A880]/75 ${swipeEdgeClasses} shadow-[0_4px_16px_rgba(197,168,128,0.18)] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] p-5 hover:brightness-[0.98] active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
+    : `bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] rounded-[22px] border-y border-y-[#1D1D1F]/[0.07] dark:border-y-[#F5F5F7]/[0.08] ${swipeEdgeClasses} shadow-[0_2px_10px_rgba(29,29,31,0.04)] dark:shadow-none p-5 hover:shadow-md active:scale-[0.99] transition-all cursor-pointer space-y-4 relative overflow-hidden`
 
   return {
     isPrized,
