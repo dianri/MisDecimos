@@ -167,7 +167,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
               <span>Compartir</span>
             </button>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#D04848]/10 text-[#A83232] dark:bg-[#D04848]/20 dark:text-[#F29B9B] border border-[#D04848]/25 shrink-0 select-none">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-[#FFFFFF] dark:bg-[#2C2C2E] border border-[#E5E5EA] dark:border-[#3A3A3C] text-[#1D1D1F] dark:text-[#F5F5F7] shrink-0 select-none">
               <Users className="w-3.5 h-3.5 shrink-0" />
               <span>Participación</span>
             </span>
