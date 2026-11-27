@@ -18,8 +18,14 @@ export interface ScrutinizedTicketItem {
 
 export interface PrizesSummaryResult {
   activeTicketsCount: number
+  checkedCount: number
+  sharedCount: number
+  totalPlayedCents: number
+  totalPlayedEuros: number
   totalPrizeCents: number
   totalPrizeEuros: number
+  totalCollectedCents: number
+  totalCollectedEuros: number
   scrutinizedItems: ScrutinizedTicketItem[]
   prizedCount: number
   noPrizeCount: number
@@ -51,6 +57,9 @@ export function buildPrizesSummary(
   const classified = classifyUserTickets(tickets, shares, archivedTicketIds, userId)
 
   let totalPrizeCents = 0
+  let totalPlayedCents = 0
+  let totalCollectedCents = 0
+  let sharedCount = 0
   const scrutinizedItems: ScrutinizedTicketItem[] = []
 
   for (const item of classified.activeTickets) {
@@ -60,8 +69,23 @@ export function buildPrizesSummary(
       ? Math.round((ticket.prize_amount_cents * userPercentage) / 100)
       : 0
 
+    const ticketPriceCents = Math.round((ticket.ticket_price || 20) * 100)
+    totalPlayedCents += Math.round((ticketPriceCents * userPercentage) / 100)
+
+    if (!isOwner || userPercentage < 100) {
+      sharedCount += 1
+    }
+
     if (isPrized) {
       totalPrizeCents += userPrizeCents
+      const userShare = shares.find(
+        (s) => s.ticket_id === ticket.id && s.user_id === userId && s.status === 'ACEPTADA'
+      )
+      const isCollected =
+        ticket.status === 'LIQUIDADO' || Boolean(userShare?.prize_paid_confirmed)
+      if (isCollected) {
+        totalCollectedCents += userPrizeCents
+      }
     }
 
     if (isTicketScrutinized(ticket)) {
@@ -104,8 +128,14 @@ export function buildPrizesSummary(
 
   return {
     activeTicketsCount: classified.totalActivosCount,
+    checkedCount: scrutinizedItems.length,
+    sharedCount,
+    totalPlayedCents,
+    totalPlayedEuros: totalPlayedCents / 100,
     totalPrizeCents,
     totalPrizeEuros: totalPrizeCents / 100,
+    totalCollectedCents,
+    totalCollectedEuros: totalCollectedCents / 100,
     scrutinizedItems,
     prizedCount,
     noPrizeCount,

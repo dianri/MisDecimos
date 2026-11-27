@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import {
-  buildPrizesSummary,
-  filterScrutinizedItems,
-  type PrizesFilterType,
-} from '../lib/prizesSummary'
+import { buildPrizesSummary } from '../lib/prizesSummary'
 import type { TicketRow, OwnershipShareRow } from '../lib/ticketMetrics'
-import { Trophy, CheckCircle2, Calendar, Loader2 } from 'lucide-react'
+import { Banknote, Loader2 } from 'lucide-react'
 
 export interface PrizesPageProps {
   onSelectTicket?: (ticketId: string) => void
@@ -19,13 +15,12 @@ const currencyFormatter = new Intl.NumberFormat('es-ES', {
   useGrouping: true,
 })
 
-export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
+export const PrizesPage: React.FC<PrizesPageProps> = () => {
   const { user } = useAuth()
   const [tickets, setTickets] = useState<TicketRow[]>([])
   const [shares, setShares] = useState<OwnershipShareRow[]>([])
   const [archivedTicketIds, setArchivedTicketIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<PrizesFilterType>('todos')
 
   const loadData = useCallback(async () => {
     if (!user?.id) return
@@ -83,228 +78,76 @@ export const PrizesPage: React.FC<PrizesPageProps> = ({ onSelectTicket }) => {
     [tickets, shares, archivedTicketIds, user?.id]
   )
 
-  const filteredItems = useMemo(
-    () => filterScrutinizedItems(summary.scrutinizedItems, filter),
-    [summary.scrutinizedItems, filter]
-  )
+  const summaryRows = [
+    {
+      label: 'Décimos totales',
+      value: String(summary.activeTicketsCount),
+      valueClass: 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+    },
+    {
+      label: 'Comprobados',
+      value: `${summary.checkedCount} / ${summary.activeTicketsCount}`,
+      valueClass: 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+    },
+    {
+      label: 'Compartidos',
+      value: String(summary.sharedCount),
+      valueClass: 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+    },
+    {
+      label: 'Jugado',
+      value: `${currencyFormatter.format(summary.totalPlayedEuros)} €`,
+      valueClass: 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+    },
+    {
+      label: 'Ganado',
+      value: `${currencyFormatter.format(summary.totalPrizeEuros)} €`,
+      valueClass:
+        summary.totalPrizeCents > 0
+          ? 'text-[#3A5245] dark:text-[#C5A880]'
+          : 'text-[#1D1D1F] dark:text-[#F5F5F7]',
+    },
+    {
+      label: 'Cobrado',
+      value: `${currencyFormatter.format(summary.totalCollectedEuros)} €`,
+      valueClass:
+        summary.totalCollectedCents > 0
+          ? 'text-[#3A5245] dark:text-[#96BFA9]'
+          : 'text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70',
+    },
+  ]
 
   return (
-    <div className="space-y-5 pb-12 max-w-xl mx-auto">
-      {/* 1. Bloque Superior — Tarjetas KPI (2 columnas) */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm p-5 space-y-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-            Resumen de Premios
+    <div className="pb-12 max-w-xl mx-auto">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#1D1D1F]/[0.06] dark:border-[#F5F5F7]/[0.08] flex items-center gap-2.5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C5A880]/18 text-[#8C6D43] dark:bg-[#C5A880]/20 dark:text-[#E2CCA8]">
+            <Banknote className="w-4 h-4" />
+          </span>
+          <h2 className="text-sm font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+            Resumen
           </h2>
-          <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-            Balance de tus décimos activos y resultados oficiales comprobados
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] p-3.5 border border-black/[0.04] dark:border-white/[0.06] space-y-1">
-            <span className="text-[10px] uppercase font-semibold tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-              Décimos Activos
-            </span>
-            <p className="text-2xl font-black tabular-nums text-[#1D1D1F] dark:text-[#F5F5F7]">
-              {summary.activeTicketsCount}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-[#F5F5F7] dark:bg-[#000000] p-3.5 border border-black/[0.04] dark:border-white/[0.06] space-y-1">
-            <span className="text-[10px] uppercase font-semibold tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-              Total Premios
-            </span>
-            <p className="text-2xl font-black tabular-nums text-[#C5A880]">
-              {currencyFormatter.format(summary.totalPrizeEuros)} €
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Bloque Inferior — Historial de Escrutinio */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-            Historial de Escrutinio
-          </h3>
-
-          {/* Filtro rápido con contadores */}
-          <div className="inline-flex rounded-xl bg-black/[0.05] dark:bg-white/[0.08] p-0.5 text-[11px] font-semibold">
-            <button
-              type="button"
-              onClick={() => setFilter('todos')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                filter === 'todos'
-                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs'
-                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
-              }`}
-            >
-              Todos ({summary.scrutinizedItems.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('premiados')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                filter === 'premiados'
-                  ? 'bg-white dark:bg-[#1D1D1F] text-[#3A5245] dark:text-[#C5A880] shadow-xs'
-                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
-              }`}
-            >
-              Premiados ({summary.prizedCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('sin_premio')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                filter === 'sin_premio'
-                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] shadow-xs'
-                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
-              }`}
-            >
-              Sin premio ({summary.noPrizeCount})
-            </button>
-          </div>
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center p-12">
+          <div className="flex justify-center p-10">
             <Loader2 className="h-6 w-6 animate-spin text-[#C5A880]" />
           </div>
-        ) : summary.scrutinizedItems.length === 0 ? (
-          <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-8 text-center space-y-2.5">
-            <div className="mx-auto w-12 h-12 rounded-2xl bg-[#C5A880]/15 flex items-center justify-center text-[#C5A880]">
-              <Trophy className="w-6 h-6" />
-            </div>
-            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-              Sin sorteos comprobados aún
-            </h3>
-            <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 max-w-xs mx-auto leading-relaxed">
-              Aquí aparecerán tus décimos premiados y el historial de sorteos comprobados en cuanto valides tus décimos.
-            </p>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-7 text-center space-y-1.5">
-            <p className="text-xs font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-              {filter === 'premiados'
-                ? 'Ningún décimo premiado en este filtro'
-                : 'No hay décimos comprobados sin premio'}
-            </p>
-            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-              Cambia el filtro superior para ver el resto de resultados.
-            </p>
-          </div>
         ) : (
-          <div className="space-y-3">
-            {filteredItems.map((item) => {
-              const { ticket, isOwner, userPercentage, isPrized, userPrizeCents, prizeCategory } =
-                item
-              const userPrizeFormatted = `${currencyFormatter.format(userPrizeCents / 100)} €`
-
-              return (
-                <button
-                  key={ticket.id}
-                  type="button"
-                  onClick={() => onSelectTicket?.(ticket.id)}
-                  className={`w-full text-left rounded-[22px] p-5 transition-all active:scale-[0.99] relative overflow-hidden space-y-3 cursor-pointer ${
-                    isPrized
-                      ? 'bg-gradient-to-br from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4] dark:from-[#262017] dark:via-[#1F1B15] dark:to-[#1D1D1F] border-[1.5px] border-[#C5A880] dark:border-[#C5A880]/75 shadow-[0_4px_16px_rgba(197,168,128,0.18)] text-[#1D1D1F] dark:text-[#F5F5F7] hover:brightness-[0.98]'
-                      : 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-[0_2px_10px_rgba(29,29,31,0.04)] dark:shadow-none hover:shadow-md'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${
-                          isPrized
-                            ? 'bg-[#3A5245] text-[#FFFFFF]'
-                            : 'bg-[#3A5245]/10 dark:bg-[#3A5245]/25 text-[#3A5245] dark:text-[#F5F5F7]'
-                        }`}
-                      >
-                        {isPrized ? (
-                          <Trophy className="w-4.5 h-4.5" />
-                        ) : (
-                          <CheckCircle2 className="w-4.5 h-4.5" />
-                        )}
-                      </div>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-2xl font-black tracking-tight tabular-nums leading-none text-[#1D1D1F] dark:text-[#F5F5F7]">
-                            {ticket.number}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                              isOwner
-                                ? 'bg-[#3A5245]/10 text-[#3A5245] dark:bg-[#3A5245]/25 dark:text-[#96BFA9]'
-                                : 'bg-[#C5A880]/18 text-[#7C5F35] dark:bg-[#C5A880]/20 dark:text-[#E2CCA8]'
-                            }`}
-                          >
-                            {isOwner ? 'Propio' : `Participación · ${userPercentage}%`}
-                          </span>
-                        </div>
-                        <p
-                          className={`text-[11px] truncate mt-1 ${
-                            isPrized
-                              ? 'text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70'
-                              : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
-                          }`}
-                        >
-                          {ticket.draw_name}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      {isPrized ? (
-                        <div className="px-2.5 py-1 rounded-xl bg-[#3A5245] text-[#FFFFFF]">
-                          <p className="text-sm font-black tabular-nums leading-tight">
-                            {userPrizeFormatted}
-                          </p>
-                          <span className="text-[10px] font-medium text-[#FFFFFF]/80">
-                            tu {userPercentage}%
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="text-sm font-bold tabular-nums text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-                          0,00 €
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div
-                    className={`flex items-center justify-between gap-2 pt-2.5 border-t text-[11px] ${
-                      isPrized
-                        ? 'border-[#C5A880]/35'
-                        : 'border-black/[0.06] dark:border-white/[0.08]'
-                    }`}
-                  >
-                    <div
-                      className={`flex items-center gap-1.5 ${
-                        isPrized
-                          ? 'text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70'
-                          : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
-                      }`}
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{ticket.draw_date}</span>
-                    </div>
-
-                    {isPrized ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#3A5245] text-[#FFFFFF] text-[10px] font-semibold">
-                        <Trophy className="w-3 h-3 text-[#C5A880]" />
-                        <span>{prizeCategory || 'Décimo premiado'}</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#3A5245] text-[#FFFFFF] dark:text-[#F5F5F7] text-[10px] font-semibold">
-                        <span>✓ Comprobado</span>
-                      </span>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
+          <div className="divide-y divide-[#1D1D1F]/[0.06] dark:divide-[#F5F5F7]/[0.08]">
+            {summaryRows.map((row) => (
+              <div
+                key={row.label}
+                className="px-5 py-3.5 flex items-center justify-between gap-4"
+              >
+                <span className="text-xs font-medium text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
+                  {row.label}
+                </span>
+                <span className={`text-sm font-extrabold tabular-nums ${row.valueClass}`}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>
