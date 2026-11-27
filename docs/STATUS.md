@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.85` (Producción Estable · Pantalla Premios como Resumen de 6 Métricas)  
+**Versión Actual:** `1.0.86` (Producción Estable · Limpieza Visual en Notificaciones)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.85`)  
+**Rama de Producción:** `main` (Tag `v1.0.86`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
