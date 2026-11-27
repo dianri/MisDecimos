@@ -1,5 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   buildPrizesSummary,
   filterScrutinizedItems,
@@ -111,4 +113,44 @@ test('isTicketScrutinized - detecta correctamente estados comprobados y pendient
   assert.equal(isTicketScrutinized({ prize_amount_cents: 0, last_checked_at: '2026-11-25T00:00:00Z', status: 'VALIDADO' }), true)
   assert.equal(isTicketScrutinized({ prize_amount_cents: 2000, last_checked_at: null, status: 'PENDIENTE' }), true)
   assert.equal(isTicketScrutinized({ prize_amount_cents: 0, last_checked_at: null, status: 'LIQUIDADO' }), true)
+})
+
+test('buildPrizesSummary - calcula las 6 métricas clave (totales, comprobados, compartidos, jugado, ganado, cobrado)', () => {
+  const userId = 'user-1'
+  const tickets: TicketRow[] = [
+    // Propio 100% comprobado sin premio (20 € jugado)
+    { ...baseTicket, id: 't1', owner_id: userId, number: '11111', draw_date: '2026-12-22', status: 'VALIDADO', prize_amount_cents: 0, last_checked_at: '2026-12-22T12:00:00Z', check_source: 'elpais' },
+    // Propio compartido (50% -> 10 € jugado), premiado 100 € total -> 50 € usuario, LIQUIDADO (cobrado)
+    { ...baseTicket, id: 't2', owner_id: userId, number: '22222', draw_date: '2026-12-22', status: 'LIQUIDADO', prize_amount_cents: 10_000, last_checked_at: '2026-12-22T12:00:00Z', check_source: 'elpais' },
+    // Participación recibida (25% -> 5 € jugado), pendiente de comprobar
+    { ...baseTicket, id: 't3', owner_id: 'other', number: '33333', draw_date: '2026-12-22', status: 'PENDIENTE', prize_amount_cents: 0, last_checked_at: null, check_source: null },
+  ]
+  const shares: OwnershipShareRow[] = [
+    { ...baseShare, id: 's1', ticket_id: 't1', user_id: userId, role: 'PROPIETARIO', percentage: 100, status: 'ACEPTADA' },
+    { ...baseShare, id: 's2', ticket_id: 't2', user_id: userId, role: 'PROPIETARIO', percentage: 50, status: 'ACEPTADA' },
+    { ...baseShare, id: 's3', ticket_id: 't3', user_id: userId, role: 'PARTICIPANTE', percentage: 25, status: 'ACEPTADA' },
+  ]
+
+  const summary = buildPrizesSummary(tickets, shares, new Set(), userId)
+  assert.equal(summary.activeTicketsCount, 3)
+  assert.equal(summary.checkedCount, 2)
+  assert.equal(summary.sharedCount, 2) // t2 (<100%) y t3 (participación recibida)
+  assert.equal(summary.totalPlayedCents, 3_500) // 20 + 10 + 5 = 35 €
+  assert.equal(summary.totalPrizeCents, 5_000) // 50 €
+  assert.equal(summary.totalCollectedCents, 5_000) // t2 LIQUIDADO -> 50 € cobrados
+})
+
+test('Navegación usa Banknote para Premios y PrizesPage muestra solo tabla Resumen de 6 métricas', () => {
+  const shellSource = readFileSync(resolve(process.cwd(), 'src/components/layout/AppShell.tsx'), 'utf8')
+  const prizesSource = readFileSync(resolve(process.cwd(), 'src/pages/PrizesPage.tsx'), 'utf8')
+
+  assert.ok(shellSource.includes("{ id: 'premios', label: 'Premios', icon: Banknote }"))
+  assert.ok(!shellSource.includes('Trophy'))
+
+  assert.ok(!prizesSource.includes('Trophy'))
+  assert.ok(!prizesSource.includes('Balance de tus décimos activos y resultados oficiales comprobados'))
+  assert.ok(!prizesSource.includes('Historial de Escrutinio'))
+  for (const label of ['Décimos totales', 'Comprobados', 'Compartidos', 'Jugado', 'Ganado', 'Cobrado']) {
+    assert.ok(prizesSource.includes(label), `PrizesPage debe incluir la métrica ${label}`)
+  }
 })
