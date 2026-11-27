@@ -7,8 +7,16 @@ import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import type { Database } from '../../types/database.types'
 import { DecimoIcon } from '../icons/DecimoIcon'
 import {
+  buildDrawDateIso,
+  extractYearFromIsoDate,
+  formatDrawDateDisplay,
+  getDefaultDrawYear,
+  getSelectableDrawYears,
+} from '../../lib/drawDateSelector'
+import {
   X,
   Camera,
+  Calendar,
   Edit3,
   Layers,
   Loader2,
@@ -69,7 +77,8 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
               initialScannedData.drawName
             )
           } else if (initialScannedData.drawDate) {
-            setDrawDate(initialScannedData.drawDate)
+            setSelectedYear(extractYearFromIsoDate(initialScannedData.drawDate))
+            setHasManualYearSelection(true)
           }
           if (initialScannedData.ticketPrice) {
             setTicketPrice(initialScannedData.ticketPrice.toFixed(2))
@@ -104,7 +113,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
   const [fraccion, setFraccion] = useState('01')
   const [drawType, setDrawType] = useState<'NAVIDAD' | 'EL_NINO'>('NAVIDAD')
   const [drawName, setDrawName] = useState('Sorteo Extraordinario de Navidad')
-  const [drawDate, setDrawDate] = useState('2026-12-22')
+  const [selectedYear, setSelectedYear] = useState<number>(() => getDefaultDrawYear('NAVIDAD'))
+  const [hasManualYearSelection, setHasManualYearSelection] = useState(false)
+  const drawDate = buildDrawDateIso(drawType, selectedYear)
+  const selectableYears = getSelectableDrawYears(new Date().getFullYear(), selectedYear)
   const [ticketPrice, setTicketPrice] = useState('20.00')
   const [barcodeRaw, setBarcodeRaw] = useState<string | null>(null)
   const [origin, setOrigin] = useState<'BARCODE_GS1' | 'MANUAL'>('MANUAL')
@@ -148,11 +160,10 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
     explicitName?: string
   ) => {
     setDrawType(type)
-    const now = new Date()
-    const currentYear = now.getFullYear()
 
     if (explicitDate) {
-      setDrawDate(explicitDate)
+      setSelectedYear(extractYearFromIsoDate(explicitDate))
+      setHasManualYearSelection(true)
       setDrawName(
         explicitName ||
           (type === 'NAVIDAD'
@@ -160,14 +171,15 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
             : 'Sorteo Extraordinario de El Niño')
       )
     } else if (type === 'NAVIDAD') {
-      const year = now > new Date(currentYear, 11, 22) ? currentYear + 1 : currentYear
       setDrawName('Sorteo Extraordinario de Navidad')
-      setDrawDate(`${year}-12-22`)
+      if (!hasManualYearSelection) {
+        setSelectedYear(getDefaultDrawYear('NAVIDAD'))
+      }
     } else {
-      // El Niño es el 6 de enero
-      const year = now.getMonth() > 0 || now.getDate() > 6 ? currentYear + 1 : currentYear
       setDrawName('Sorteo Extraordinario de El Niño')
-      setDrawDate(`${year}-01-06`)
+      if (!hasManualYearSelection) {
+        setSelectedYear(getDefaultDrawYear('EL_NINO'))
+      }
     }
     setTicketPrice('20.00')
 
@@ -210,7 +222,8 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
       if (parsed.drawType) {
         handleDrawTypeChange(parsed.drawType, parsed.drawDate, parsed.drawName)
       } else if (parsed.drawDate) {
-        setDrawDate(parsed.drawDate)
+        setSelectedYear(extractYearFromIsoDate(parsed.drawDate))
+        setHasManualYearSelection(true)
       }
       if (parsed.ticketPrice) setTicketPrice(parsed.ticketPrice.toFixed(2))
     } else {
@@ -447,13 +460,27 @@ export const TicketFormModal: React.FC<TicketFormModalProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-gray-700">Fecha del Sorteo</label>
-                <input
-                  type="date"
-                  required
-                  value={drawDate}
-                  onChange={(e) => setDrawDate(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-lottery/20 focus:border-lottery"
-                />
+                <div className="relative w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-gray-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-lottery/20 focus-within:border-lottery text-gray-900 flex items-center justify-between transition">
+                  <span className="tabular-nums font-medium">
+                    {formatDrawDateDisplay(drawType, selectedYear)}
+                  </span>
+                  <Calendar className="h-3.5 w-3.5 text-gray-500 shrink-0 pointer-events-none" />
+                  <select
+                    aria-label="Año del sorteo"
+                    value={selectedYear}
+                    onChange={(e) => {
+                      setSelectedYear(Number(e.target.value))
+                      setHasManualYearSelection(true)
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  >
+                    {selectableYears.map((yearOption) => (
+                      <option key={yearOption} value={yearOption}>
+                        {yearOption}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-1">

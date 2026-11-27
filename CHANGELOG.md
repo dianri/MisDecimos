@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.82] - 2026-11-27
+
+### Changed
+- **Selector Exclusivo de Año para Fecha del Sorteo (`TicketFormModal.tsx`, `drawDateSelector.ts`):**
+  - Sustituido el `<input type="date">` nativo del campo **Fecha del Sorteo** por un selector exclusivo de año (`<select aria-label="Año del sorteo">` transparente superpuesto), manteniendo exactamente la apariencia visual (`DD/MM/YYYY` con icono de calendario a la derecha).
+  - Fijado automáticamente el día y mes según el tipo de sorteo (`Navidad` → `22/12/{año}`, `El Niño` → `06/01/{año}`), sugiriendo el año en curso para Navidad y el próximo sorteo para El Niño, y sincronizando año y tipo al escanear un código SELAE.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/drawDateSelector.test.ts`):**
+  - Verificación de formato `22/12/YYYY` y `06/01/YYYY`, generación ISO `YYYY-12-22` / `YYYY-01-06`, cálculo de año por defecto, rango seleccionable y ausencia de `type="date"` en `TicketFormModal.tsx`.
+
 ## [1.0.81] - 2026-11-27
 
 ### Changed
