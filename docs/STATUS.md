@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.88` (Producción Estable · Cobro del Propietario y Bento Grid en Premios)  
+**Versión Actual:** `1.0.89` (Producción Estable · Ordenamiento por Sorteo y Número en Pantalla Principal)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.88`)  
+**Rama de Producción:** `main` (Tag `v1.0.89`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

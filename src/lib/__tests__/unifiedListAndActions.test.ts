@@ -3,9 +3,11 @@ import assert from 'node:assert/strict'
 import {
   classifyUserTickets,
   buildUnifiedActiveTicketsList,
+  sortTicketsByDrawAndNumber,
   type TicketRow,
   type OwnershipShareRow,
 } from '../ticketMetrics.ts'
+import { filterHomeTickets } from '../ticketCardHelper.ts'
 import { shouldShowCreateParticipationButton } from '../cardQuickActions.ts'
 import { resolveTicketCardPresentation } from '../ticketCardHelper.ts'
 import { clampSwipeOffset, resolveSwipeSnap } from '../swipeCardState.ts'
@@ -108,5 +110,46 @@ test('shouldShowCreateParticipationButton - visible solo para propietario con po
   assert.equal(
     shouldShowCreateParticipationButton({ isOwner: true, ticketStatus: 'LIQUIDADO', availablePercentage: 50 }),
     false
+  )
+})
+
+test('sortTicketsByDrawAndNumber - ordena por sorteo más reciente primero y número ascendente dentro del mismo sorteo', () => {
+  const userId = 'user-1'
+  const tickets: TicketRow[] = [
+    { ...baseTicket, id: 't-nav26-high', owner_id: userId, number: '12345', draw_date: '2026-12-22', status: 'VALIDADO', prize_amount_cents: 0, last_checked_at: '2026-12-22T12:00:00Z', created_at: '2026-11-01T10:00:00Z' },
+    { ...baseTicket, id: 't-nav25', owner_id: userId, number: '00001', draw_date: '2025-12-22', status: 'VALIDADO', prize_amount_cents: 2000, last_checked_at: '2025-12-22T12:00:00Z', created_at: '2026-11-01T10:00:00Z' },
+    { ...baseTicket, id: 't-nino27', owner_id: 'other', number: '99999', draw_date: '2027-01-06', status: 'PENDIENTE', prize_amount_cents: 0, last_checked_at: null, created_at: '2026-11-01T10:00:00Z' },
+    { ...baseTicket, id: 't-nav26-low', owner_id: 'other', number: '02320', draw_date: '2026-12-22', status: 'VALIDADO', prize_amount_cents: 10000, last_checked_at: '2026-12-22T12:00:00Z', created_at: '2026-11-01T10:00:00Z' },
+    { ...baseTicket, id: 't-nav26-mid', owner_id: userId, number: '11111', draw_date: '2026-12-22', status: 'VALIDADO', prize_amount_cents: 2000, last_checked_at: '2026-12-22T12:00:00Z', created_at: '2026-11-01T10:00:00Z' },
+  ]
+  const shares: OwnershipShareRow[] = [
+    { ...baseShare, id: 's1', ticket_id: 't-nav26-high', user_id: userId, role: 'PROPIETARIO', percentage: 100, status: 'ACEPTADA' },
+    { ...baseShare, id: 's2', ticket_id: 't-nav25', user_id: userId, role: 'PROPIETARIO', percentage: 100, status: 'ACEPTADA' },
+    { ...baseShare, id: 's3', ticket_id: 't-nino27', user_id: userId, role: 'PARTICIPANTE', percentage: 25, status: 'ACEPTADA' },
+    { ...baseShare, id: 's4', ticket_id: 't-nav26-low', user_id: userId, role: 'PARTICIPANTE', percentage: 50, status: 'ACEPTADA' },
+    { ...baseShare, id: 's5', ticket_id: 't-nav26-mid', user_id: userId, role: 'PROPIETARIO', percentage: 100, status: 'ACEPTADA' },
+  ]
+
+  const classified = classifyUserTickets(tickets, shares, new Set(), userId)
+  const sorted = sortTicketsByDrawAndNumber(classified.activeTickets)
+
+  // 1º: El Niño 2027 (2027-01-06), luego Navidad 2026 (02320 < 11111 < 12345), luego Navidad 2025
+  assert.deepEqual(
+    sorted.map((item) => item.ticket.id),
+    ['t-nino27', 't-nav26-low', 't-nav26-mid', 't-nav26-high', 't-nav25']
+  )
+
+  // Persistencia del orden en los 3 filtros (Todos, Premiados, Sin premio)
+  assert.deepEqual(
+    filterHomeTickets(sorted, 'todos').map((i) => i.ticket.id),
+    ['t-nino27', 't-nav26-low', 't-nav26-mid', 't-nav26-high', 't-nav25']
+  )
+  assert.deepEqual(
+    filterHomeTickets(sorted, 'premiados').map((i) => i.ticket.id),
+    ['t-nav26-low', 't-nav26-mid', 't-nav25']
+  )
+  assert.deepEqual(
+    filterHomeTickets(sorted, 'sin_premio').map((i) => i.ticket.id),
+    ['t-nav26-high']
   )
 })
