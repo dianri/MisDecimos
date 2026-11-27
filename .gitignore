@@ -31,3 +31,8 @@ dist-ssr
 
 # Supabase CLI temp files
 supabase/.temp/
+
+# Database backups
+backups/
+backups/*.sql
+*.dump

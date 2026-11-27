@@ -45,3 +45,9 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
    - Tras cualquier cambio en PostgreSQL, regenerar `src/types/database.types.ts` desde Supabase (`xmdghpyfrblmtjtevtru`).
 5. **Cierre de tarea:**
    - Es obligatorio actualizar `CHANGELOG.md`, `README.md`, `docs/STATUS.md` y comprobar si `AGENTS.md`, `docs/ARCHITECTURE.md` o `docs/SCREENS_GUIDE.md` requieren actualización antes de integrar la rama en `develop`.
+
+## Regla Obligatoria de Base de Datos y Backups (Supabase Cloud)
+Estas normas son de estricto cumplimiento para cualquier tarea futura que implique cambios en la base de datos:
+1. **Backup previo obligatorio:** Antes de crear, modificar o aplicar cualquier migración SQL (`supabase/migrations/*`), trigger, función RPC o cambio de esquema/RLS en Supabase, el agente **debe ejecutar primero `npm run db:backup`** y confirmar que el archivo `.sql` en `backups/` se ha generado correctamente y no está vacío (`> 0 bytes`). Si no puede ejecutarse por faltar `SUPABASE_DB_URL` en `.env.local`, debe detenerse y pedírsela al usuario antes de tocar la base de datos.
+2. **Triggers defensivos en tablas de producción:** Cualquier trigger añadido sobre tablas ya activas en producción (`tickets`, `participations`, `ownership_shares`, `profiles`, etc.) debe comprobar en su primera línea si el registro pertenece a la nueva funcionalidad y ejecutar un **retorno inmediato (`RETURN NEW;` / `RETURN OLD;`)** para todos los registros normales de producción.
+3. **Plan de reversión (Rollback):** Toda nueva migración en `supabase/migrations/` debe incluir al final un bloque comentado `-- ROLLBACK:` con las sentencias `DROP TRIGGER`, `DROP FUNCTION` y `DROP TABLE` exactas para deshacer los cambios al instante sin afectar a los datos en producción.

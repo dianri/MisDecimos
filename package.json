@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types src/lib/__tests__/*.test.ts",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:backup": "bash scripts/backup-supabase.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
