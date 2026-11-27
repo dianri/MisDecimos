@@ -64,6 +64,7 @@ import {
   DONUT_STROKE_WIDTH,
 } from '../../lib/ownershipSegments'
 import { shouldShowCreateParticipationButton } from '../../lib/cardQuickActions'
+import type { ShareableInviteItem } from '../../lib/shareBatchHelper'
 
 export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   ticketId,
@@ -87,6 +88,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   // Modales
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [activeShareInvite, setActiveShareInvite] = useState<PendingInvite | null>(null)
+  const [activeShareBatch, setActiveShareBatch] = useState<ShareableInviteItem[]>([])
   const [activeMenuShareId, setActiveMenuShareId] = useState<string | null>(null)
   const [openSwipeShareId, setOpenSwipeShareId] = useState<string | null>(null)
   const [renouncingShare, setRenouncingShare] = useState<OwnershipShare | null>(null)
@@ -1012,31 +1014,25 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         onInviteCreated={async (newInvite) => {
           setShowCreateSheet(false)
           await onRefresh()
-          setActiveShareInvite({
-            id: newInvite.id,
-            short_code: newInvite.short_code,
-            invite_token: newInvite.invite_token,
-            percentage: newInvite.percentage,
-            label: newInvite.label || null,
-            ticket_id: ticketId,
-            status: 'PENDIENTE',
-            created_by: user?.id || '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            accepted_at: null,
-            accepted_by_user_id: null,
-          })
+          setActiveShareBatch([newInvite])
         }}
-        onEqualSplitComplete={async () => {
+        onEqualSplitComplete={async (createdInvitations) => {
           setShowCreateSheet(false)
           await onRefresh()
+          if (createdInvitations.length > 0) {
+            setActiveShareBatch(createdInvitations)
+          }
         }}
       />
 
-      {/* Modal para ver QR y compartir invitación existente */}
+      {/* Modal para ver QR y compartir invitación existente o lote recién creado */}
       <ShareInviteModal
-        isOpen={!!activeShareInvite}
-        onClose={() => setActiveShareInvite(null)}
+        isOpen={activeShareBatch.length > 0 || !!activeShareInvite}
+        onClose={() => {
+          setActiveShareBatch([])
+          setActiveShareInvite(null)
+        }}
+        invitations={activeShareBatch.length > 0 ? activeShareBatch : undefined}
         invite={
           activeShareInvite
             ? {
