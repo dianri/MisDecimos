@@ -98,7 +98,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
                 <span>Instalación PWA</span>
               </div>
               <h3 id="pwa-install-title" className="text-base font-bold text-[#1D1D1F] dark:text-[#F5F5F7] leading-tight">
-                Instala MisDecimos en tu dispositivo
+                Instala Mis Décimos en tu dispositivo
               </h3>
             </div>
           </div>
@@ -219,13 +219,13 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
                     2
                   </div>
                   <div className="text-xs leading-relaxed">
-                    Confirma el nombre <span className="font-bold">MisDecimos</span> y pulsa <span className="font-bold">Añadir</span>.
+                    Confirma el nombre <span className="font-bold">Mis Décimos</span> y pulsa <span className="font-bold">Añadir</span>.
                   </div>
                 </div>
               </div>
 
               <p className="text-[11px] text-gray-500 leading-relaxed">
-                Podrás abrir MisDecimos directamente desde el Dock como una app nativa con su propia ventana independiente.
+                Podrás abrir Mis Décimos directamente desde el Dock como una app nativa con su propia ventana independiente.
               </p>
             </div>
           )}
@@ -240,7 +240,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
                 </p>
                 <ol className="list-decimal list-inside space-y-1 text-[11px] text-gray-600">
                   <li>Pulsa el icono de instalación en la barra de direcciones de tu navegador.</li>
-                  <li>O abre el menú de opciones (<span className="font-bold">≡</span> / <span className="font-bold">⋮</span>) y selecciona <span className="font-bold">«Instalar MisDecimos»</span> o <span className="font-bold">«Crear acceso directo»</span>.</li>
+                  <li>O abre el menú de opciones (<span className="font-bold">≡</span> / <span className="font-bold">⋮</span>) y selecciona <span className="font-bold">«Instalar Mis Décimos»</span> o <span className="font-bold">«Crear acceso directo»</span>.</li>
                 </ol>
               </div>
 

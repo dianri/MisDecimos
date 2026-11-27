@@ -59,7 +59,7 @@ test('ProfilePage muestra píldora flotante de versión exclusivamente en Mi Per
 
   const loginSource = readFileSync(resolve(process.cwd(), 'src/pages/LoginPage.tsx'), 'utf8')
   assert.ok(!loginSource.includes('__APP_VERSION__'), 'LoginPage no debe mostrar número de versión')
-  assert.ok(loginSource.includes('MisDecimos · Plataforma segura PWA de reparto de Lotería'))
+  assert.ok(loginSource.includes('Mis Décimos · Plataforma segura PWA de reparto de Lotería'))
 
   const appSource = readFileSync(resolve(process.cwd(), 'src/App.tsx'), 'utf8')
   const shellSource = readFileSync(resolve(process.cwd(), 'src/components/layout/AppShell.tsx'), 'utf8')

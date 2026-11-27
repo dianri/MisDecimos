@@ -32,8 +32,8 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: 'MisDecimos',
-        short_name: 'MisDecimos',
+        name: 'Mis Décimos',
+        short_name: 'Mis Décimos',
         description: 'Custodia compartida y reparto de décimos de Lotería Nacional',
         theme_color: '#2E6146',
         background_color: '#F7F9F7',

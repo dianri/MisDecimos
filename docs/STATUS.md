@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.80` (Producción Estable · Renovación Preventiva de Sesión y Reintento 401)  
-**Última Actualización:** 2026-11-25  
-**Rama de Producción:** `main` (Tag `v1.0.80`)  
+**Versión Actual:** `1.0.81` (Producción Estable · Marca «Mis Décimos», Filtros y Tarjeta Simplificada)  
+**Última Actualización:** 2026-11-27  
+**Rama de Producción:** `main` (Tag `v1.0.81`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

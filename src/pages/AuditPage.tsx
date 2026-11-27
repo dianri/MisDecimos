@@ -347,7 +347,7 @@ export const AuditPage: React.FC<AuditPageProps> = ({ onSelectTicket, onBack }) 
       {showGuarantees && (
         <div className="bg-white rounded-3xl border border-gray-200/80 p-5 shadow-xs space-y-4">
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-2">
-            Las 4 Reglas de Seguridad de MisDecimos
+            Las 4 Reglas de Seguridad de Mis Décimos
           </h4>
 
           <div className="grid grid-cols-1 gap-3 text-xs">

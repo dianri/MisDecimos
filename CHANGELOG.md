@@ -5,6 +5,21 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.81] - 2026-11-27
+
+### Changed
+- **Renombrado de Marca a «Mis Décimos» (`index.html`, `vite.config.ts`, `AppShell.tsx`, `LoginPage.tsx`, `PwaInstallBanner.tsx`, `ProfilePage.tsx`, `AuditPage.tsx`):**
+  - Actualizado el nombre visible de la aplicación a **`Mis Décimos`** en la barra superior, `<title>`, manifiesto PWA, inicio de sesión y guías de instalación, manteniendo intactos los identificadores técnicos internos.
+- **Rediseño de Tarjetas y Filtro Segmentado en Pantalla Principal (`TicketsPage.tsx`, `TicketListItemCard.tsx`, `ticketCardHelper.ts`):**
+  - Eliminado el encabezado `<h2>` `"Mis Décimos y Participaciones (X)"` y añadido en su lugar el selector segmentado **`Todos`** / **`Premiados`** / **`Sin premio`** (`filterHomeTickets`), excluyendo estrictamente los décimos pendientes de comprobar de ambos filtros específicos.
+  - Eliminada la cabecera redundante de cada tarjeta en `TicketListItemCard.tsx` para arrancar directamente con `NÚMERO` y `Serie` / `Fracción`.
+  - Rediseñada la barra de resultado: icono `Banknote`, texto **`Has ganado {importe}`**, subtexto condicional `De un total de {total}` solo si está compartido, píldora **`PREMIADO`** / **`COBRADO`**, barra neutra **`No premiado`** con icono `Clover` para `0 €`, y oculta cuando aún no se ha comprobado.
+  - Añadido `formatDrawLabel` para mostrar **`Sorteo de Navidad`** (`*-12-22`), **`Sorteo del Niño`** (`*-01-06`) o `Sorteo: YYYY-MM-DD`.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/winningTicketCard.test.ts`):**
+  - Cobertura de `filterHomeTickets`, `formatDrawLabel`, `isShared`, marca `"Mis Décimos"` y estructura de la tarjeta y barra de resultado.
+
 ## [1.0.80] - 2026-11-25
 
 ### Added
