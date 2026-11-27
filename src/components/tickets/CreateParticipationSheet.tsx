@@ -127,13 +127,18 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
     setErrorMsg(null)
 
     try {
-      const { error } = await supabase.rpc('create_equal_split_participations', {
+      const { data: rpcData, error } = await supabase.rpc('create_equal_split_participations', {
         p_ticket_id: ticketId,
         p_parts_count: partsCount,
         p_owner_participates: ownerParticipates,
       })
 
       if (error) throw error
+
+      const rpcCreated = Array.isArray(rpcData)
+        ? (rpcData as Array<{ invite_id?: string; short_code?: string; percentage?: number }>)
+        : []
+      const rpcIds = new Set(rpcCreated.map((r) => r.invite_id).filter(Boolean))
 
       // Recuperar las invitaciones recién creadas (ordenadas por Parte 2, Parte 3...)
       const { data: createdRows, error: fetchErr } = await supabase
@@ -147,16 +152,30 @@ export const CreateParticipationSheet: React.FC<CreateParticipationSheetProps> =
         console.warn('No se pudieron recuperar las invitaciones recién creadas:', fetchErr)
       }
 
+      const filteredRows = (createdRows || []).filter(
+        (row) => rpcIds.size === 0 || rpcIds.has(row.id)
+      )
+
       const mappedInvites: ShareableInviteItem[] = sortCreatedInvitations(
-        (createdRows || []).map((row) => ({
-          id: row.id,
-          short_code: row.short_code,
-          invite_token: row.invite_token,
-          percentage: Number(row.percentage),
-          label: row.label,
-          ticketNumber,
-          drawName,
-        }))
+        filteredRows.length > 0
+          ? filteredRows.map((row) => ({
+              id: row.id,
+              short_code: row.short_code,
+              invite_token: row.invite_token,
+              percentage: Number(row.percentage),
+              label: row.label,
+              ticketNumber,
+              drawName,
+            }))
+          : rpcCreated.map((item, idx) => ({
+              id: item.invite_id || `invite-${idx}`,
+              short_code: item.short_code || '',
+              invite_token: item.invite_id || `invite-${idx}`,
+              percentage: Number(item.percentage || 0),
+              label: `Parte ${idx + (ownerParticipates ? 2 : 1)}`,
+              ticketNumber,
+              drawName,
+            }))
       )
 
       onEqualSplitComplete(mappedInvites)

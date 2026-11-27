@@ -57,8 +57,8 @@ test('CreateParticipationSheet, OwnershipBreakdownCard y ShareInviteModal integr
   assert.ok(sheetSource.includes('onEqualSplitComplete(mappedInvites)'))
 
   // OwnershipBreakdownCard abre ShareInviteModal automáticamente tras crear 1 o varias
-  assert.ok(breakdownSource.includes('setActiveShareBatch([newInvite])'))
-  assert.ok(breakdownSource.includes('setActiveShareBatch(createdInvitations)'))
+  assert.ok(breakdownSource.includes('openShareModal([newInvite])'))
+  assert.ok(breakdownSource.includes('openShareModal(createdInvitations)'))
 
   // ShareInviteModal distingue modo individual (length === 1) vs lote (length > 1)
   assert.ok(modalSource.includes('const isBatchMode = effectiveInvites.length > 1'))

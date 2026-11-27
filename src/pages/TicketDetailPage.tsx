@@ -7,6 +7,8 @@ import {
   type OwnershipShare,
   type PendingInvite,
 } from '../components/tickets/OwnershipBreakdownCard'
+import { ShareInviteModal } from '../components/tickets/ShareInviteModal'
+import type { ShareableInviteItem } from '../lib/shareBatchHelper'
 import {
   TicketAuditTimeline,
   type AuditEvent,
@@ -76,7 +78,9 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     title: string
     subtitle: string
   } | null>(null)
+  const [shareModalInvitations, setShareModalInvitations] = useState<ShareableInviteItem[]>([])
   const hasTriggeredShareToastRef = useRef(false)
+  const hasLoadedOnceRef = useRef(false)
 
   // Disparar toast flotante al entrar con selectShareToShare: true una vez cargado el décimo
   useEffect(() => {
@@ -189,7 +193,9 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     if (!ticketId || !user?.id) return
 
     try {
-      setIsLoading(true)
+      if (!hasLoadedOnceRef.current) {
+        setIsLoading(true)
+      }
 
       // 1. Cargar datos del billete
       const { data: ticketData, error: ticketErr } = await supabase
@@ -199,6 +205,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         .single()
 
       if (ticketErr) throw ticketErr
+      hasLoadedOnceRef.current = true
       setTicket(ticketData)
 
       // Si se accedió por entrada directa, marcar el fallback según si es cotitular o propietario
@@ -424,7 +431,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
   }, [ticket, user?.id, onBack, onNavigateToRoot])
 
-  if (isLoading) {
+  if (isLoading && !ticket) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <Loader2 className="h-7 w-7 animate-spin text-lottery" />
@@ -594,6 +601,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
               onRenounced={handleShareRenounced}
               autoOpenCreateShare={autoOpenCreateShare}
               onAutoOpenHandled={handleAutoOpenHandled}
+              onOpenShareModal={(invites) => setShareModalInvitations(invites)}
             />
           </div>
         ) : (
@@ -733,6 +741,12 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           </button>
         </div>
       )}
+      {/* Modal persistente de Compartir Participación (inmune a refrescos en segundo plano) */}
+      <ShareInviteModal
+        isOpen={shareModalInvitations.length > 0}
+        onClose={() => setShareModalInvitations([])}
+        invitations={shareModalInvitations}
+      />
     </div>
   )
 }

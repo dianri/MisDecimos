@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.91] - 2026-11-27
+
+### Fixed
+- **Apertura Automática Garantizada de «Compartir Participación» en Todos los Flujos (`TicketDetailPage.tsx`, `OwnershipBreakdownCard.tsx`, `CreateParticipationSheet.tsx`):**
+  - Corregido el desmontaje prematuro de `OwnershipBreakdownCard` y `ShareInviteModal` provocado por `setIsLoading(true)` durante `loadTicketDetails()` tras crear participaciones (`if (isLoading && !ticket)`).
+  - Elevado el estado `shareModalInvitations` al contenedor estable `TicketDetailPage.tsx` para que el modal **Compartir Participación** permanezca abierto e inmune ante refrescos en segundo plano y eventos Realtime.
+  - Reforzada la obtención de `createdInvitations` en `CreateParticipationSheet.tsx` combinando el retorno de `create_equal_split_participations` y la consulta a `pending_invites`.
+
+### Added
+- **Tests de Integración UI con `@testing-library/react` (`src/lib/__tests__/shareBatchIntegration.test.ts`):**
+  - Simulación real de DOM para apertura automática desde **Compartir** (2 partes / 1 invitación sin selector de lote) y desde **Detalle del décimo** (3 partes / 2 invitaciones con selector de lote `Parte 2` / `Parte 3` y avance automático tras enviar por WhatsApp).
+
 ## [1.0.90] - 2026-11-27
 
 ### Added

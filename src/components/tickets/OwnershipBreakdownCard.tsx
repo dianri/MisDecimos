@@ -56,6 +56,7 @@ interface OwnershipBreakdownCardProps {
   onRenounced?: () => void
   autoOpenCreateShare?: boolean
   onAutoOpenHandled?: () => void
+  onOpenShareModal?: (invitations: ShareableInviteItem[]) => void
 }
 
 import {
@@ -79,6 +80,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   onRenounced,
   autoOpenCreateShare = false,
   onAutoOpenHandled,
+  onOpenShareModal,
 }) => {
   const { user } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -131,6 +133,15 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       document.removeEventListener('touchstart', handleClickOutside)
     }
   }, [activeMenuShareId])
+
+  const openShareModal = (invites: ShareableInviteItem[]) => {
+    if (invites.length === 0) return
+    if (onOpenShareModal) {
+      onOpenShareModal(invites)
+    } else {
+      setActiveShareBatch(invites)
+    }
+  }
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true)
@@ -1013,15 +1024,15 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
         availablePercentage={ownerPct}
         onInviteCreated={async (newInvite) => {
           setShowCreateSheet(false)
+          openShareModal([newInvite])
           await onRefresh()
-          setActiveShareBatch([newInvite])
         }}
         onEqualSplitComplete={async (createdInvitations) => {
           setShowCreateSheet(false)
-          await onRefresh()
           if (createdInvitations.length > 0) {
-            setActiveShareBatch(createdInvitations)
+            openShareModal(createdInvitations)
           }
+          await onRefresh()
         }}
       />
 
