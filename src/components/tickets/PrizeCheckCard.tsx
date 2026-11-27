@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import { checkTicketPrize } from '../../services/prizeService'
+import { checkTicketPrize, toggleOwnerPrizeCollected } from '../../services/prizeService'
 import { evaluateHistoricalDraw } from '../../lib/historicalDraws'
 import type { Database } from '../../types/database.types'
 import type { OwnershipShare } from './OwnershipBreakdownCard'
@@ -458,48 +458,75 @@ export const PrizeCheckCard: React.FC<PrizeCheckCardProps> = ({
                     ) : (
                       /* Propietario */
                       <div className="space-y-2">
-                        {!hasThirdPartyParticipants ? (
-                          /* Propietario 100% único custodio */
-                          !isLiquidated ? (
-                            <button
-                              type="button"
-                              onClick={handleConfirmReceived}
-                              disabled={isActionLoading}
-                              className="w-full py-2.5 px-3 rounded-xl bg-lottery hover:bg-lottery-dark text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition active:scale-98"
-                            >
-                              {isActionLoading ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <BadgeCheck className="h-4 w-4" />
-                              )}
-                              <span>Marcar premio como cobrado (Liquidar décimo)</span>
-                            </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (isActionLoading) return
+                            setIsActionLoading(true)
+                            setFeedbackMsg(null)
+                            try {
+                              const nextCollected = !(userShare.prize_paid_confirmed || isLiquidated)
+                              await toggleOwnerPrizeCollected({
+                                ticketId: ticket.id,
+                                userId: userShare.user_id,
+                                nextCollected,
+                                hasThirdPartyParticipants,
+                              })
+                              setFeedbackMsg({
+                                type: 'success',
+                                text: nextCollected
+                                  ? 'Tu premio ha quedado marcado como cobrado.'
+                                  : 'Premio desmarcado como pendiente de cobro.',
+                              })
+                              await onRefresh()
+                            } catch (err: unknown) {
+                              setFeedbackMsg({
+                                type: 'error',
+                                text:
+                                  err instanceof Error
+                                    ? err.message
+                                    : 'Error al actualizar el estado de cobro.',
+                              })
+                            } finally {
+                              setIsActionLoading(false)
+                            }
+                          }}
+                          disabled={isActionLoading}
+                          className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition active:scale-98 cursor-pointer ${
+                            userShare.prize_paid_confirmed || isLiquidated
+                              ? 'bg-[#3A5245] hover:bg-[#2F4338] text-white'
+                              : 'bg-[#C5A880] hover:bg-[#B8996F] text-[#1D1D1F]'
+                          }`}
+                        >
+                          {isActionLoading ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
-                              <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                              <span>Premio cobrado íntegramente por el propietario</span>
-                            </div>
-                          )
-                        ) : (
-                          /* Propietario con cotitulares */
-                          pendingPayoutShares.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={handleSendReminder}
-                              disabled={isActionLoading}
-                              className="w-full py-2 px-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition active:scale-98"
-                            >
-                              {isActionLoading ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-700" />
-                              ) : (
-                                <Bell className="h-3.5 w-3.5 text-amber-700" />
-                              )}
-                              <span>
-                                Solicitar confirmación de cobro ({pendingPayoutShares.length}{' '}
-                                pendiente{pendingPayoutShares.length > 1 ? 's' : ''})
-                              </span>
-                            </button>
-                          )
+                            <BadgeCheck className="h-4 w-4" />
+                          )}
+                          <span>
+                            {userShare.prize_paid_confirmed || isLiquidated
+                              ? 'Cobrado (pulsa para revertir)'
+                              : 'Marcar cobrado'}
+                          </span>
+                        </button>
+
+                        {hasThirdPartyParticipants && pendingPayoutShares.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleSendReminder}
+                            disabled={isActionLoading}
+                            className="w-full py-2 px-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition active:scale-98"
+                          >
+                            {isActionLoading ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-700" />
+                            ) : (
+                              <Bell className="h-3.5 w-3.5 text-amber-700" />
+                            )}
+                            <span>
+                              Solicitar confirmación de cobro ({pendingPayoutShares.length}{' '}
+                              pendiente{pendingPayoutShares.length > 1 ? 's' : ''})
+                            </span>
+                          </button>
                         )}
                       </div>
                     )}

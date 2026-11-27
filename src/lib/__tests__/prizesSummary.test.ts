@@ -153,4 +153,27 @@ test('Navegación usa Banknote para Premios y PrizesPage muestra solo tabla Resu
   for (const label of ['Décimos totales', 'Comprobados', 'Compartidos', 'Jugado', 'Ganado', 'Cobrado']) {
     assert.ok(prizesSource.includes(label), `PrizesPage debe incluir la métrica ${label}`)
   }
+
+  // Diseño Apple Wallet / Bento Grid (Hero Card + 3 widgets)
+  assert.ok(prizesSource.includes('from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4]'))
+  assert.ok(prizesSource.includes('grid-cols-3'))
+  assert.ok(prizesSource.includes('Progreso de cobro'))
+  assert.ok(prizesSource.includes('Progreso de escrutinio'))
+
+  // El marcado de cobro del propietario impacta directamente en Cobrado
+  const afterCollected = buildPrizesSummary(
+    [{ ...baseTicket, id: 't1', owner_id: 'u1', number: '12345', draw_date: '2026-12-22', status: 'VALIDADO', prize_amount_cents: 10_000, last_checked_at: '2026-12-22T12:00:00Z', check_source: 'elpais' }],
+    [{ ...baseShare, id: 's1', ticket_id: 't1', user_id: 'u1', role: 'PROPIETARIO', percentage: 100, status: 'ACEPTADA', prize_paid_confirmed: true }],
+    new Set(),
+    'u1'
+  )
+  assert.equal(afterCollected.totalCollectedCents, 10_000)
+
+  const afterReverted = buildPrizesSummary(
+    [{ ...baseTicket, id: 't1', owner_id: 'u1', number: '12345', draw_date: '2026-12-22', status: 'VALIDADO', prize_amount_cents: 10_000, last_checked_at: '2026-12-22T12:00:00Z', check_source: 'elpais' }],
+    [{ ...baseShare, id: 's1', ticket_id: 't1', user_id: 'u1', role: 'PROPIETARIO', percentage: 100, status: 'ACEPTADA', prize_paid_confirmed: false }],
+    new Set(),
+    'u1'
+  )
+  assert.equal(afterReverted.totalCollectedCents, 0)
 })

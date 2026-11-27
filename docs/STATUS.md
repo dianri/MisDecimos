@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.87` (Producción Estable · Restauración de Bordes Originales en Tarjetas)  
+**Versión Actual:** `1.0.88` (Producción Estable · Cobro del Propietario y Bento Grid en Premios)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.87`)  
+**Rama de Producción:** `main` (Tag `v1.0.88`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
