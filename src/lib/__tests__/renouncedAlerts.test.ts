@@ -1,5 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   extractTicketIdFromNotification,
   isNotificationTicketRenounced,
@@ -87,4 +89,15 @@ test('canNavigateToTicketFromAlert - bloquea navegación para décimos renunciad
     ticketId: null,
     isRenounced: false,
   })
+})
+
+test('AlertsPage - cabecera muestra Notificaciones y tarjetas omiten Ver décimo manteniendo clic completo', () => {
+  const alertsSource = readFileSync(resolve(process.cwd(), 'src/pages/AlertsPage.tsx'), 'utf8')
+
+  assert.ok(alertsSource.includes('Notificaciones'))
+  assert.ok(!alertsSource.includes('Mis Notificaciones'))
+  assert.ok(!alertsSource.includes('Ver décimo'))
+  assert.ok(!alertsSource.includes('ExternalLink'))
+  assert.ok(alertsSource.includes('onClick={() => handleCardClick(item)}'))
+  assert.ok(alertsSource.includes('cursor-pointer'))
 })

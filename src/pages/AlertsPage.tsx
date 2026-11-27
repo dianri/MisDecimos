@@ -13,7 +13,6 @@ import {
   Info,
   Check,
   X,
-  ExternalLink,
   Ban,
 } from 'lucide-react'
 import {
@@ -272,7 +271,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
           )}
           <div>
             <h2 className="text-lg sm:text-xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-              Mis Notificaciones
+              Notificaciones
             </h2>
             <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
               Avisos de sorteos, participaciones y cobros
@@ -338,7 +337,6 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
           {notifications.map((item) => {
             const iconConfig = getNotificationIcon(item.type)
             const Icon = iconConfig.icon
-            const targetTicketId = extractTicketIdFromNotification(item)
             const isRenounced = isNotificationTicketRenounced(item, renouncedTicketIds)
             const isWaiverRequest = item.type === 'WAIVER_REQUEST'
 
@@ -407,21 +405,14 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
                       </div>
                     )}
 
-                    {/* Indicador de renuncia o enlace al billete */}
-                    {isRenounced ? (
+                    {/* Indicador de renuncia */}
+                    {isRenounced && (
                       <div className="pt-1.5 flex items-center">
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F5F5F7] dark:bg-white/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 text-[10px] font-medium cursor-default select-none">
                           <Ban className="h-3 w-3" />
                           <span>Participación renunciada · Sin acceso</span>
                         </span>
                       </div>
-                    ) : (
-                      targetTicketId && (
-                        <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-[#C5A880]">
-                          <span>Ver décimo</span>
-                          <ExternalLink className="h-3 w-3" />
-                        </div>
-                      )
                     )}
                   </div>
                 </div>
