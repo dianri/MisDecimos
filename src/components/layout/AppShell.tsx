@@ -15,7 +15,7 @@ import { AlertsPage } from '../../pages/AlertsPage'
 import { AuditPage } from '../../pages/AuditPage'
 import { ProfilePage } from '../../pages/ProfilePage'
 import { DecimoIcon } from '../icons/DecimoIcon'
-import { Trophy, Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
+import { Banknote, Bell, User as UserIcon, LogOut, BellOff, X } from 'lucide-react'
 import {
   resolveAlertDotPriority,
   getAlertDotColorClass,
@@ -32,7 +32,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'billetes', label: 'Décimos', icon: DecimoIcon },
-  { id: 'premios', label: 'Premios', icon: Trophy },
+  { id: 'premios', label: 'Premios', icon: Banknote },
   { id: 'alertas', label: 'Alertas', icon: Bell },
 ]
 

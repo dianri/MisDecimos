@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.84` (Producción Estable · Etiqueta Neutra y Filo Pastel por Propiedad en Tarjetas)  
+**Versión Actual:** `1.0.85` (Producción Estable · Pantalla Premios como Resumen de 6 Métricas)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.84`)  
+**Rama de Producción:** `main` (Tag `v1.0.85`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

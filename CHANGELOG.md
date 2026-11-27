@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.85] - 2026-11-27
+
+### Changed
+- **Rediseño de la Pantalla «Premios» e Icono de Navegación (`PrizesPage.tsx`, `prizesSummary.ts`, `AppShell.tsx`):**
+  - Sustituido el icono `Trophy` de la pestaña **Premios** en `AppShell.tsx` por **`Banknote`** (billetes).
+  - Simplificada `PrizesPage.tsx` eliminando el título/subtítulo redundante, filtros, listado de décimos e `Historial de Escrutinio`, dejando una única tarjeta **Resumen** con las 6 métricas clave calculadas sobre las cuotas del usuario: **`Décimos totales`**, **`Comprobados`** (`X / Y`), **`Compartidos`**, **`Jugado`**, **`Ganado`** y **`Cobrado`**.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/prizesSummary.test.ts`):**
+  - Verificación de los 6 indicadores clave en `buildPrizesSummary`, uso de `Banknote` en navegación y ausencia de textos/listados redundantes en `PrizesPage.tsx`.
+
 ## [1.0.84] - 2026-11-27
 
 ### Changed
