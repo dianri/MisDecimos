@@ -5,6 +5,16 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.89] - 2026-11-27
+
+### Changed
+- **Ordenamiento por Sorteo y Número en Pantalla Principal (`ticketMetrics.ts`):**
+  - Implementada `sortTicketsByDrawAndNumber` e integrada en `buildUnifiedActiveTicketsList`: ordena primero por fecha de sorteo más reciente (`draw_date` descendente), luego por número de décimo de menor a mayor (`Number(number)` ascendente) mezclando décimos propios y participaciones, y aplica desempate determinista por serie, fracción e `id`, conservando el orden en `Todos`, `Premiados` y `Sin premio`.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/unifiedListAndActions.test.ts`):**
+  - Cobertura de ordenamiento descendente por sorteo, ascendente por número dentro del mismo sorteo y persistencia del orden en los tres filtros.
+
 ## [1.0.88] - 2026-11-27
 
 ### Added
