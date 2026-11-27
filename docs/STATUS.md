@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.82` (Producción Estable · Selector Exclusivo de Año en Registro de Décimo)  
+**Versión Actual:** `1.0.83` (Producción Estable · Etiqueta Participación en Tarjetas y Margen Inferior)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.82`)  
+**Rama de Producción:** `main` (Tag `v1.0.83`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

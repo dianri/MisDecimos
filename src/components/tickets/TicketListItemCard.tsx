@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Database } from '../../types/database.types'
-import { Banknote, Clover, Calendar, Share2, Search, Loader2 } from 'lucide-react'
+import { Banknote, Clover, Calendar, Share2, Search, Loader2, Users } from 'lucide-react'
 import { formatDrawLabel, resolveTicketCardPresentation } from '../../lib/ticketCardHelper'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -150,7 +150,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             <span className="truncate">{formatDrawLabel(ticket.draw_date)}</span>
           </div>
 
-          {isOwner && (
+          {isOwner ? (
             <button
               type="button"
               data-no-card-nav="true"
@@ -166,6 +166,11 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
               <Share2 className="w-3.5 h-3.5" />
               <span>Compartir</span>
             </button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#D04848]/10 text-[#A83232] dark:bg-[#D04848]/20 dark:text-[#F29B9B] border border-[#D04848]/25 shrink-0 select-none">
+              <Users className="w-3.5 h-3.5 shrink-0" />
+              <span>Participación</span>
+            </span>
           )}
         </div>
 

@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.83] - 2026-11-27
+
+### Changed
+- **Etiqueta `Participación` en Slot de `Compartir` y Margen Inferior en Listado (`TicketListItemCard.tsx`, `TicketsPage.tsx`):**
+  - En la fila del sorteo de las tarjetas de la pantalla principal, las participaciones recibidas (`!isOwner`) muestran la etiqueta no interactiva **`Participación`** con icono `Users` en el mismo hueco derecho que ocupa el botón **`Compartir`** en los décimos propios.
+  - Añadido `pb-28` al contenedor del listado principal en `TicketsPage.tsx` para evitar que el botón flotante `Añadir` y la barra inferior tapen la última tarjeta al hacer scroll.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/winningTicketCard.test.ts`):**
+  - Verificación de la bifurcación `Compartir` vs `Participación` según `isOwner` y presencia de `pb-28` en el listado.
+
 ## [1.0.82] - 2026-11-27
 
 ### Changed
