@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.90` (Producción Estable · Apertura Automática y Selector de Lote en Compartición)  
+**Versión Actual:** `1.0.91` (Producción Estable · Fix Apertura Automática Compartir Participación)  
 **Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.90`)  
+**Rama de Producción:** `main` (Tag `v1.0.91`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

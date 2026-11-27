@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import { X, Copy, Check, Share2, MessageCircle, ShieldCheck, ClipboardCheck, CheckCircle2 } from 'lucide-react'
@@ -29,6 +29,15 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
   const [sharedIds, setSharedIds] = useState<Set<string>>(() => new Set())
   const [copied, setCopied] = useState(false)
   const [whatsappCopiedNotice, setWhatsappCopiedNotice] = useState(false)
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const whatsappTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      if (whatsappTimerRef.current) clearTimeout(whatsappTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -78,7 +87,8 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
     try {
       await navigator.clipboard.writeText(activeInvite.short_code)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000)
     } catch {
       // Fallback
     }
@@ -90,7 +100,8 @@ export const ShareInviteModal: React.FC<ShareInviteModalProps> = ({
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(messageText)
         setWhatsappCopiedNotice(true)
-        setTimeout(() => setWhatsappCopiedNotice(false), 6000)
+        if (whatsappTimerRef.current) clearTimeout(whatsappTimerRef.current)
+        whatsappTimerRef.current = setTimeout(() => setWhatsappCopiedNotice(false), 6000)
       }
     } catch {
       // Si el portapapeles no está disponible, continuar con la apertura
