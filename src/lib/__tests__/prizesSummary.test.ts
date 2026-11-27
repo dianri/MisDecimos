@@ -140,25 +140,30 @@ test('buildPrizesSummary - calcula las 6 métricas clave (totales, comprobados, 
   assert.equal(summary.totalCollectedCents, 5_000) // t2 LIQUIDADO -> 50 € cobrados
 })
 
-test('Navegación usa Banknote para Premios y PrizesPage muestra solo tabla Resumen de 6 métricas', () => {
+test('Navegación unificada sin BottomNav e integración Hero Card Bento en pestaña Premiados', () => {
   const shellSource = readFileSync(resolve(process.cwd(), 'src/components/layout/AppShell.tsx'), 'utf8')
-  const prizesSource = readFileSync(resolve(process.cwd(), 'src/pages/PrizesPage.tsx'), 'utf8')
+  const ticketsSource = readFileSync(resolve(process.cwd(), 'src/pages/TicketsPage.tsx'), 'utf8')
+  const heroSource = readFileSync(resolve(process.cwd(), 'src/components/tickets/PrizesHeroCard.tsx'), 'utf8')
+  const navSource = readFileSync(resolve(process.cwd(), 'src/hooks/useAndroidBackNavigation.ts'), 'utf8')
 
-  assert.ok(shellSource.includes("{ id: 'premios', label: 'Premios', icon: Banknote }"))
+  assert.ok(!shellSource.includes('Navegación principal móvil'), 'AppShell no debe renderizar BottomNav')
   assert.ok(!shellSource.includes('Trophy'))
+  assert.ok(shellSource.includes('Abrir mi perfil') && shellSource.includes('Mis Décimos'))
+  assert.ok(shellSource.includes('Abrir notificaciones'))
+  assert.ok(navSource.includes('?filter=premiados'), '/premios debe redirigir a la vista principal con filtro premiados')
 
-  assert.ok(!prizesSource.includes('Trophy'))
-  assert.ok(!prizesSource.includes('Balance de tus décimos activos y resultados oficiales comprobados'))
-  assert.ok(!prizesSource.includes('Historial de Escrutinio'))
-  for (const label of ['Décimos totales', 'Comprobados', 'Compartidos', 'Jugado', 'Ganado', 'Cobrado']) {
-    assert.ok(prizesSource.includes(label), `PrizesPage debe incluir la métrica ${label}`)
+  assert.ok(ticketsSource.includes('<PrizesHeroCard summary={prizesSummary} />'))
+  assert.ok(
+    ticketsSource.includes('count: todosCount') &&
+      ticketsSource.includes('count: premiadosCount') &&
+      ticketsSource.includes('count: sinPremioCount')
+  )
+
+  for (const label of ['Ganado', 'Jugado', 'Cobrado', 'Progreso de cobro']) {
+    assert.ok(heroSource.includes(label), `PrizesHeroCard debe incluir ${label}`)
   }
-
-  // Diseño Apple Wallet / Bento Grid (Hero Card + 3 widgets)
-  assert.ok(prizesSource.includes('from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4]'))
-  assert.ok(prizesSource.includes('grid-cols-3'))
-  assert.ok(prizesSource.includes('Progreso de cobro'))
-  assert.ok(prizesSource.includes('Progreso de escrutinio'))
+  assert.ok(heroSource.includes('from-[#FCF9F3] via-[#F7EFE0] to-[#EFE0C4]'))
+  assert.ok(!heroSource.includes('Décimos totales') && !heroSource.includes('Comprobados') && !heroSource.includes('Compartidos'))
 
   // El marcado de cobro del propietario impacta directamente en Cobrado
   const afterCollected = buildPrizesSummary(

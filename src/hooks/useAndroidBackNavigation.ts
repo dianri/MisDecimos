@@ -45,7 +45,7 @@ export function parseRouteFromPath(rawPath: string): { tab: TabType; ticketId: s
   }
 
   if (lower === '/premios' || lower === '/premios/') {
-    return { tab: 'premios', ticketId: null }
+    return { tab: 'billetes', ticketId: null }
   }
   if (lower === '/alertas' || lower === '/alertas/') {
     return { tab: 'alertas', ticketId: null }
@@ -102,7 +102,9 @@ export function useAndroidBackNavigation() {
     const isRoot = tab === 'billetes' && ticketId === null
 
     if (isRoot) {
-      const currentSearch = window.location.search || ''
+      const isPremiosPath =
+        window.location.pathname.toLowerCase().replace(/\/+$/, '') === '/premios'
+      const currentSearch = isPremiosPath ? '?filter=premiados' : window.location.search || ''
       const rootPath = `/${currentSearch}`
 
       // Estado base de la app
