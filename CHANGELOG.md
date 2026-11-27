@@ -5,6 +5,17 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.86] - 2026-11-27
+
+### Changed
+- **Limpieza Visual en Notificaciones (`AlertsPage.tsx`):**
+  - Simplificado el encabezado principal de `"Mis Notificaciones"` a **`Notificaciones`**, conservando el botón de retroceso, el subtítulo `"Avisos de sorteos, participaciones y cobros"` y `"Leídas todas"`.
+  - Eliminada la línea inferior **`Ver décimo`** y su icono `ExternalLink` en las tarjetas de notificación, manteniendo la interactividad de clic en toda la tarjeta para marcar como leída y abrir el décimo asociado.
+
+### Added
+- **Tests Unitarios (`src/lib/__tests__/renouncedAlerts.test.ts`):**
+  - Verificación de título `"Notificaciones"`, ausencia de `"Mis Notificaciones"` y `"Ver décimo"`, y preservación de `handleCardClick` en toda la tarjeta.
+
 ## [1.0.85] - 2026-11-27
 
 ### Changed
