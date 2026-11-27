@@ -17,7 +17,7 @@ const AppContent: React.FC = () => {
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
           <p className="text-xs font-semibold text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-            Cargando MisDecimos...
+            Cargando Mis Décimos...
           </p>
         </div>
       </div>

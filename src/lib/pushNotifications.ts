@@ -177,7 +177,7 @@ export async function subscribeUserToPush(userId: string): Promise<boolean> {
   const platform = detectPlatform()
   if (platform === 'ios' && !isStandaloneMode()) {
     alert(
-      'En iOS (iPhone/iPad), debes añadir MisDecimos a la pantalla de inicio para habilitar las notificaciones push.'
+      'En iOS (iPhone/iPad), debes añadir Mis Décimos a la pantalla de inicio para habilitar las notificaciones push.'
     )
     return false
   }

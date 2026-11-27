@@ -1,6 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { resolveTicketCardPresentation } from '../ticketCardHelper.ts'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import {
+  filterHomeTickets,
+  formatDrawLabel,
+  resolveTicketCardPresentation,
+} from '../ticketCardHelper.ts'
 
 test('resolveTicketCardPresentation - billete pendiente sin premio', () => {
   const result = resolveTicketCardPresentation({
@@ -105,4 +111,85 @@ test('resolveTicketCardPresentation - billete archivado premiado preserva fondo 
   assert.strictEqual(result.statusBadgeLabel, '¡PREMIADO!')
   assert.strictEqual(result.userPrizeFormatted, '375,00 €')
   assert.ok(result.containerClasses.includes('from-[#FCF9F3]'))
+})
+
+test('resolveTicketCardPresentation - isShared distingue décimo propio 100% sin participaciones vs compartido', () => {
+  const soloOwner = resolveTicketCardPresentation({
+    prizeAmountCents: 100000,
+    status: 'VALIDADO',
+    userPercentage: 100,
+    isOwner: true,
+    hasParticipations: false,
+  })
+  assert.strictEqual(soloOwner.isShared, false)
+
+  const sharedOwner = resolveTicketCardPresentation({
+    prizeAmountCents: 100000,
+    status: 'VALIDADO',
+    userPercentage: 75,
+    isOwner: true,
+    hasParticipations: true,
+  })
+  assert.strictEqual(sharedOwner.isShared, true)
+
+  const participant = resolveTicketCardPresentation({
+    prizeAmountCents: 100000,
+    status: 'VALIDADO',
+    userPercentage: 25,
+    isOwner: false,
+  })
+  assert.strictEqual(participant.isShared, true)
+})
+
+test('filterHomeTickets - Todos, Premiados y Sin premio excluyen estrictamente los pendientes', () => {
+  const items = [
+    { id: 'pending', ticket: { status: 'PENDIENTE', last_checked_at: null, prize_amount_cents: 0 } },
+    { id: 'winner', ticket: { status: 'VALIDADO', last_checked_at: '2026-12-22T12:00:00Z', prize_amount_cents: 2000 } },
+    { id: 'settled', ticket: { status: 'LIQUIDADO', last_checked_at: '2026-12-22T12:00:00Z', prize_amount_cents: 10000 } },
+    { id: 'loser', ticket: { status: 'VALIDADO', last_checked_at: '2026-12-22T12:00:00Z', prize_amount_cents: 0 } },
+  ]
+
+  assert.deepStrictEqual(
+    filterHomeTickets(items, 'todos').map((i) => i.id),
+    ['pending', 'winner', 'settled', 'loser']
+  )
+  assert.deepStrictEqual(
+    filterHomeTickets(items, 'premiados').map((i) => i.id),
+    ['winner', 'settled']
+  )
+  assert.deepStrictEqual(
+    filterHomeTickets(items, 'sin_premio').map((i) => i.id),
+    ['loser']
+  )
+})
+
+test('formatDrawLabel - formatea Navidad (12-22), El Niño (01-06) y fechas ordinarias', () => {
+  assert.strictEqual(formatDrawLabel('2026-12-22'), 'Sorteo de Navidad')
+  assert.strictEqual(formatDrawLabel('2025-12-22'), 'Sorteo de Navidad')
+  assert.strictEqual(formatDrawLabel('2027-01-06'), 'Sorteo del Niño')
+  assert.strictEqual(formatDrawLabel('2026-01-06'), 'Sorteo del Niño')
+  assert.strictEqual(formatDrawLabel('2026-07-18'), 'Sorteo: 2026-07-18')
+})
+
+test('Marca "Mis Décimos", filtro en pantalla principal y tarjeta sin cabecera redundante', () => {
+  const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8')
+  const shell = readFileSync(resolve(process.cwd(), 'src/components/layout/AppShell.tsx'), 'utf8')
+  const login = readFileSync(resolve(process.cwd(), 'src/pages/LoginPage.tsx'), 'utf8')
+  const ticketsPage = readFileSync(resolve(process.cwd(), 'src/pages/TicketsPage.tsx'), 'utf8')
+  const card = readFileSync(resolve(process.cwd(), 'src/components/tickets/TicketListItemCard.tsx'), 'utf8')
+
+  assert.ok(html.includes('<title>Mis Décimos</title>'))
+  assert.ok(shell.includes('Mis Décimos'))
+  assert.ok(login.includes('Mis Décimos'))
+  assert.ok(!ticketsPage.includes('Mis Décimos y Participaciones'))
+  assert.ok(ticketsPage.includes('Todos') && ticketsPage.includes('Premiados') && ticketsPage.includes('Sin premio'))
+
+  assert.ok(!card.includes('{/* Cabecera */}'))
+  assert.ok(card.includes('Banknote'))
+  assert.ok(card.includes('Clover'))
+  assert.ok(card.includes('Has ganado {userPrizeFormatted}'))
+  assert.ok(card.includes('De un total de {totalPrizeFormatted}'))
+  assert.ok(card.includes("'COBRADO' : 'PREMIADO'"))
+  assert.ok(card.includes('No premiado'))
+  assert.ok(card.includes('formatDrawLabel(ticket.draw_date)'))
 })

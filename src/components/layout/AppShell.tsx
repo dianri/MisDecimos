@@ -198,13 +198,13 @@ export const AppShell: React.FC = () => {
           >
             <img
               src="/logo-4mills.png"
-              alt="MisDecimos"
+              alt="Mis Décimos"
               className="w-9 h-9 rounded-xl object-contain shadow-sm shrink-0"
               width={36}
               height={36}
             />
             <span className="text-base sm:text-lg font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
-              MisDecimos
+              Mis Décimos
             </span>
           </button>
 

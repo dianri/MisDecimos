@@ -825,7 +825,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <AlertCircle className="h-4 w-4 text-amber-600" /> Web Push en dispositivos iPhone / iPad
             </p>
             <p className="text-[11px] text-amber-800 leading-relaxed">
-              Apple requiere que agregues MisDecimos a tu pantalla de inicio para poder activar las alertas en segundo plano.
+              Apple requiere que agregues Mis Décimos a tu pantalla de inicio para poder activar las alertas en segundo plano.
             </p>
           </div>
         )}
@@ -1133,7 +1133,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 </div>
                 <div>
                   <h3 id="pwa-instructions-title" className="text-base font-bold text-gray-900 leading-tight">
-                    Cómo instalar MisDecimos
+                    Cómo instalar Mis Décimos
                   </h3>
                   <p className="text-xs text-gray-500">
                     {pwaPlatform === 'android'
@@ -1181,7 +1181,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       3
                     </span>
                     <p className="leading-snug pt-0.5">
-                      Confirma en <strong>«Instalar»</strong> para tener MisDecimos como aplicación nativa en tu móvil.
+                      Confirma en <strong>«Instalar»</strong> para tener Mis Décimos como aplicación nativa en tu móvil.
                     </p>
                   </div>
                 </div>
@@ -1227,7 +1227,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                       2
                     </span>
                     <p className="leading-snug pt-0.5">
-                      O abre el menú (<strong>⋮</strong> / <strong>…</strong>) y selecciona <strong>«Instalar MisDecimos»</strong>.
+                      O abre el menú (<strong>⋮</strong> / <strong>…</strong>) y selecciona <strong>«Instalar Mis Décimos»</strong>.
                     </p>
                   </div>
                 </div>

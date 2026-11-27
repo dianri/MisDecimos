@@ -149,13 +149,13 @@ export const LoginPage: React.FC = () => {
         <div className="text-center space-y-2">
           <img
             src="/logo-4mills.png"
-            alt="MisDecimos"
+            alt="Mis Décimos"
             className="w-20 h-20 rounded-2xl object-contain shadow-md mb-2 mx-auto"
             width={80}
             height={80}
           />
           <h1 className="text-2xl font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-            MisDecimos
+            Mis Décimos
           </h1>
           <p className="text-xs font-medium text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Custodia compartida y reparto de décimos de Lotería
@@ -294,7 +294,7 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <p className="mt-6 text-[11px] text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 text-center max-w-xs">
-        MisDecimos · Plataforma segura PWA de reparto de Lotería
+        Mis Décimos · Plataforma segura PWA de reparto de Lotería
       </p>
     </div>
   )

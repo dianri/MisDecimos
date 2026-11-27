@@ -24,6 +24,7 @@ import {
 } from '../lib/cardQuickActions'
 import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../lib/swipeCardState'
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
+import { filterHomeTickets, type HomeTicketFilter } from '../lib/ticketCardHelper'
 import { checkTicketPrize } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
@@ -73,6 +74,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [pendingInviteTicketIds, setPendingInviteTicketIds] = useState<Set<string>>(new Set())
   const [allShares, setAllShares] = useState<OwnershipShareRow[]>([])
   const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState<HomeTicketFilter>('todos')
   const [openSwipeTicketId, setOpenSwipeTicketId] = useState<string | null>(null)
 
   // Auto-cierre del toast de confirmación tras 5 segundos
@@ -385,13 +387,41 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const filteredActiveTickets = filterHomeTickets(unifiedActiveTickets, activeFilter)
+
   return (
     <div className="space-y-4 pb-32 max-w-xl mx-auto">
-      {/* Cabecera limpia del listado principal (sin pestañas ni filtros) */}
-      <div className="flex items-center justify-between px-1">
-        <h2 className="text-base font-extrabold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-          Mis Décimos y Participaciones ({unifiedActiveTickets.length})
-        </h2>
+      {/* Selector segmentado de filtro (Todos / Premiados / Sin premio) */}
+      <div
+        role="tablist"
+        aria-label="Filtrar décimos por resultado"
+        className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-[#1D1D1F]/[0.05] dark:bg-[#F5F5F7]/[0.08] border border-[#1D1D1F]/[0.06] dark:border-[#F5F5F7]/[0.08]"
+      >
+        {(
+          [
+            { id: 'todos', label: 'Todos' },
+            { id: 'premiados', label: 'Premiados' },
+            { id: 'sin_premio', label: 'Sin premio' },
+          ] as const
+        ).map((option) => {
+          const isActive = activeFilter === option.id
+          return (
+            <button
+              key={option.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActiveFilter(option.id)}
+              className={`py-2 px-3 rounded-xl text-xs transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-white dark:bg-[#1D1D1F] text-[#1D1D1F] dark:text-[#F5F5F7] font-semibold shadow-xs'
+                  : 'text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] font-medium'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Listado unificado de décimos y participaciones activas */}
@@ -399,19 +429,27 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         <div className="flex justify-center p-12">
           <Loader2 className="h-6 w-6 animate-spin text-[#C5A880]" />
         </div>
-      ) : unifiedActiveTickets.length === 0 ? (
+      ) : filteredActiveTickets.length === 0 ? (
         <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-dashed border-black/10 dark:border-white/15 p-8 text-center space-y-2">
           <DecimoIcon className="mx-auto w-10 h-10 text-[#1D1D1F]/25 dark:text-[#F5F5F7]/25" />
           <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-            No tienes décimos ni participaciones
+            {unifiedActiveTickets.length === 0
+              ? 'No tienes décimos ni participaciones'
+              : activeFilter === 'premiados'
+              ? 'No tienes décimos ni participaciones premiados'
+              : 'No tienes décimos ni participaciones sin premio'}
           </h3>
           <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 max-w-xs mx-auto">
-            Pulsa el botón Añadir abajo para escanear un décimo, introducirlo manualmente o canjear un código.
+            {unifiedActiveTickets.length === 0
+              ? 'Pulsa el botón Añadir abajo para escanear un décimo, introducirlo manualmente o canjear un código.'
+              : activeFilter === 'premiados'
+              ? 'Cuando compruebes un sorteo con premio, aparecerá aquí.'
+              : 'Los décimos ya comprobados sin premio aparecerán aquí.'}
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {unifiedActiveTickets.map((item) => (
+          {filteredActiveTickets.map((item) => (
             <SwipeableTicketCard
               key={item.ticket.id}
               ticketId={item.ticket.id}

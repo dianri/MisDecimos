@@ -1,6 +1,9 @@
+export type HomeTicketFilter = 'todos' | 'premiados' | 'sin_premio'
+
 export interface TicketCardPresentation {
   isPrized: boolean
   isCheckedWithoutPrize: boolean
+  isShared: boolean
   totalPrizeFormatted: string
   userPrizeFormatted: string
   isUserActive: boolean
@@ -26,6 +29,7 @@ export function resolveTicketCardPresentation(params: {
   status: string
   userPercentage: number
   isOwner?: boolean
+  hasParticipations?: boolean
   isArchived?: boolean
   isRenounced?: boolean
   lastCheckedAt?: string | null
@@ -34,6 +38,8 @@ export function resolveTicketCardPresentation(params: {
   const isUserActive = !params.isRenounced && params.userPercentage > 0
   const isCheckedWithoutPrize =
     !isPrized && (params.status === 'VALIDADO' || Boolean(params.lastCheckedAt))
+  const isShared =
+    params.isOwner === false || params.userPercentage < 100 || Boolean(params.hasParticipations)
 
   const totalPrizeFormatted = `${currencyFormatter.format(params.prizeAmountCents / 100)} €`
 
@@ -77,6 +83,7 @@ export function resolveTicketCardPresentation(params: {
   return {
     isPrized,
     isCheckedWithoutPrize,
+    isShared,
     totalPrizeFormatted,
     userPrizeFormatted,
     isUserActive,
@@ -84,4 +91,65 @@ export function resolveTicketCardPresentation(params: {
     statusBadgeClasses,
     containerClasses,
   }
+}
+
+/**
+ * Indica si un décimo o participación ya ha sido comprobado en algún sorteo.
+ */
+export function isTicketChecked(ticket: {
+  status: string
+  last_checked_at?: string | null
+  prize_amount_cents?: number | null
+}): boolean {
+  return (
+    Boolean(ticket.last_checked_at) ||
+    ticket.status === 'VALIDADO' ||
+    ticket.status === 'LIQUIDADO' ||
+    (ticket.prize_amount_cents || 0) > 0
+  )
+}
+
+/**
+ * Filtra la lista unificada de la pantalla principal según el selector:
+ * - todos: todos los elementos
+ * - premiados: únicamente comprobados con premio > 0
+ * - sin_premio: únicamente comprobados con premio === 0
+ * Los décimos pendientes de comprobar quedan excluidos de ambos filtros específicos.
+ */
+export function filterHomeTickets<
+  T extends {
+    ticket: {
+      status: string
+      last_checked_at?: string | null
+      prize_amount_cents?: number | null
+    }
+  }
+>(items: T[], filter: HomeTicketFilter): T[] {
+  if (filter === 'todos') return items
+  if (filter === 'premiados') {
+    return items.filter(
+      (item) => isTicketChecked(item.ticket) && (item.ticket.prize_amount_cents || 0) > 0
+    )
+  }
+  return items.filter(
+    (item) => isTicketChecked(item.ticket) && (item.ticket.prize_amount_cents || 0) === 0
+  )
+}
+
+/**
+ * Formatea la etiqueta de sorteo de forma inteligente:
+ * - 22 de diciembre -> "Sorteo de Navidad"
+ * - 6 de enero -> "Sorteo del Niño"
+ * - Cualquier otra fecha -> "Sorteo: YYYY-MM-DD"
+ */
+export function formatDrawLabel(drawDate?: string | null): string {
+  if (!drawDate) return ''
+  const trimmed = drawDate.trim()
+  if (/^\d{4}-12-22$/.test(trimmed) || trimmed.endsWith('-12-22')) {
+    return 'Sorteo de Navidad'
+  }
+  if (/^\d{4}-01-06$/.test(trimmed) || trimmed.endsWith('-01-06')) {
+    return 'Sorteo del Niño'
+  }
+  return `Sorteo: ${trimmed}`
 }
