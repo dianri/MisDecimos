@@ -448,7 +448,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 pb-28">
           {filteredActiveTickets.map((item) => (
             <SwipeableTicketCard
               key={item.ticket.id}

@@ -192,4 +192,11 @@ test('Marca "Mis Décimos", filtro en pantalla principal y tarjeta sin cabecera 
   assert.ok(card.includes("'COBRADO' : 'PREMIADO'"))
   assert.ok(card.includes('No premiado'))
   assert.ok(card.includes('formatDrawLabel(ticket.draw_date)'))
+
+  // Simetría Compartir (isOwner) vs Participación (!isOwner) y margen inferior pb-28
+  assert.ok(card.includes('{isOwner ? ('), 'Debe bifurcar la posición derecha según isOwner')
+  assert.ok(card.includes('<span>Compartir</span>'))
+  assert.ok(card.includes('<span>Participación</span>'))
+  assert.ok(card.includes('<Users className="w-3.5 h-3.5 shrink-0" />'))
+  assert.ok(ticketsPage.includes('space-y-3 pb-28'), 'El listado principal debe incluir pb-28')
 })
