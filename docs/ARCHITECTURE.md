@@ -23,6 +23,11 @@ erDiagram
     tickets ||--o{ ticket_archive_hides : "ticket_id (CASCADE)"
     tickets ||--o{ audit_events : "ticket_id (CASCADE)"
     tickets ||--o{ notifications : "ticket_id (SET NULL)"
+    tickets ||--o| ticket_certifications : "ticket_id (CASCADE)"
+    tickets ||--o{ ticket_legal_events : "ticket_id (CASCADE)"
+    tickets ||--o{ ticket_handwritten_signatures : "ticket_id (CASCADE)"
+    ownership_shares ||--o{ ticket_legal_events : "participation_id (SET NULL)"
+    ownership_shares ||--o{ ticket_handwritten_signatures : "participation_id (SET NULL)"
 
     profiles {
         uuid id PK
@@ -140,6 +145,67 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
     }
+
+    ticket_certifications {
+        uuid id PK
+        uuid ticket_id UK,FK
+        uuid custodian_user_id FK
+        text status
+        text photo_path
+        text photo_sha256
+        text custodian_name
+        text custodian_nif
+        text cert_issuer
+        text cert_serial
+        text cert_method
+        text signature_b64
+        text payload_sha256
+        text verification_code UK
+        timestamptz signed_at
+    }
+
+    ticket_legal_events {
+        uuid id PK
+        uuid ticket_id FK
+        uuid participation_id FK
+        uuid actor_user_id FK
+        text event_type
+        text actor_name
+        text actor_nif
+        text cert_issuer
+        text cert_serial
+        text cert_method
+        text signature_b64
+        text payload_sha256
+        numeric share_percentage
+        numeric share_amount
+        jsonb metadata
+        timestamptz created_at
+    }
+
+    ticket_handwritten_signatures {
+        uuid id PK
+        uuid ticket_id FK
+        uuid participation_id FK
+        uuid signer_user_id FK
+        text signer_role
+        text full_name
+        text nif
+        text phone
+        text photo_path
+        text photo_sha256
+        text signature_image_b64
+        text signature_sha256
+        text user_agent
+        text verification_code UK
+        timestamptz signed_at
+    }
+
+    autofirma_sessions {
+        text id PK
+        text dat
+        timestamptz created_at
+    }
 ```
 
 ---
@@ -173,6 +239,12 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
     2. El usuario que ya aceptó esa invitación concreta (`accepted_by_user_id = auth.uid()`).
   - Ningún otro participante del décimo (`ownership_shares`) puede consultar ni listar invitaciones en estado `PENDIENTE` ni obtener códigos PIN o tokens por API directa.
   - Las operaciones de previsualización y canje de invitaciones (`accept_pending_invite` y `reject_pending_invite`) operan mediante funciones RPC transaccionales `SECURITY DEFINER` con `search_path = public, auth`, permitiendo validar y canjear códigos PIN de 6 dígitos sin requerir permisos `SELECT` directos sobre la tabla por parte del invitado.
+- **Storage Privado (`ticket-certifications`) y Tablas Legales:**
+  - **Bucket `ticket-certifications`:** Privado (máx. 5 MB, `image/jpeg`, `image/png`, `image/webp`). Solo accesible por el propietario o cotitulares del décimo.
+  - **`ticket_certifications`:** Relación `1:1` con `tickets`. `INSERT` exclusivo del propietario; `DELETE` bloqueado por RLS si existen participaciones de terceros en estado `ACEPTADA`.
+  - **`ticket_legal_events`:** Registro *append-only* protegido por trigger `trg_ticket_legal_events_immutable` (bloquea `UPDATE`/`DELETE`).
+  - **`ticket_handwritten_signatures`:** Clave única `(ticket_id, signer_user_id, signer_role)` con RLS de lectura para propietario y cotitulares.
+  - **Trigger de Blindaje de Renuncias (`trg_guard_signed_participation_renounce`):** Trigger `BEFORE UPDATE` sobre `public.ownership_shares` (`guard_signed_participation_renounce()`). Ignora filas ya renunciadas o que no pasen a `RENUNCIADA`; si existe `PARTICIPATION_SIGNED` con `signature_b64` y `cert_serial` estrictamente para `participation_id = NEW.id` (ignorando eventos huérfanos `NULL`), exige la existencia de un evento posterior `PARTICIPATION_RENOUNCED` firmado electrónicamente para ese mismo `NEW.id` antes de permitir la transición.
 
 ---
 
@@ -218,7 +290,8 @@ Todas las operaciones que mutan porcentajes, estados de décimos o invitaciones 
   - **Historial Completo en `BottomNav`:** La navegación entre pestañas no sobrescribe la pila (`replace: true`), permitiendo al usuario volver sobre sus pasos de forma intuitiva.
 - **Manejador de Modales y Sheets (`src/hooks/useModalBackHandler.ts`):**
   - Mantiene una pila global de modales activos (`activeModalStack`) y un contador de cierres programáticos (`programmaticBackCount`).
-  - Al abrirse cualquier modal (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal`, `PwaInstallBanner`, `VersionBadge`), empuja un estado `{ modalOpen: true, modalKey }` en el historial y se apila en `activeModalStack`.
+  - Al abrirse cualquier modal (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal`, `CertificateSignModal`, `TicketPhotoCaptureModal`, `PwaInstallBanner`, `VersionBadge`), empuja un estado `{ modalOpen: true, modalKey }` en el historial y se apila en `activeModalStack`.
+  - En `TicketDetailPage.tsx`, el parámetro de búsqueda `?tab=certification` (además de `propiedad` e `historial`) se sincroniza de forma bidireccional con `useSearchParams`, `history.state.openTab` y `popstate`.
   - Al recibir `popstate` por pulsación de 'Atrás' físico, solo el modal situado en la cima de la pila responde y se cierra, protegiendo a los modales padre subyacentes.
   - **Prevención de Cierre en Cascada:** Cuando un modal hijo (ej. `BarcodeScannerModal`) se cierra programáticamente por código (tras escanear con éxito o por UI), incrementa `programmaticBackCount` antes de invocar `window.history.back()`, absorbiendo el evento `popstate` y garantizando que el modal padre (`TicketFormModal`) permanezca abierto con los datos precargados.
 
@@ -344,4 +417,22 @@ La identidad gráfica de **MisDecimos** evoluciona hacia una estética de orfebr
 | `favicon.svg` | Vectorial escalable · SVG | Favicon moderno para navegadores compatibles con visualización nítida a cualquier factor de escala y densidad Retina. |
 | `masked-icon.svg` | Vectorial monocromo · SVG | Máscara de un solo canal en negro (#000000) requerida por Safari para Pinned Tabs en macOS. |
 | `badge-mono.png` | `192x192 px` · PNG (Alpha) | Plantilla monocroma de silueta para la barra de estado de notificaciones en Android 5+. |
+
+---
+
+## 7. Certificación Legal, Relay AutoFirma y Generación de PDF
+
+### Edge Function `autofirma-relay` (`supabase/functions/autofirma-relay/index.ts`)
+- **Despliegue sin JWT (`--no-verify-jwt`):** Necesario porque el cliente nativo Java/Android de AutoFirma (`UrlHttpManagerImpl`) envía el resultado directamente sin cabecera `Authorization: Bearer`. Incluye cabeceras CORS `Access-Control-Allow-Origin: *`.
+- **Protocolo `@firma` (`stservlet`):**
+  - **`op=put` (`POST`):** Extrae `op`, `id` (`^[A-Za-z0-9]{1,64}$`, generado por el cliente con longitud `<= 20` caracteres y sin parámetro `key` para evitar cifrado simétrico) y `dat` combinando query params y cuerpo (`application/x-www-form-urlencoded`, JSON o multipart), almacenándolos temporalmente en `public.autofirma_sessions` y respondiendo `200 OK` (`OK`).
+  - **`op=get` (`GET`/`POST`):** Purga sesiones caducadas con TTL de **10 minutos** (reforzado por el trigger `trg_cleanup_expired_autofirma_sessions`), entrega el payload `dat` de lectura única y elimina inmediatamente el registro de la sesión (o devuelve `NO_DATA` si aún no ha llegado).
+- **Compatibilidad Multiplataforma:** Soporta escritorio y móvil (Android/iOS), normalizando segmentos `<cert>|<cms>` en Base64URL/Base64 y decodificando cadenas de certificados ASN.1/DER concatenadas de `KeyChain` en Android en modo no estricto (`forge.asn1.fromDer(bytes, false)`).
+
+### Procesamiento Criptográfico y Generación PDF en Cliente
+- **`src/lib/digitalSignature.ts` (`node-forge` + Web Crypto API):**
+  - Procesa archivos `.p12 / .pfx` en memoria (extracción de clave privada y certificado X.509, validación de vigencia, extracción de `fullName`, `nif`, `issuer`, `serialNumber` y firma PKCS#7/CMS SHA-256) y decodifica respuestas CMS/X.509 de AutoFirma.
+  - Calcula huellas criptográficas `SHA-256` mediante `globalThis.crypto.subtle.digest('SHA-256', ...)` tanto para la fotografía del anverso como para el payload canónico determinista (`buildCanonicalLegalPayload` en `src/lib/legalCustody.ts`).
+- **`src/lib/legalPdfGenerator.ts` (`pdf-lib`):**
+  - Genera el Documento Legal PDF A4 unificado con fuentes estándar WinAnsi (sanitización ASCII sin caracteres `?`), contención proporcional de la fotografía del anverso (`scaleToFit`), tabla unificada de participaciones (`ACTIVA`, `SIN RECLAMAR`, `RENUNCIADA`) con prioridad de identidad del Certificado Digital, y Anexo Cronológico Inmutable paginado automáticamente con las imágenes PNG de las firmas manuscritas incrustadas inline (`embedPng`).
 
