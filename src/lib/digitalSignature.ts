@@ -232,7 +232,7 @@ function toBase64UrlSafe(text: string): string {
 }
 
 function fromBase64UrlSafeToStandard(b64: string): string {
-  const cleaned = b64.trim().replace(/-/g, '+').replace(/_/g, '/')
+  const cleaned = b64.trim().replace(/ /g, '+').replace(/-/g, '+').replace(/_/g, '/')
   const padLen = (4 - (cleaned.length % 4)) % 4
   return cleaned + '='.repeat(padLen)
 }
@@ -269,33 +269,82 @@ export function buildAutoFirmaSignUrl(params: {
 }
 
 /**
- * Decodifica una firma CMS/PKCS#7 en Base64 devuelta por AutoFirma y extrae el certificado X.509 del firmante.
+ * Decodifica la respuesta de AutoFirma (<cert_b64>|<cms_b64> o paquete CMS/X.509 único)
+ * y extrae el certificado X.509 del firmante junto a la firma en Base64 estándar.
  */
-export async function decodeCmsSignatureAndExtractIdentity(
-  cmsBase64: string,
+export async function parseAutoFirmaSignature(
+  rawDat: string,
   canonicalPayload: string,
   now: Date = new Date()
 ): Promise<DigitalSignatureResult> {
-  const stdB64 = fromBase64UrlSafeToStandard(cmsBase64)
-  let derBytes: string
-  try {
-    derBytes = forge.util.decode64(stdB64)
-  } catch {
-    throw new Error('La firma recibida desde AutoFirma no tiene un formato Base64 válido.')
+  const segments = String(rawDat || '')
+    .trim()
+    .split('|')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  if (segments.length === 0) {
+    throw new Error('AutoFirma devolvió una respuesta vacía sin certificado ni firma.')
   }
 
-  let p7: forge.pkcs7.PkcsSignedData
-  try {
-    const asn1 = forge.asn1.fromDer(derBytes)
-    p7 = forge.pkcs7.messageFromAsn1(asn1) as forge.pkcs7.PkcsSignedData
-  } catch {
-    throw new Error('No se pudo decodificar el paquete CMS/PKCS#7 devuelto por AutoFirma.')
-  }
+  let signerCert: forge.pki.Certificate | undefined
+  let signatureB64 = ''
 
-  const certs = (p7 as unknown as { certificates?: forge.pki.Certificate[] }).certificates || []
-  const signerCert = certs[0]
-  if (!signerCert) {
-    throw new Error('La firma CMS de AutoFirma no incluye el certificado X.509 del firmante.')
+  if (segments.length >= 2) {
+    const certB64 = fromBase64UrlSafeToStandard(segments[0])
+    try {
+      const certDer = forge.util.decode64(certB64)
+      const certAsn1 = forge.asn1.fromDer(certDer)
+      signerCert = forge.pki.certificateFromAsn1(certAsn1)
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : String(err)
+      throw new Error(`No se pudo decodificar el certificado X.509 devuelto por AutoFirma (${detail}).`)
+    }
+
+    signatureB64 = fromBase64UrlSafeToStandard(segments[1])
+    try {
+      const sigDer = forge.util.decode64(signatureB64)
+      forge.asn1.fromDer(sigDer)
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : String(err)
+      throw new Error(`No se pudo validar la estructura ASN.1 de la firma CMS (${detail}).`)
+    }
+  } else {
+    signatureB64 = fromBase64UrlSafeToStandard(segments[0])
+    let derBytes: string
+    try {
+      derBytes = forge.util.decode64(signatureB64)
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : String(err)
+      throw new Error(`La firma recibida desde AutoFirma no tiene un formato Base64 válido (${detail}).`)
+    }
+
+    let asn1: forge.asn1.Asn1
+    try {
+      asn1 = forge.asn1.fromDer(derBytes)
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : String(err)
+      throw new Error(`No se pudo parsear el bloque ASN.1 devuelto por AutoFirma (${detail}).`)
+    }
+
+    try {
+      const p7 = forge.pkcs7.messageFromAsn1(asn1) as forge.pkcs7.PkcsSignedData
+      const certs = (p7 as unknown as { certificates?: forge.pki.Certificate[] }).certificates || []
+      signerCert = certs[0]
+    } catch {
+      // Intentar parseo directo como certificado X.509 si no es contenedor PKCS#7
+    }
+
+    if (!signerCert) {
+      try {
+        signerCert = forge.pki.certificateFromAsn1(asn1)
+      } catch (err: unknown) {
+        const detail = err instanceof Error ? err.message : String(err)
+        throw new Error(
+          `No se pudo decodificar el paquete CMS/PKCS#7 ni extraer el certificado X.509 (${detail}).`
+        )
+      }
+    }
   }
 
   const identity = extractIdentityFromX509Cert(signerCert, now)
@@ -304,11 +353,13 @@ export async function decodeCmsSignatureAndExtractIdentity(
   return {
     method: 'autofirma',
     identity,
-    signatureB64: stdB64,
+    signatureB64,
     payloadSha256,
     signedAtIso: now.toISOString(),
   }
 }
+
+export const decodeCmsSignatureAndExtractIdentity = parseAutoFirmaSignature
 
 /**
  * Realiza polling contra autofirma-relay hasta recibir la firma CMS, un error SAF_... o agotar el timeout.
