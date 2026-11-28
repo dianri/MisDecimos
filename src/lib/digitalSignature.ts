@@ -21,7 +21,7 @@ export interface DigitalSignatureResult {
 }
 
 const NIF_NIE_REGEX = /\b([XYZ]\d{7}[A-Z]|\d{8}[A-Z])\b/i
-export const ALPHANUMERIC_ID_REGEX = /^[A-Za-z0-9]+$/
+export const ALPHANUMERIC_ID_REGEX = /^[A-Za-z0-9]{1,20}$/
 
 function getAttributeValue(
   attrs: forge.pki.CertificateField[],
@@ -195,11 +195,11 @@ export async function signPayloadWithP12(params: {
 }
 
 /**
- * Genera un identificador de sesión estrictamente alfanumérico sin guiones (ej. MD176429...).
+ * Genera un identificador de sesión estrictamente alfanumérico de 16 caracteres (<= 20 exigido por @firma).
  */
 export function generateAutoFirmaSessionId(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  const randomBytes = new Uint8Array(8)
+  const randomBytes = new Uint8Array(14)
   if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.getRandomValues === 'function') {
     globalThis.crypto.getRandomValues(randomBytes)
   } else {
@@ -211,7 +211,7 @@ export function generateAutoFirmaSessionId(): string {
   for (const b of randomBytes) {
     suffix += chars[b % chars.length]
   }
-  return `MD${Date.now()}${suffix}`
+  return `MD${suffix}`
 }
 
 export function getAutoFirmaRelayUrl(): string {
@@ -246,7 +246,9 @@ export function buildAutoFirmaSignUrl(params: {
   relayUrl?: string
 }): string {
   if (!ALPHANUMERIC_ID_REGEX.test(params.opId)) {
-    throw new Error('El identificador de sesión de AutoFirma debe ser estrictamente alfanumérico.')
+    throw new Error(
+      'El identificador de sesión de AutoFirma debe ser estrictamente alfanumérico y tener como máximo 20 caracteres.'
+    )
   }
 
   const relay = params.relayUrl || getAutoFirmaRelayUrl()

@@ -11,7 +11,6 @@ import {
   generateAutoFirmaSessionId,
   buildAutoFirmaSignUrl,
   decodeCmsSignatureAndExtractIdentity,
-  ALPHANUMERIC_ID_REGEX,
 } from '../digitalSignature.ts'
 import {
   evaluateCertifiedTicketLock,
@@ -123,14 +122,18 @@ test('signPayloadWithP12 firma en memoria con SHA-256 y rechaza certificados cad
   )
 
   const opId = generateAutoFirmaSessionId()
-  assert.match(opId, ALPHANUMERIC_ID_REGEX)
+  assert.equal(opId.length, 16)
+  assert.match(opId, /^[A-Za-z0-9]{1,20}$/)
   assert.ok(!opId.includes('-'))
 
   const afirmaUrl = buildAutoFirmaSignUrl({ canonicalPayload: payload, opId })
   assert.ok(afirmaUrl.startsWith('afirma://sign?'))
   const parsedParams = new URLSearchParams(afirmaUrl.split('?')[1])
   assert.equal(parsedParams.get('op'), 'sign')
-  assert.match(parsedParams.get('id') || '', /^[A-Za-z0-9]+$/)
+  const urlId = parsedParams.get('id') || ''
+  assert.ok(urlId.length <= 20)
+  assert.match(urlId, /^[A-Za-z0-9]{1,20}$/)
+  assert.equal(parsedParams.get('key'), null)
   assert.ok((parsedParams.get('stservlet') || '').endsWith('/functions/v1/autofirma-relay'))
   assert.ok((parsedParams.get('rtservlet') || '').endsWith('/functions/v1/autofirma-relay'))
   assert.equal(parsedParams.get('format'), 'CAdES')
@@ -140,7 +143,11 @@ test('signPayloadWithP12 firma en memoria con SHA-256 y rechaza certificados cad
 
   assert.throws(
     () => buildAutoFirmaSignUrl({ canonicalPayload: payload, opId: 'invalid-id-1' }),
-    /estrictamente alfanumérico/
+    /máximo 20 caracteres/
+  )
+  assert.throws(
+    () => buildAutoFirmaSignUrl({ canonicalPayload: payload, opId: 'MD1234567890123456789' }),
+    /máximo 20 caracteres/
   )
 
   // Decodificación CMS/PKCS#7 devuelto por AutoFirma
