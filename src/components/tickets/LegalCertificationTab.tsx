@@ -2,9 +2,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import type { Database } from '../../types/database.types'
-import type { OwnershipShare } from './OwnershipBreakdownCard'
+import type { OwnershipShare, PendingInvite } from './OwnershipBreakdownCard'
 import { CertificateSignModal } from './CertificateSignModal'
 import { TicketPhotoCaptureModal } from './TicketPhotoCaptureModal'
+import {
+  HandwrittenSignatureTab,
+  type TicketHandwrittenSignatureRow,
+} from './HandwrittenSignatureTab'
 import type { DigitalSignatureResult } from '../../lib/digitalSignature'
 import {
   evaluateCertifiedTicketLock,
@@ -27,6 +31,7 @@ import {
   CheckCircle2,
   UserCheck,
   FileSignature,
+  PenLine,
   LogOut,
 } from 'lucide-react'
 
@@ -37,9 +42,11 @@ export type TicketLegalEventRow = Database['public']['Tables']['ticket_legal_eve
 export interface LegalCertificationTabProps {
   ticket: TicketRow
   shares: OwnershipShare[]
+  pendingInvites?: PendingInvite[]
   isOwner: boolean
   userShare?: OwnershipShare
   certification: TicketCertificationRow | null
+  handwrittenSignatures?: TicketHandwrittenSignatureRow[]
   legalEvents: TicketLegalEventRow[]
   onRefresh: () => Promise<void>
   onRenounced?: (percentage: number) => void
@@ -48,9 +55,11 @@ export interface LegalCertificationTabProps {
 export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   ticket,
   shares,
+  pendingInvites = [],
   isOwner,
   userShare,
   certification,
+  handwrittenSignatures = [],
   legalEvents,
   onRefresh,
   onRenounced,
@@ -146,8 +155,13 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   const hasCurrentUserSigned = Boolean(user?.id && participantSignatureByUser.has(user.id))
 
   const participantShares = useMemo(
-    () => shares.filter((s) => s.role === 'PARTICIPANTE'),
-    [shares]
+    () => shares.filter((s) => s.role === 'PARTICIPANTE' || s.user_id !== ticket.owner_id),
+    [shares, ticket.owner_id]
+  )
+
+  const activePendingInvites = useMemo(
+    () => pendingInvites.filter((inv) => inv.status === 'PENDIENTE'),
+    [pendingInvites]
   )
 
   const canonicalPayload = useMemo(() => {
@@ -470,7 +484,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         </div>
       )}
 
-      {/* 1. Bloque de Custodia del Depositario */}
+      {/* SECCIÓN 1 — Certificado Digital (Validez jurídica plena) */}
       <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-5 space-y-4 shadow-xs">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -479,12 +493,12 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             </span>
             <div>
               <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-                Custodia Legal del Décimo
+                Certificado Digital
               </h3>
               <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
                 {certification
-                  ? `Verificación: ${certification.verification_code}`
-                  : 'Acredita la posesión física mediante firma electrónica'}
+                  ? `Validez jurídica plena · Verificación: ${certification.verification_code}`
+                  : 'Validez jurídica plena · AutoFirma o archivo .p12 / .pfx'}
               </p>
             </div>
           </div>
@@ -632,16 +646,16 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         )}
       </div>
 
-      {/* 2. Bloque de Partícipes (Firma opcional y Renuncia) */}
+      {/* Partícipes y Firmas (aceptados, renunciados e invitaciones pendientes) */}
       <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-5 space-y-3 shadow-xs">
         <div className="flex items-center gap-2">
           <UserCheck className="w-4 h-4 text-[#C5A880]" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
-            Partícipes y Firmas ({participantShares.length})
+            Partícipes y Firmas ({participantShares.length + activePendingInvites.length})
           </h4>
         </div>
 
-        {participantShares.length === 0 ? (
+        {participantShares.length + activePendingInvites.length === 0 ? (
           <p className="text-xs text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
             Aún no hay participaciones registradas en este décimo.
           </p>
@@ -685,6 +699,25 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
                 </div>
               )
             })}
+
+            {activePendingInvites.map((inv) => (
+              <div
+                key={inv.id}
+                className="p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] flex items-center justify-between gap-2 text-xs"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate">
+                    {inv.label || 'Invitación pendiente'} ({inv.percentage}%)
+                  </p>
+                  <p className="text-[11px] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
+                    Código {inv.short_code} · Pendiente de aceptar
+                  </p>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9]">
+                  Pendiente
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -722,6 +755,35 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             </button>
           </div>
         )}
+      </div>
+
+      {/* SECCIÓN 2 — Firma Manuscrita (Acuerdo privado en pantalla) */}
+      <div className="pt-2 space-y-3">
+        <div className="flex items-center gap-2.5 px-1">
+          <span className="w-8 h-8 rounded-xl bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center shrink-0">
+            <PenLine className="w-4 h-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              Firma Manuscrita
+            </h3>
+            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+              Acuerdo privado con firma táctil en pantalla
+            </p>
+          </div>
+        </div>
+
+        <HandwrittenSignatureTab
+          ticket={ticket}
+          shares={shares}
+          isOwner={isOwner}
+          userShare={userShare}
+          certification={certification}
+          handwrittenSignatures={handwrittenSignatures}
+          legalEvents={legalEvents}
+          onRefresh={onRefresh}
+          onRenounced={onRenounced}
+        />
       </div>
 
       {/* Visor de cámara en vivo para fotografiar el anverso del décimo */}

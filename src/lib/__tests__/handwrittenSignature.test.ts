@@ -111,17 +111,20 @@ test('generateHandwrittenAgreementPdf incrusta firmas PNG manuscritas y aviso de
   assert.ok(parsed.getPageCount() >= 1)
 })
 
-test('TicketDetailPage integra Firma Manuscrita, SignaturePadCanvas usa touchAction none y migración incluye ROLLBACK', () => {
+test('LegalCertificationTab unifica Certificado Digital y Firma Manuscrita en barra de 3 pestañas', () => {
   const detail = readFileSync(resolve(process.cwd(), 'src/pages/TicketDetailPage.tsx'), 'utf8')
+  const legalTab = readFileSync(resolve(process.cwd(), 'src/components/tickets/LegalCertificationTab.tsx'), 'utf8')
   const pad = readFileSync(resolve(process.cwd(), 'src/components/tickets/SignaturePadCanvas.tsx'), 'utf8')
   const migration = readFileSync(
     resolve(process.cwd(), 'supabase/migrations/20261128015000_handwritten_signatures.sql'),
     'utf8'
   )
 
-  assert.ok(detail.includes('Firma Manuscrita'))
-  assert.ok(detail.includes('<HandwrittenSignatureTab'))
-  assert.ok(detail.includes('overflow-x-auto'))
+  assert.ok(detail.includes('grid-cols-3'))
+  assert.ok(!detail.includes('overflow-x-auto'))
+  assert.ok(legalTab.includes('Certificado Digital'))
+  assert.ok(legalTab.includes('Firma Manuscrita'))
+  assert.ok(legalTab.includes('<HandwrittenSignatureTab'))
   assert.ok(pad.includes("touchAction: 'none'"))
   assert.ok(pad.includes('Borrar trazo'))
   assert.ok(migration.includes('if v_hw_id is null then'))
