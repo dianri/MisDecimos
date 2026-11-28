@@ -82,10 +82,56 @@ export interface SyncPushResult {
   error?: string
 }
 
+const PUSH_SUBSCRIBE_TIMEOUT_MS = 6000
+
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(timeoutMessage))
+    }, ms)
+
+    promise
+      .then((val) => {
+        clearTimeout(timer)
+        resolve(val)
+      })
+      .catch((err) => {
+        clearTimeout(timer)
+        reject(err)
+      })
+  })
+}
+
+async function resolveServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
+  let registration = await withTimeout(
+    navigator.serviceWorker.getRegistration(),
+    PUSH_SUBSCRIBE_TIMEOUT_MS,
+    'Tiempo de espera agotado al comprobar el Service Worker'
+  )
+
+  if (!registration) {
+    try {
+      registration = await withTimeout(
+        navigator.serviceWorker.register('/sw.js'),
+        PUSH_SUBSCRIBE_TIMEOUT_MS,
+        'Tiempo de espera agotado al registrar el Service Worker'
+      )
+    } catch {
+      registration = await withTimeout(
+        navigator.serviceWorker.ready,
+        PUSH_SUBSCRIBE_TIMEOUT_MS,
+        'Service Worker no disponible en este entorno'
+      )
+    }
+  }
+
+  return registration
+}
+
 /**
  * Resincroniza silenciosamente la suscripción Web Push en el navegador y Supabase.
  * - Verifica `Notification.permission === 'granted'`.
- * - Obtiene o renueva la suscripción en `registration.pushManager`.
+ * - Comprueba `getRegistration()` y aplica timeout máximo de 6s para evitar bloqueos en preview.
  * - Realiza `upsert` seguro en `public.web_push_subscriptions`.
  * - Actualiza `profiles.push_enabled = true`.
  */
@@ -99,19 +145,27 @@ export async function syncPushSubscription(userId: string): Promise<SyncPushResu
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready
-    let subscription = await registration.pushManager.getSubscription()
+    const registration = await resolveServiceWorkerRegistration()
+    let subscription = await withTimeout(
+      registration.pushManager.getSubscription(),
+      PUSH_SUBSCRIBE_TIMEOUT_MS,
+      'Tiempo de espera agotado al consultar la suscripción push'
+    )
     const vapidKey =
       (typeof import.meta !== 'undefined' && import.meta.env?.VITE_VAPID_PUBLIC_KEY) ||
       (typeof process !== 'undefined' ? process.env?.VITE_VAPID_PUBLIC_KEY : '')
 
-    // Si no hay suscripción activa y contamos con la clave VAPID, la creamos
+    // Si no hay suscripción activa y contamos con la clave VAPID, la creamos con timeout de 6s
     if (!subscription && vapidKey) {
       const convertedVapidKey = urlBase64ToUint8Array(vapidKey)
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey,
-      })
+      subscription = await withTimeout(
+        registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey,
+        }),
+        PUSH_SUBSCRIBE_TIMEOUT_MS,
+        'Tiempo de espera agotado al suscribir PushManager'
+      )
     }
 
     if (!subscription) {

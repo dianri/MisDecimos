@@ -358,6 +358,117 @@ export type Database = {
           },
         ]
       }
+      ticket_certifications: {
+        Row: {
+          cert_issuer: string
+          cert_method: string
+          cert_serial: string
+          custodian_nif: string
+          custodian_name: string
+          custodian_user_id: string
+          id: string
+          payload_sha256: string
+          photo_path: string
+          photo_sha256: string
+          signature_b64: string
+          signed_at: string
+          status: string
+          ticket_id: string
+          verification_code: string
+        }
+        Insert: {
+          cert_issuer: string
+          cert_method: string
+          cert_serial: string
+          custodian_nif: string
+          custodian_name: string
+          custodian_user_id: string
+          id?: string
+          payload_sha256: string
+          photo_path: string
+          photo_sha256: string
+          signature_b64: string
+          signed_at?: string
+          status?: string
+          ticket_id: string
+          verification_code: string
+        }
+        Update: {
+          cert_issuer?: string
+          cert_method?: string
+          cert_serial?: string
+          custodian_nif?: string
+          custodian_name?: string
+          custodian_user_id?: string
+          id?: string
+          payload_sha256?: string
+          photo_path?: string
+          photo_sha256?: string
+          signature_b64?: string
+          signed_at?: string
+          status?: string
+          ticket_id?: string
+          verification_code?: string
+        }
+        Relationships: []
+      }
+      ticket_legal_events: {
+        Row: {
+          actor_name: string
+          actor_nif: string | null
+          actor_user_id: string
+          cert_issuer: string | null
+          cert_method: string | null
+          cert_serial: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          participation_id: string | null
+          payload_sha256: string
+          share_amount: number | null
+          share_percentage: number | null
+          signature_b64: string | null
+          ticket_id: string
+        }
+        Insert: {
+          actor_name: string
+          actor_nif?: string | null
+          actor_user_id: string
+          cert_issuer?: string | null
+          cert_method?: string | null
+          cert_serial?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          participation_id?: string | null
+          payload_sha256: string
+          share_amount?: number | null
+          share_percentage?: number | null
+          signature_b64?: string | null
+          ticket_id: string
+        }
+        Update: {
+          actor_name?: string
+          actor_nif?: string | null
+          actor_user_id?: string
+          cert_issuer?: string | null
+          cert_method?: string | null
+          cert_serial?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          participation_id?: string | null
+          payload_sha256?: string
+          share_amount?: number | null
+          share_percentage?: number | null
+          signature_b64?: string | null
+          ticket_id?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           barcode_raw: string | null

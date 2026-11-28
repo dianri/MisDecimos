@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.92` (Producción Estable · Navegación Unificada, Cabecera Limpia y Premiados Bento)  
-**Última Actualización:** 2026-11-27  
-**Rama de Producción:** `main` (Tag `v1.0.92`)  
+**Versión Actual:** `1.0.93` (Producción Estable · Certificación Digital, AutoFirma y Documento Legal PDF)  
+**Última Actualización:** 2026-11-28  
+**Rama de Producción:** `main` (Tag `v1.0.93`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
