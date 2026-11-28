@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.101] - 2026-11-28
+
+### Fixed
+- **Aislamiento estricto por `participation_id` en firmas digitales y renuncias (`legalAuditHelper.ts`, `LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`, `TicketDetailPage.tsx`, `TicketsPage.tsx`, `AlertsPage.tsx`, `OwnershipBreakdownCard.tsx`):**
+  - Añadido `findActiveUserShare()` para seleccionar únicamente la participación vigente (`ACEPTADA` / `PENDIENTE`, ordenada por `created_at` descendente), ignorando participaciones históricas renunciadas o canceladas.
+  - Restringida la comprobación de firmas digitales (`hasActiveDigitalParticipationSignature`, `participantSignatureByShareId`) y manuscritas (`HandwrittenSignatureTab`) exclusivamente por `participation_id`, evitando que una nueva participación herede la firma de una participación previa renunciada.
+  - Ordenada la inserción de `PARTICIPATION_RENOUNCED` previa al RPC cuando la renuncia lleva firma digital y añadido `extractSupabaseErrorMessage()` para mostrar el mensaje técnico real de Supabase/PostgREST si falla la renuncia.
+  - Actualizado el trigger `guard_signed_participation_renounce()` en Supabase (`20261128031000_fix_guard_signed_share_renounce_scoping.sql`) para filtrar estrictamente por `participation_id = NEW.id` e ignorar filas ya renunciadas o eventos huérfanos (`participation_id IS NULL`).
+
 ## [1.0.100] - 2026-11-28
 
 ### Fixed
