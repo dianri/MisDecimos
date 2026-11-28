@@ -174,6 +174,24 @@ test('signPayloadWithP12 firma en memoria con SHA-256 y rechaza certificados cad
   assert.equal(pipeRes.identity.issuer, 'AC FNMT Usuarios Test')
   assert.equal(pipeRes.identity.serialNumber, '01AB23CD')
   assert.equal(pipeRes.signatureB64, res.signatureB64)
+
+  // Cadena de certificados DER concatenados en Android KeyChain (bytes residuales tras el 1.º cert) + %7C + CMS
+  const { cert: caCert } = createTestP12({ nifInCnOnly: true })
+  const caCertDer = forge.asn1.toDer(forge.pki.certificateToAsn1(caCert)).getBytes()
+  const chainedCertsDer = certDer + caCertDer
+  const chainedCertsBase64Url = forge.util
+    .encode64(chainedCertsDer)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '')
+  const androidRes = await decodeCmsSignatureAndExtractIdentity(
+    `${chainedCertsBase64Url}%7C${cmsBase64Url}`,
+    payload
+  )
+  assert.equal(androidRes.method, 'autofirma')
+  assert.equal(androidRes.identity.fullName, 'CARLOS RUIZ MARTIN')
+  assert.equal(androidRes.identity.nif, '12345678Z')
+  assert.equal(androidRes.signatureB64, res.signatureB64)
 })
 
 test('evaluateCertifiedTicketLock y requiresDigitalSignatureForRenounce controlan bloqueo y renuncia', () => {
