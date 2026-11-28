@@ -57,6 +57,51 @@ export function findActiveUserShare<
   })[0]
 }
 
+export interface TicketSealStatus {
+  isSigned: boolean
+  mode: 'digital' | 'handwritten' | 'unsigned'
+  title: string
+  subtitle: string
+  verificationCode?: string | null
+}
+
+/**
+ * Resuelve el estado visual del Sello Digital del décimo (Firmado Digital, Acuerdo Manuscrito o Sin Firmar).
+ */
+export function resolveTicketSealState(input: {
+  hasDigitalCert: boolean
+  hasCustodianHandwritten: boolean
+  verificationCode?: string | null
+}): TicketSealStatus {
+  if (input.hasDigitalCert) {
+    return {
+      isSigned: true,
+      mode: 'digital',
+      title: 'FIRMADO · SELLO DIGITAL',
+      subtitle: input.verificationCode
+        ? `CUSTODIA CERTIFICADA · ${input.verificationCode}`
+        : 'CUSTODIA CERTIFICADA',
+      verificationCode: input.verificationCode || null,
+    }
+  }
+  if (input.hasCustodianHandwritten) {
+    return {
+      isSigned: true,
+      mode: 'handwritten',
+      title: 'FIRMADO · SELLO DIGITAL',
+      subtitle: 'ACUERDO MANUSCRITO',
+      verificationCode: input.verificationCode || null,
+    }
+  }
+  return {
+    isSigned: false,
+    mode: 'unsigned',
+    title: 'SIN FIRMAR · SELLO DIGITAL',
+    subtitle: 'SELLO DIGITAL',
+    verificationCode: null,
+  }
+}
+
 /**
  * Extrae el mensaje real de un error de Supabase/PostgREST o Error estándar.
  */

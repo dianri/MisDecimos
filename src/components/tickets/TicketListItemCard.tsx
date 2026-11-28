@@ -1,7 +1,8 @@
 import React from 'react'
 import type { Database } from '../../types/database.types'
-import { Banknote, Clover, Calendar, Share2, Search, Loader2, Users, CheckCircle2 } from 'lucide-react'
+import { Banknote, Clover, Calendar, Share2, Search, Loader2, Users, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { formatDrawLabel, resolveTicketCardPresentation } from '../../lib/ticketCardHelper'
+import type { TicketSealStatus } from '../../lib/legalAuditHelper'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
 
@@ -16,6 +17,7 @@ export interface TicketListItemCardProps {
   isCollected?: boolean
   isCheckingPrize?: boolean
   isTogglingCollected?: boolean
+  sealStatus?: TicketSealStatus
   onClick?: (ticketId: string) => void
   onShareClick?: (ticketId: string, hasParticipations: boolean) => void
   onCheckPrizeClick?: (ticket: TicketRow) => void
@@ -32,6 +34,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   isCollected: isCollectedProp = false,
   isCheckingPrize = false,
   isTogglingCollected = false,
+  sealStatus,
   onClick,
   onShareClick,
   onCheckPrizeClick,
@@ -153,9 +156,22 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
         }`}
       >
         <div className={`flex items-center justify-between gap-2 text-[11px] ${secondaryTextClass}`}>
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
             <Calendar className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{formatDrawLabel(ticket.draw_date)}</span>
+            {sealStatus && (
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide shrink-0 ${
+                  sealStatus.isSigned
+                    ? 'bg-[#3A5245] text-white border border-[#C5A880]/70'
+                    : 'bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
+                }`}
+                title={sealStatus.subtitle}
+              >
+                <ShieldCheck className={`w-3 h-3 ${sealStatus.isSigned ? 'text-[#C5A880]' : ''}`} />
+                <span>{sealStatus.isSigned ? 'Firmado' : 'Sin firmar'}</span>
+              </span>
+            )}
           </div>
 
           {isOwner ? (

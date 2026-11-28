@@ -135,7 +135,7 @@ test('Responsive móvil y blindaje de renuncia en UI y migración SQL', () => {
   )
 
   assert.ok(detail.includes('sm:hidden') && detail.includes('sm:inline'))
-  assert.ok(legalTab.includes('flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between'))
+  assert.ok(legalTab.includes('aria-expanded={isDigitalCertOpen}'))
   assert.ok(migration.includes('trg_guard_signed_participation_renounce'))
   assert.ok(migration.includes('-- ROLLBACK:'))
 })

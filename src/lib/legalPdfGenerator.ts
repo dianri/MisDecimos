@@ -25,6 +25,8 @@ export interface LegalPdfEventItem {
   cert_method?: string | null
   payload_sha256: string
   metadata?: unknown
+  participation_id?: string | null
+  signaturePngBase64?: string | null
 }
 
 export interface LegalPdfInput {
@@ -465,17 +467,20 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
 
     ensureSpace(hasDualName ? 28 : 18)
 
+    const isPending = p.status === 'PENDIENTE' || p.status === 'PENDING'
     const isRenounced = p.status === 'RENUNCIADA' || p.status === 'RENOUNCED'
     const statusText = isRenounced
       ? 'RENUNCIADA'
-      : p.status === 'PENDIENTE'
-      ? 'PENDIENTE'
+      : isPending
+      ? 'SIN RECLAMAR'
       : 'ACTIVA'
     const displayPct = isRenounced ? 0 : p.percentage
     const displayAmount = isRenounced ? 0 : p.amountEuros
 
     let sigText = 'Aceptacion estandar'
-    if (p.isOwner && input.certification) {
+    if (isPending) {
+      sigText = 'Pendiente de reclamar'
+    } else if (p.isOwner && input.certification) {
       sigText = `Depositario (${input.certification.custodian_nif})`
     } else if (p.signedNif && p.certMethod && p.certMethod !== 'handwritten') {
       sigText = `Certificado (${p.signedNif})`
@@ -513,13 +518,36 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
     drawText('No hay eventos legales adicionales registrados.', margin, y, 8.8, fontRegular, muted)
     y -= 14
   } else {
-    for (const ev of input.events) {
-      ensureSpace(48)
+    const orderedEvents = [...input.events].sort(
+      (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at)
+    )
+
+    for (const ev of orderedEvents) {
+      const isHandwrittenSignEvent =
+        ev.event_type === 'HANDWRITTEN_CUSTODY_SIGNED' ||
+        ev.event_type === 'HANDWRITTEN_PARTICIPATION_SIGNED'
+
+      // Resolver imagen PNG inline si viene en el evento o en handwrittenSigners
+      let inlinePngB64 = ev.signaturePngBase64 || null
+      if (!inlinePngB64 && isHandwrittenSignEvent && input.handwrittenSigners?.length) {
+        const matched =
+          ev.event_type === 'HANDWRITTEN_CUSTODY_SIGNED'
+            ? input.handwrittenSigners.find((s) => s.role === 'custodian')
+            : input.handwrittenSigners.find(
+                (s) =>
+                  s.role === 'participant' &&
+                  ((ev.actor_nif && s.nif === ev.actor_nif) || s.fullName === ev.actor_name)
+              )
+        inlinePngB64 = matched?.signaturePngBase64 || null
+      }
+
+      ensureSpace(inlinePngB64 ? 105 : 48)
       const meta =
         ev.metadata && typeof ev.metadata === 'object'
           ? (ev.metadata as Record<string, unknown>)
           : {}
-      const phoneStr = typeof meta.phone === 'string' && meta.phone.trim() ? ` - Tel: ${meta.phone.trim()}` : ''
+      const phoneStr =
+        typeof meta.phone === 'string' && meta.phone.trim() ? ` - Tel: ${meta.phone.trim()}` : ''
       const pctNum = ev.share_percentage != null ? ev.share_percentage : null
       const pctStr = pctNum != null ? ` - ${pctNum}%` : ''
       const nifPart = ev.actor_nif ? `NIF: ${ev.actor_nif}` : ''
@@ -552,6 +580,33 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
         fontRegular,
         dark
       )
+
+      if (inlinePngB64) {
+        try {
+          const sigBytes = decodeDataUrlPngBytes(inlinePngB64)
+          const sigImg = await doc.embedPng(sigBytes)
+          const sigDims = sigImg.scaleToFit(120, 44)
+          ensureSpace(sigDims.height + 24)
+          page.drawRectangle({
+            x: margin + 10,
+            y: y - sigDims.height - 4,
+            width: sigDims.width + 8,
+            height: sigDims.height + 6,
+            borderColor: border,
+            borderWidth: 0.6,
+          })
+          page.drawImage(sigImg, {
+            x: margin + 14,
+            y: y - sigDims.height - 1,
+            width: sigDims.width,
+            height: sigDims.height,
+          })
+          y -= sigDims.height + 12
+        } catch {
+          // conservar huella SHA-256 si la imagen PNG no fuera válida
+        }
+      }
+
       drawWrappedLine(
         `SHA-256: ${ev.payload_sha256}`,
         margin + 10,
@@ -562,76 +617,6 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
         muted
       )
       y -= 6
-    }
-  }
-
-  // 6. Sección visual de Firmas Manuscritas Registradas (PNG incrustados)
-  if (input.handwrittenSigners && input.handwrittenSigners.length > 0) {
-    y -= 6
-    ensureSpace(120)
-    drawText('5. FIRMAS MANUSCRITAS REGISTRADAS', margin, y, 10.5, fontBold, granite)
-    y -= 6
-    page.drawLine({
-      start: { x: margin, y },
-      end: { x: margin + contentWidth, y },
-      thickness: 1,
-      color: cava,
-    })
-    y -= 14
-
-    for (const signer of input.handwrittenSigners) {
-      ensureSpace(96)
-      page.drawRectangle({
-        x: margin,
-        y: y - 78,
-        width: contentWidth,
-        height: 82,
-        borderColor: border,
-        borderWidth: 0.8,
-      })
-
-      const roleLabel =
-        signer.role === 'custodian' ? 'Depositario' : `Participe ${signer.percentage}%`
-      drawText(
-        `${roleLabel}: ${signer.fullName}   |   DNI/NIE: ${signer.nif}`,
-        margin + 10,
-        y - 14,
-        9.2,
-        fontBold,
-        dark
-      )
-      drawText(
-        `Tel: ${signer.phone}   |   Estado: ${signer.status}`,
-        margin + 10,
-        y - 28,
-        8.3,
-        fontRegular,
-        dark
-      )
-      drawText(
-        `Fecha: ${formatDateEs(signer.signedAt)}   |   SHA-256 firma: ${signer.signatureSha256.slice(0, 24)}...`,
-        margin + 10,
-        y - 42,
-        7.6,
-        fontRegular,
-        muted
-      )
-
-      try {
-        const sigBytes = decodeDataUrlPngBytes(signer.signaturePngBase64)
-        const sigImg = await doc.embedPng(sigBytes)
-        const sigDims = sigImg.scaleToFit(115, 46)
-        page.drawImage(sigImg, {
-          x: margin + contentWidth - sigDims.width - 12,
-          y: y - 68,
-          width: sigDims.width,
-          height: sigDims.height,
-        })
-      } catch {
-        // conservar metadatos si la imagen PNG no fuera válida
-      }
-
-      y -= 92
     }
   }
 
