@@ -197,6 +197,13 @@ const ACTION_CONFIGS: Record<string, ActionConfig> = {
     bgClass: 'bg-[#C5A880]/20',
     borderClass: 'border-[#C5A880]/45',
   },
+  PARTICIPATION_ACCEPTED: {
+    title: 'Participación aceptada',
+    icon: CheckCircle2,
+    colorClass: 'text-[#3A5245] dark:text-[#C5A880]',
+    bgClass: 'bg-[#3A5245]/10 dark:bg-[#3A5245]/25',
+    borderClass: 'border-[#3A5245]/25',
+  },
   PARTICIPATION_SIGNED: {
     title: 'Participación firmada con certificado',
     icon: FileSignature,

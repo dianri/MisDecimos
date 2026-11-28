@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.103] - 2026-11-28
+
+### Fixed
+- **Documento Legal PDF con nombres duales, maquetación segura y evento `PARTICIPATION_ACCEPTED` (`legalPdfGenerator.ts`, `inviteService.ts`, `LegalCertificationTab.tsx`, `legalAuditHelper.ts`, `TicketAuditTimeline.tsx`):**
+  - Registrado automáticamente `PARTICIPATION_ACCEPTED` en `ticket_legal_events` (con `participation_id`, `actor_user_id`, `actor_name`, cuota y `payload_sha256`) al aceptar una participación en `claimInvite()`.
+  - Actualizado `generateLegalCustodyPdf()` para mostrar ambos nombres (alias en la app + nombre completo del certificado o firma manuscrita) en las Secciones 2 y 3, e incluir participaciones `RENUNCIADA` con `0%`.
+  - Corregida la contención de la fotografía del anverso (`scaleToFit`), sanitización WinAnsi sin `?` y paginación dinámica en el Anexo Cronológico cuando `y < 70`.
+
 ## [1.0.102] - 2026-11-28
 
 ### Fixed
