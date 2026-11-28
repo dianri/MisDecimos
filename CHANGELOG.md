@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.97] - 2026-11-28
+
+### Fixed
+- **Decodificación del retorno `<cert_b64>|<cms_b64>` de AutoFirma (`digitalSignature.ts`):**
+  - Añadido soporte en `parseAutoFirmaSignature` / `decodeCmsSignatureAndExtractIdentity` para respuestas compuestas separadas por `|` (`<certificado_x509>|<firma_cms>`), normalizando espacios (`' '` → `'+'`), Base64URL (`-`/`_`) y padding `=`, con detalle técnico en errores ASN.1.
+  - Cubierto en `legalCertification.test.ts` con prueba unitaria específica de retorno `<certX509_base64url>|<cms_base64url>`.
+
 ## [1.0.96] - 2026-11-28
 
 ### Changed

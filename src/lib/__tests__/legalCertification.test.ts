@@ -157,6 +157,23 @@ test('signPayloadWithP12 firma en memoria con SHA-256 y rechaza certificados cad
   assert.equal(cmsRes.identity.fullName, 'CARLOS RUIZ MARTIN')
   assert.equal(cmsRes.identity.nif, '12345678Z')
   assert.equal(cmsRes.identity.serialNumber, '01AB23CD')
+
+  // Formato compuesto real de AutoFirma: <certX509_base64url>|<cms_base64url> (incluyendo '+' convertido a espacio)
+  const { cert } = createTestP12()
+  const certDer = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes()
+  const certBase64UrlWithSpaces = forge.util
+    .encode64(certDer)
+    .replace(/\+/g, ' ')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '')
+  const pipePayload = `${certBase64UrlWithSpaces}|${cmsBase64Url}`
+  const pipeRes = await decodeCmsSignatureAndExtractIdentity(pipePayload, payload)
+  assert.equal(pipeRes.method, 'autofirma')
+  assert.equal(pipeRes.identity.fullName, 'CARLOS RUIZ MARTIN')
+  assert.equal(pipeRes.identity.nif, '12345678Z')
+  assert.equal(pipeRes.identity.issuer, 'AC FNMT Usuarios Test')
+  assert.equal(pipeRes.identity.serialNumber, '01AB23CD')
+  assert.equal(pipeRes.signatureB64, res.signatureB64)
 })
 
 test('evaluateCertifiedTicketLock y requiresDigitalSignatureForRenounce controlan bloqueo y renuncia', () => {
