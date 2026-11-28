@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.98] - 2026-11-28
+
+### Changed
+- **Acordeón Desplegable para «Firma Manuscrita» (`LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`):**
+  - Convertida la sección **Firma Manuscrita** en un bloque desplegable cerrado por defecto (`isHandwrittenOpen = false`) con cabecera clickable (`aria-expanded`), badge de estado (**`Firmada`** / **`Opcional`**) e icono `ChevronDown` rotatorio.
+  - Actualizado el texto del banner informativo para referenciar la sección superior **`Certificado Digital`**.
+
 ## [1.0.97] - 2026-11-28
 
 ### Fixed
