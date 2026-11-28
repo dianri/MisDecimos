@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.108] - 2026-11-28
+
+### Changed
+- **Botón de renuncia unificado en rojo y una sola línea (`LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`):**
+  - Eliminado el botón duplicado de renuncia dentro de la sección desplegable `Firma Manuscrita`.
+  - Aplicado el diseño rojo de alerta/renuncia (`bg-[#D04848]/10 text-[#D04848] border-[#D04848]/25`) y layout en un único renglón (`inline-flex whitespace-nowrap text-xs sm:text-sm`) con el texto **`Renunciar con certificado digital`** al botón superior en `Certificado Digital`.
+
 ## [1.0.107] - 2026-11-28
 
 ### Changed
