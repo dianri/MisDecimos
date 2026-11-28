@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   countActiveRepartoItems,
+  getTicketDeletionBlockReason,
   hasActiveDigitalParticipationSignature,
   mergeAuditAndLegalEvents,
   type TicketLegalEventRow,
@@ -138,4 +139,51 @@ test('Responsive móvil y blindaje de renuncia en UI y migración SQL', () => {
   assert.ok(legalTab.includes('aria-expanded={isDigitalCertOpen}'))
   assert.ok(migration.includes('trg_guard_signed_participation_renounce'))
   assert.ok(migration.includes('-- ROLLBACK:'))
+})
+
+test('getTicketDeletionBlockReason devuelve mensajes específicos para no propietario, participaciones aceptadas y liquidado', () => {
+  assert.equal(
+    getTicketDeletionBlockReason({
+      isOwner: false,
+      acceptedThirdPartyCount: 0,
+      ticketStatus: 'PENDIENTE',
+    }),
+    'Solo el propietario del décimo puede eliminarlo.'
+  )
+
+  assert.equal(
+    getTicketDeletionBlockReason({
+      isOwner: true,
+      acceptedThirdPartyCount: 1,
+      ticketStatus: 'PENDIENTE',
+    }),
+    'No puedes eliminar este décimo porque tiene 1 participación aceptada. Para eliminarlo, el partícipe debe renunciar antes a su participación.'
+  )
+
+  assert.equal(
+    getTicketDeletionBlockReason({
+      isOwner: true,
+      acceptedThirdPartyCount: 3,
+      ticketStatus: 'VALIDADO',
+    }),
+    'No puedes eliminar este décimo porque tiene 3 participaciones aceptadas. Para eliminarlo, los partícipes deben renunciar antes a sus participaciones.'
+  )
+
+  assert.equal(
+    getTicketDeletionBlockReason({
+      isOwner: true,
+      acceptedThirdPartyCount: 0,
+      ticketStatus: 'LIQUIDADO',
+    }),
+    'No puedes eliminar este décimo porque el sorteo ya está liquidado.'
+  )
+
+  assert.equal(
+    getTicketDeletionBlockReason({
+      isOwner: true,
+      acceptedThirdPartyCount: 0,
+      ticketStatus: 'PENDIENTE',
+    }),
+    null
+  )
 })

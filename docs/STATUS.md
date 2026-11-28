@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.109` (Producción Estable · Navegación Sello Digital y Disparador en Número)  
+**Versión Actual:** `1.0.110` (Producción Estable · Mensajes Claros de Bloqueo al Eliminar Décimo)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.109`)  
+**Rama de Producción:** `main` (Tag `v1.0.110`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

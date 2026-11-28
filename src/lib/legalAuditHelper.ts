@@ -102,6 +102,36 @@ export function resolveTicketSealState(input: {
   }
 }
 
+export interface TicketDeletionBlockInput {
+  isOwner: boolean
+  acceptedThirdPartyCount: number
+  ticketStatus: string
+}
+
+/**
+ * Devuelve un mensaje claro y accionable si el décimo no puede eliminarse, o null si está permitido.
+ */
+export function getTicketDeletionBlockReason(input: TicketDeletionBlockInput): string | null {
+  if (!input.isOwner) {
+    return 'Solo el propietario del décimo puede eliminarlo.'
+  }
+
+  const count = Math.max(0, Math.floor(input.acceptedThirdPartyCount || 0))
+  if (count === 1) {
+    return 'No puedes eliminar este décimo porque tiene 1 participación aceptada. Para eliminarlo, el partícipe debe renunciar antes a su participación.'
+  }
+  if (count > 1) {
+    return `No puedes eliminar este décimo porque tiene ${count} participaciones aceptadas. Para eliminarlo, los partícipes deben renunciar antes a sus participaciones.`
+  }
+
+  const normalizedStatus = String(input.ticketStatus || '').trim().toUpperCase()
+  if (normalizedStatus === 'LIQUIDADO') {
+    return 'No puedes eliminar este décimo porque el sorteo ya está liquidado.'
+  }
+
+  return null
+}
+
 /**
  * Extrae el mensaje real de un error de Supabase/PostgREST o Error estándar.
  */
