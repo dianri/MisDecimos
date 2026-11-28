@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.96] - 2026-11-28
+
+### Changed
+- **Reorganización de «Certificación Legal» y Barra Limpia de 3 Pestañas (`TicketDetailPage.tsx`, `LegalCertificationTab.tsx`):**
+  - Restaurada la barra limpia de **3 pestañas** (`Reparto`, `Certificación Legal` e `Historial`) sin desplazamiento horizontal, mostrando el indicador de estado en `Certificación Legal` cuando existe certificación digital o firma manuscrita.
+  - Agrupado el contenido de `Certificación Legal` en dos secciones independientes: **Sección 1 — Certificado Digital** (`AutoFirma` / `.p12`) y **Sección 2 — Firma Manuscrita** (acuerdo privado táctil en pantalla y Documento Privado PDF).
+  - Sincronizado el bloque `Partícipes y Firmas` para incluir todas las participaciones registradas e invitaciones pendientes del décimo.
+
 ## [1.0.95] - 2026-11-28
 
 ### Added
