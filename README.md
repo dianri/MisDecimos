@@ -1,6 +1,6 @@
 # 🎟️ MisDecimos
 
-**MisDecimos** es una plataforma Web PWA (Progressive Web App) diseñada para la gestión segura, custodia compartida y reparto transparente de participaciones de décimos de Lotería Nacional (Navidad, El Niño y sorteos semanales) entre amigos, familiares y peñas.
+**MisDecimos** es una plataforma Web PWA (Progressive Web App) diseñada para la gestión segura, custodia compartida, certificación legal y reparto transparente de participaciones de décimos de Lotería Nacional (sorteos extraordinarios oficiales de **Lotería de Navidad** y **El Niño**) entre amigos, familiares y peñas. Incluye **certificación legal de custodia** mediante Certificado Digital (**AutoFirma** / `.p12` / `.pfx`), **Firma Manuscrita** y generación de **Documento Legal PDF** unificado.
 
 ---
 
@@ -22,15 +22,19 @@
 | Módulo / Pantalla | Componente / Archivo Fuente | Descripción |
 | :--- | :--- | :--- |
 | **Login y OTP** | [`src/pages/LoginPage.tsx`](./src/pages/LoginPage.tsx) · [`src/context/AuthContext.tsx`](./src/context/AuthContext.tsx) | Autenticación OTP por email, reintento `email`/`signup` y gestión de tokens. |
-| **Shell y Navegación** | [`src/components/layout/AppShell.tsx`](./src/components/layout/AppShell.tsx) | Header, BottomNav fijo de 4 pestañas y contador Realtime de alertas. |
+| **Shell y Navegación** | [`src/components/layout/AppShell.tsx`](./src/components/layout/AppShell.tsx) | Cabecera unificada con logotipo **4 MILLS**, BottomNav de 3 pestañas (`Décimos`, `Premios`, `Alertas`) y campana de alertas con punto de prioridad. |
 | **Anti-Caché PWA** | [`src/components/common/VersionBadge.tsx`](./src/components/common/VersionBadge.tsx) | Badge visual dinámico, diagnóstico y purga de caché/SW en 1 clic. |
-| **Billetes (Dashboard)** | [`src/pages/TicketsPage.tsx`](./src/pages/TicketsPage.tsx) | Métricas, filtros (Mis Décimos, Participaciones, Archivados) y lista. |
-| **Tarjeta de Listado** | [`src/components/tickets/TicketListItemCard.tsx`](./src/components/tickets/TicketListItemCard.tsx) | Ficha resumen con insignia de custodia, porcentaje y estado. |
+| **Dashboard (Décimos)** | [`src/pages/TicketsPage.tsx`](./src/pages/TicketsPage.tsx) | Listado unificado de **Décimos** y **Participaciones** activas con gestos swipe y botón flotante `Añadir`. |
+| **Premios** | [`src/pages/PrizesPage.tsx`](./src/pages/PrizesPage.tsx) · [`src/components/tickets/PrizesHeroCard.tsx`](./src/components/tickets/PrizesHeroCard.tsx) | KPIs de *Décimos Activos* y *Total Premios* e historial de escrutinio (`Todos`, `Premiados`, `Sin premio`). |
+| **Tarjeta de Listado** | [`src/components/tickets/TicketListItemCard.tsx`](./src/components/tickets/TicketListItemCard.tsx) | Ficha resumen con distintivo interactivo **`SIN FIRMAR` / `FIRMADO`** hacia `?tab=certification` y acciones rápidas (`Compartir`, `Comprobar sorteo`). |
 | **Alta de Décimos** | [`src/components/tickets/TicketFormModal.tsx`](./src/components/tickets/TicketFormModal.tsx) | Modal de captura (manual vs escaneo) y llamada a RPC `create_ticket`. |
 | **Escáner GS1-128 / QR** | [`src/components/tickets/BarcodeScannerModal.tsx`](./src/components/tickets/BarcodeScannerModal.tsx) · [`src/lib/selaeBarcodeParser.ts`](./src/lib/selaeBarcodeParser.ts) | Cámara con linterna, selector de foto y parser de códigos de SELAE. |
 | **Canje de Invitaciones** | [`src/components/tickets/InviteClaimModal.tsx`](./src/components/tickets/InviteClaimModal.tsx) | Previsualización y asignación/rechazo de participaciones por código o QR. |
-| **Detalle del Décimo** | [`src/pages/TicketDetailPage.tsx`](./src/pages/TicketDetailPage.tsx) | Vista integral de boleto, auditoría, cuotas y liquidación de premios. |
-| **Boleto Realista** | [`src/components/tickets/RealisticTicketCard.tsx`](./src/components/tickets/RealisticTicketCard.tsx) | Replicación fiel de billete oficial con guilloche y sellos de seguridad. |
+| **Detalle del Décimo** | [`src/pages/TicketDetailPage.tsx`](./src/pages/TicketDetailPage.tsx) | Vista de **3 pestañas** (`Reparto`, `Certificación Legal`, `Historial`) con custodia protegida. |
+| **Boleto Realista** | [`src/components/tickets/RealisticTicketCard.tsx`](./src/components/tickets/RealisticTicketCard.tsx) | Boleto vectorial con `SELLO DIGITAL` interactivo (`SIN FIRMAR` / `FIRMADO`) hacia certificación y activador oculto de 5 toques en `NÚMERO / SERIE / FRACCIÓN`. |
+| **Certificación Legal** | [`src/components/tickets/LegalCertificationTab.tsx`](./src/components/tickets/LegalCertificationTab.tsx) · [`src/components/tickets/TicketPhotoCaptureModal.tsx`](./src/components/tickets/TicketPhotoCaptureModal.tsx) | Pestaña unificada con prueba gráfica compartida (`SHA-256`), Certificado Digital, Firma Manuscrita desplegable, solicitud de firma al depositario y descarga de PDF único. |
+| **Firma Electrónica y Trazos** | [`src/components/tickets/CertificateSignModal.tsx`](./src/components/tickets/CertificateSignModal.tsx) · [`src/components/tickets/SignaturePadCanvas.tsx`](./src/components/tickets/SignaturePadCanvas.tsx) | Modal de firma con AutoFirma (escritorio y móvil) o archivo `.p12 / .pfx` y lienzo táctil manuscrito. |
+| **Criptografía y PDF Legal** | [`src/lib/digitalSignature.ts`](./src/lib/digitalSignature.ts) · [`src/lib/legalCustody.ts`](./src/lib/legalCustody.ts) · [`src/lib/legalPdfGenerator.ts`](./src/lib/legalPdfGenerator.ts) | Procesamiento X.509/PKCS#7/PKCS#12 (`node-forge`), aislamiento por `participation_id` y generación del Certificado Legal PDF con `pdf-lib`. |
 | **Comprobador de Premios**| [`src/components/tickets/PrizeCheckCard.tsx`](./src/components/tickets/PrizeCheckCard.tsx) | Consulta de premios en vivo, desglose de IRPF y confirmación de cobro. |
 | **Cuadro de Propiedad** | [`src/components/tickets/OwnershipBreakdownCard.tsx`](./src/components/tickets/OwnershipBreakdownCard.tsx) | Gráfico Donut SVG (`100% Distribuido`), lista de cotitulares y renuncias. |
 | **Reparto y Cuotas** | [`src/components/tickets/CreateParticipationSheet.tsx`](./src/components/tickets/CreateParticipationSheet.tsx) | Reparto manual o a partes iguales con absorción de redondeos. |
@@ -41,7 +45,7 @@
 | **Perfil y Ajustes** | [`src/pages/ProfilePage.tsx`](./src/pages/ProfilePage.tsx) | Edición de perfil, avatar WebP, interruptor Push y test de notificación. |
 | **Servicio Web Push** | [`src/services/push/pushSubscription.ts`](./src/services/push/pushSubscription.ts) · [`public/push-sw.js`](./public/push-sw.js) | Suscripción VAPID y manejador de notificaciones del Service Worker. |
 | **Instalador PWA** | [`src/components/pwa/PwaInstallBanner.tsx`](./src/components/pwa/PwaInstallBanner.tsx) | Prompt nativo en Android y tutorial guiado en iOS Safari. |
-| **Edge Functions y Motor** | [`supabase/functions/check-prizes/`](./supabase/functions/check-prizes/) · [`src/lib/historicalDraws.ts`](./src/lib/historicalDraws.ts) · [`send-push/`](./supabase/functions/send-push/index.ts) | Comprobación oficial con motor histórico 2020-2025 y Web Push asíncrono. |
+| **Edge Functions y Motor** | [`supabase/functions/autofirma-relay/`](./supabase/functions/autofirma-relay/index.ts) · [`supabase/functions/check-prizes/`](./supabase/functions/check-prizes/) · [`send-push/`](./supabase/functions/send-push/index.ts) · [`src/lib/historicalDraws.ts`](./src/lib/historicalDraws.ts) | Relay AutoFirma efímero, comprobación oficial con motor histórico 2020-2025 y Web Push asíncrono. |
 | **Migraciones SQL** | [`supabase/migrations/`](./supabase/migrations/) | Migraciones PostgreSQL (tablas, RLS, triggers y RPCs transaccionales). |
 
 ---
@@ -49,6 +53,11 @@
 ## 🛠️ Stack Tecnológico
 
 - **Frontend:** React 18+, Vite 6, TypeScript, Tailwind CSS, Lucide React, `vite-plugin-pwa`.
+- **Criptografía, PDF y Testing:**
+  - `node-forge`: procesamiento de certificados X.509 y firmas PKCS#7/PKCS#12 (`.p12` / `.pfx` y retorno AutoFirma).
+  - `pdf-lib`: generación íntegra en cliente del Documento Legal de Custodia PDF.
+  - Web Crypto API (`SHA-256`): huella criptográfica de la fotografía del anverso del décimo.
+  - Tests unitarios puros con Node.js Test Runner (`node --test --experimental-strip-types`, sin `jsdom`).
 - **Backend:** Supabase Cloud (`xmdghpyfrblmtjtevtru`):
   - Base de datos PostgreSQL con políticas Row-Level Security (RLS) estrictas.
   - Funciones transaccionales RPC en PL/pgSQL (`SECURITY DEFINER`).
@@ -76,20 +85,26 @@
 │   │   ├── common/             # VersionBadge anti-caché y modales
 │   │   ├── layout/             # AppShell, Header y BottomNav fijo
 │   │   ├── pwa/                # PwaInstallBanner nativo e instrucciones iOS
-│   │   └── tickets/            # Escáner GS1-128, boleto realista, Donut SVG, comprobación de premios y auditoría
+│   │   └── tickets/            # Escáner GS1-128, boleto realista, Certificación Legal (AutoFirma, firma manuscrita), Donut SVG, premios y auditoría
 │   ├── context/
 │   │   └── AuthContext.tsx     # Sesión OTP y persistencia de deep-links
 │   ├── lib/
+│   │   ├── __tests__/          # Suite de tests unitarios puros (node --test)
+│   │   ├── digitalSignature.ts # Parsing X.509, PKCS#7/PKCS#12 (node-forge) y SHA-256
+│   │   ├── legalCustody.ts     # Aislamiento por participation_id y validaciones legales
+│   │   ├── legalPdfGenerator.ts# Generación del Documento Legal PDF (pdf-lib)
 │   │   ├── sanitize.ts         # Sanitización XSS y validación de URLs
 │   │   ├── selaeBarcodeParser.ts # Parser de códigos de barras GS1-128 SELAE
 │   │   └── supabase.ts         # Cliente Supabase singleton
 │   ├── pages/
 │   │   ├── LoginPage.tsx       # Login OTP por Email con soporte de pegado
-│   │   ├── TicketsPage.tsx     # Dashboard Billetes Compartidos
-│   │   ├── TicketDetailPage.tsx# Detalle del décimo, bloqueo y auditoría
+│   │   ├── TicketsPage.tsx     # Dashboard unificado de Décimos y Participaciones
+│   │   ├── PrizesPage.tsx      # KPIs de Décimos Activos, Total Premios e historial
+│   │   ├── InvitePage.tsx      # Canje directo de invitaciones por enlace (/invite/:token)
+│   │   ├── TicketDetailPage.tsx# Detalle de 3 pestañas (Reparto, Certificación Legal, Historial)
 │   │   ├── AlertsPage.tsx      # Pestaña Alertas con Realtime
-│   │   ├── AuditPage.tsx       # Pestaña Auditoría
-│   │   └── ProfilePage.tsx     # Mi Perfil, subida WebP y switch Web Push
+│   │   ├── AuditPage.tsx       # Centro de Auditoría y Reglas de Oro
+│   │   └── ProfilePage.tsx     # Mi Perfil, subida WebP, archivados y switch Web Push
 │   ├── services/
 │   │   └── push/               # Suscripción VAPID y detección de plataforma
 │   ├── types/
@@ -97,6 +112,10 @@
 │   ├── App.tsx                 # Enrutador principal de autenticación
 │   └── main.tsx                # Bootstrap de React
 ├── supabase/
+│   ├── functions/
+│   │   ├── autofirma-relay/    # Relay efímero HTTPS para firma móvil AutoFirma
+│   │   ├── check-prizes/       # Comprobación oficial de premios y motor histórico
+│   │   └── send-push/          # Envío asíncrono de notificaciones Web Push
 │   └── migrations/             # Migraciones SQL secuenciales
 ├── AGENTS.md                   # Normas obligatorias de gobernanza y Git Flow
 ├── CHANGELOG.md                # Registro de cambios (Keep a Changelog)
@@ -148,6 +167,9 @@ npm install
 # Modo desarrollo
 npm run dev
 
+# Ejecutar suite de tests unitarios (node --test --experimental-strip-types)
+npm test
+
 # Verificación de tipos TypeScript
 npm run typecheck
 
@@ -156,6 +178,9 @@ npm run build
 
 # Previsualizar build de producción
 npm run preview
+
+# Respaldo obligatorio de base de datos previo a migraciones SQL
+npm run db:backup
 ```
 
 ---

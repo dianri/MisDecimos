@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.114] - 2026-11-28
+
+### Docs
+- **Actualización integral de `README.md`:**
+  - Actualizada la descripción inicial a los sorteos extraordinarios de **Lotería de Navidad** y **El Niño**, incorporando la certificación legal de custodia (AutoFirma / `.p12`, Firma Manuscrita y Documento Legal PDF).
+  - Actualizada la tabla `Acceso Directo al Código por Pantalla / Módulo` con `AppShell.tsx` (3 pestañas y logotipo **4 MILLS**), `TicketsPage.tsx`, `PrizesPage.tsx`, `TicketListItemCard.tsx` (`SIN FIRMAR` / `FIRMADO`), `TicketDetailPage.tsx` (3 pestañas), `RealisticTicketCard.tsx` (`SELLO DIGITAL` y 5 toques en `NÚMERO / SERIE / FRACCIÓN`), `LegalCertificationTab.tsx`, `CertificateSignModal.tsx`, `SignaturePadCanvas.tsx`, `digitalSignature.ts`, `legalCustody.ts`, `legalPdfGenerator.ts` y `autofirma-relay/`.
+  - Actualizadas las secciones `Stack Tecnológico`, `Estructura del Proyecto` y `Scripts Disponibles` (`npm test` y `npm run db:backup`).
+
 ## [1.0.113] - 2026-11-28
 
 ### Docs
