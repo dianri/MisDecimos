@@ -156,9 +156,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       await loadArchivedTickets()
     } catch (err: unknown) {
       console.error('Error eliminando décimo archivado:', err)
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : err && typeof err === 'object' && 'message' in err && typeof (err as { message?: unknown }).message === 'string'
+          ? String((err as { message: string }).message)
+          : 'No se pudo eliminar el décimo.'
       setStatusMsg({
         type: 'error',
-        text: err instanceof Error ? err.message : 'No se pudo eliminar el décimo.',
+        text: msg,
       })
     } finally {
       setArchivedActionId(null)

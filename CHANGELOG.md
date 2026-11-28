@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.110] - 2026-11-28
+
+### Fixed
+- **Mensajes claros y específicos al bloquear el borrado de un décimo (`legalAuditHelper.ts`, `TicketsPage.tsx`, `ProfilePage.tsx`):**
+  - Añadido `getTicketDeletionBlockReason()` para desglosar el motivo exacto por el que no se puede eliminar un décimo: no ser propietario, tener 1 o N participaciones aceptadas pendientes de renuncia, o estar el sorteo liquidado (`LIQUIDADO`).
+  - Aplicada extracción de mensaje real de Supabase (`extractSupabaseErrorMessage`) en el `catch` de borrado en `TicketsPage.tsx` y `ProfilePage.tsx`.
+
 ## [1.0.109] - 2026-11-28
 
 ### Changed
