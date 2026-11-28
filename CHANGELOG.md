@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.111] - 2026-11-28
+
+### Docs
+- **Actualización integral del manual funcional (`docs/SCREENS_GUIDE.md`):**
+  - Documentada la integración de `CertificateSignModal` y `TicketPhotoCaptureModal` con `useModalBackHandler` en la Sección 2.
+  - Documentado el badge clickable `SIN FIRMAR` / `FIRMADO` en `<TicketListItemCard />` con navegación directa a `?tab=certification`.
+  - Actualizada la Sección 4 con la barra de 3 pestañas (`Reparto (N)`, `Certificación Legal`, `Historial (N)`), el `SELLO DIGITAL` interactivo, la reubicación de las 5 pulsaciones al recuadro `NÚMERO / SERIE / FRACCIÓN`, los mensajes específicos de bloqueo al eliminar décimos y el nuevo subapartado `F) Certificación Legal, Firma Electrónica y PDF Unificado`.
+  - Actualizada la Sección 5 con la guarda de renuncia desde notificaciones y las alertas de solicitud de firma al propietario.
+
 ## [1.0.110] - 2026-11-28
 
 ### Fixed
