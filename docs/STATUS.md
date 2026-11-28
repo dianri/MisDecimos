@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.107` (Producción Estable · Firma Manuscrita Simplificada sin Teléfono)  
+**Versión Actual:** `1.0.108` (Producción Estable · Botón de Renuncia Unificado en Rojo y Una Línea)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.107`)  
+**Rama de Producción:** `main` (Tag `v1.0.108`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
