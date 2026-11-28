@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.94] - 2026-11-28
+
+### Added
+- **Pestaña «Firma Manuscrita» en Detalle del Décimo (`TicketDetailPage.tsx`, `HandwrittenSignatureTab.tsx`, `SignaturePadCanvas.tsx`):**
+  - Nueva pestaña **Firma Manuscrita** (con scroll horizontal fluido en móvil e indicador de firma registrada) y aviso legal destacado aclarando su carácter de acuerdo privado simple sin certificado digital.
+  - Formulario completo del depositario y partícipes con validación oficial de **DNI/NIE**, teléfono móvil, fotografía del anverso (`SHA-256` o reutilización de la existente), casilla de declaración responsable y lienzo táctil `SignaturePadCanvas` (`touch-action: none`, botón **Borrar trazo**).
+  - Descarga de **Documento Privado PDF** (`generateHandwrittenAgreementPdf` en `legalPdfGenerator.ts`) incrustando la foto del anverso, datos identificativos, imágenes PNG de las firmas manuscritas y nota explícita de firma en pantalla.
+  - Migración SQL `ticket_handwritten_signatures`, ampliación de eventos en `ticket_legal_events` y trigger defensivo `trg_guard_handwritten_signed_ticket`.
+
 ## [1.0.93] - 2026-11-28
 
 ### Added
