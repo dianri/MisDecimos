@@ -24,6 +24,7 @@ export interface LegalPdfEventItem {
   share_amount?: number | null
   cert_method?: string | null
   payload_sha256: string
+  metadata?: unknown
 }
 
 export interface LegalPdfInput {
@@ -52,6 +53,7 @@ export interface LegalPdfInput {
   photoMimeType?: string | null
   participants: LegalPdfParticipantItem[]
   events: LegalPdfEventItem[]
+  handwrittenSigners?: HandwrittenSignaturePdfSigner[]
 }
 
 /**
@@ -452,9 +454,26 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
     y -= 14
   } else {
     for (const ev of input.events) {
-      ensureSpace(46)
-      const pctStr = ev.share_percentage != null ? ` - ${ev.share_percentage}%` : ''
-      const nifStr = ev.actor_nif ? ` (${ev.actor_nif})` : ''
+      ensureSpace(48)
+      const meta =
+        ev.metadata && typeof ev.metadata === 'object'
+          ? (ev.metadata as Record<string, unknown>)
+          : {}
+      const phoneStr = typeof meta.phone === 'string' && meta.phone.trim() ? ` - Tel: ${meta.phone.trim()}` : ''
+      const pctNum = ev.share_percentage != null ? ev.share_percentage : null
+      const pctStr = pctNum != null ? ` - ${pctNum}%` : ''
+      const nifPart = ev.actor_nif ? `NIF: ${ev.actor_nif}` : ''
+      const identityDetails = [nifPart, phoneStr.replace(/^ - /, '')].filter(Boolean).join(' - ')
+
+      let actorDetailLine = `Actor: ${ev.actor_name}${ev.actor_nif ? ` (${ev.actor_nif})` : ''}${pctStr}`
+      if (ev.event_type === 'HANDWRITTEN_CUSTODY_SIGNED') {
+        actorDetailLine = `Custodia firmada de forma manuscrita por ${ev.actor_name}${identityDetails ? ` (${identityDetails})` : ''}`
+      } else if (ev.event_type === 'HANDWRITTEN_PARTICIPATION_SIGNED') {
+        actorDetailLine = `Participacion (${pctNum ?? 0}%) firmada de forma manuscrita por ${ev.actor_name}${identityDetails ? ` (${identityDetails})` : ''}`
+      } else if (ev.event_type === 'HANDWRITTEN_PARTICIPATION_RENOUNCED') {
+        actorDetailLine = `Renuncia de participacion manuscrita por ${ev.actor_name}${ev.actor_nif ? ` (NIF: ${ev.actor_nif})` : ''}`
+      }
+
       drawText(
         `${formatDateEs(ev.created_at)} - ${formatEventLabel(ev.event_type)}`,
         margin,
@@ -464,15 +483,15 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
         dark
       )
       y -= 12
-      drawText(
-        `Actor: ${ev.actor_name}${nifStr}${pctStr}`,
+      drawWrappedLine(
+        actorDetailLine,
         margin + 10,
-        y,
+        contentWidth - 10,
         8,
+        11,
         fontRegular,
         dark
       )
-      y -= 11
       drawWrappedLine(
         `SHA-256: ${ev.payload_sha256}`,
         margin + 10,
@@ -483,6 +502,76 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
         muted
       )
       y -= 6
+    }
+  }
+
+  // 6. Sección visual de Firmas Manuscritas Registradas (PNG incrustados)
+  if (input.handwrittenSigners && input.handwrittenSigners.length > 0) {
+    y -= 6
+    ensureSpace(120)
+    drawText('5. FIRMAS MANUSCRITAS REGISTRADAS', margin, y, 10.5, fontBold, granite)
+    y -= 6
+    page.drawLine({
+      start: { x: margin, y },
+      end: { x: margin + contentWidth, y },
+      thickness: 1,
+      color: cava,
+    })
+    y -= 14
+
+    for (const signer of input.handwrittenSigners) {
+      ensureSpace(96)
+      page.drawRectangle({
+        x: margin,
+        y: y - 78,
+        width: contentWidth,
+        height: 82,
+        borderColor: border,
+        borderWidth: 0.8,
+      })
+
+      const roleLabel =
+        signer.role === 'custodian' ? 'Depositario' : `Participe ${signer.percentage}%`
+      drawText(
+        `${roleLabel}: ${signer.fullName}   |   DNI/NIE: ${signer.nif}`,
+        margin + 10,
+        y - 14,
+        9.2,
+        fontBold,
+        dark
+      )
+      drawText(
+        `Tel: ${signer.phone}   |   Estado: ${signer.status}`,
+        margin + 10,
+        y - 28,
+        8.3,
+        fontRegular,
+        dark
+      )
+      drawText(
+        `Fecha: ${formatDateEs(signer.signedAt)}   |   SHA-256 firma: ${signer.signatureSha256.slice(0, 24)}...`,
+        margin + 10,
+        y - 42,
+        7.6,
+        fontRegular,
+        muted
+      )
+
+      try {
+        const sigBytes = decodeDataUrlPngBytes(signer.signaturePngBase64)
+        const sigImg = await doc.embedPng(sigBytes)
+        const sigDims = sigImg.scaleToFit(115, 46)
+        page.drawImage(sigImg, {
+          x: margin + contentWidth - sigDims.width - 12,
+          y: y - 68,
+          width: sigDims.width,
+          height: sigDims.height,
+        })
+      } catch {
+        // conservar metadatos si la imagen PNG no fuera válida
+      }
+
+      y -= 92
     }
   }
 
