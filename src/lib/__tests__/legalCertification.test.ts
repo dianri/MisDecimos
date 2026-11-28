@@ -773,8 +773,8 @@ test('generateLegalCustodyPdf incluye eventos manuscritos en anexo e incrusta fi
   const combined = streamContent + '\n' + hexStrings.join('\n')
 
   assert.ok(!combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
-  assert.ok(combined.includes('600112233'))
-  assert.ok(combined.includes('611223344'))
+  assert.ok(!combined.includes('Tel:'))
+  assert.ok(!combined.includes('undefined'))
   assert.ok(rawStr.includes('/Subtype /Image'), 'Debe incrustar el objeto XObject de imagen PNG inline en el Anexo')
 })
 
