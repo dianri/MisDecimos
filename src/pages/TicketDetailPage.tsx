@@ -13,6 +13,11 @@ import {
   TicketAuditTimeline,
   type AuditEvent,
 } from '../components/tickets/TicketAuditTimeline'
+import {
+  countActiveRepartoItems,
+  hasActiveDigitalParticipationSignature,
+  mergeAuditAndLegalEvents,
+} from '../lib/legalAuditHelper'
 import { PrizeCheckCard } from '../components/tickets/PrizeCheckCard'
 import {
   LegalCertificationTab,
@@ -74,7 +79,24 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [legalEvents, setLegalEvents] = useState<TicketLegalEventRow[]>([])
   const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'propiedad' | 'certificacion' | 'historial'>('propiedad')
+  const [activeTab, setActiveTab] = useState<'propiedad' | 'certificacion' | 'historial'>(() => {
+    if (typeof window !== 'undefined') {
+      const stateTab = (window.history.state as { openTab?: string } | null)?.openTab
+      const queryTab = new URLSearchParams(window.location.search).get('tab')
+      if (stateTab === 'certificacion' || queryTab === 'certification' || queryTab === 'certificacion') {
+        return 'certificacion'
+      }
+    }
+    return 'propiedad'
+  })
+  const [autoOpenRenounceModal, setAutoOpenRenounceModal] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const stateAction = (window.history.state as { action?: string } | null)?.action
+      const queryAction = new URLSearchParams(window.location.search).get('action')
+      return stateAction === 'renounce' || queryAction === 'renounce'
+    }
+    return false
+  })
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
@@ -530,6 +552,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
   }
 
+  const activeRepartoCount = countActiveRepartoItems(shares, pendingInvites)
+  const mergedTimelineEvents = mergeAuditAndLegalEvents(auditEvents, legalEvents)
+  const hasCurrentUserDigitalSignature = hasActiveDigitalParticipationSignature(
+    legalEvents,
+    user?.id,
+    userShare?.id
+  )
+
   return (
     <div className="space-y-4 sm:space-y-6 pb-16 max-w-xl mx-auto">
       {/* 1. Cabecera */}
@@ -593,29 +623,28 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('propiedad')}
-            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex items-center justify-center gap-1 px-2 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition cursor-pointer whitespace-nowrap ${
               activeTab === 'propiedad'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <Users className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">
-              Reparto ({shares.length + pendingInvites.length})
-            </span>
+            <span>Reparto ({activeRepartoCount})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('certificacion')}
-            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex items-center justify-center gap-1 px-2 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition cursor-pointer whitespace-nowrap ${
               activeTab === 'certificacion'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Certificación Legal</span>
+            <span className="sm:hidden">Certificación</span>
+            <span className="hidden sm:inline">Certificación Legal</span>
             {(certification || handwrittenSignatures.length > 0) && (
               <span
                 aria-label="Décimo certificado o firmado"
@@ -627,14 +656,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('historial')}
-            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex items-center justify-center gap-1 px-2 sm:px-4 text-xs sm:text-sm font-bold border-b-2 transition cursor-pointer whitespace-nowrap ${
               activeTab === 'historial'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <Shield className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Historial ({auditEvents.length})</span>
+            <span>Historial ({mergedTimelineEvents.length})</span>
           </button>
         </div>
 
@@ -654,6 +683,12 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
               autoOpenCreateShare={autoOpenCreateShare}
               onAutoOpenHandled={handleAutoOpenHandled}
               onOpenShareModal={(invites) => setShareModalInvitations(invites)}
+              hasDigitalSignatureForCurrentUser={hasCurrentUserDigitalSignature}
+              isCertifiedTicket={Boolean(certification)}
+              onRequireDigitalRenounce={() => {
+                setActiveTab('certificacion')
+                setAutoOpenRenounceModal(true)
+              }}
             />
           </div>
         ) : activeTab === 'certificacion' ? (
@@ -666,12 +701,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             certification={certification}
             handwrittenSignatures={handwrittenSignatures}
             legalEvents={legalEvents}
+            autoOpenRenounce={autoOpenRenounceModal}
+            onAutoOpenRenounceHandled={() => setAutoOpenRenounceModal(false)}
             onRefresh={loadTicketDetails}
             onRenounced={handleShareRenounced}
           />
         ) : (
           <TicketAuditTimeline
-            events={auditEvents}
+            events={mergedTimelineEvents}
             onRefresh={loadTicketDetails}
           />
         )}

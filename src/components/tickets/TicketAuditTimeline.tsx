@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import type { Database } from '../../types/database.types'
+import type { TimelineAuditLikeEvent } from '../../lib/legalAuditHelper'
 import { DecimoIcon } from '../icons/DecimoIcon'
 import {
   RefreshCw,
@@ -12,6 +13,8 @@ import {
   AlertTriangle,
   Trash2,
   ShieldCheck,
+  PenLine,
+  FileSignature,
   Send,
   CheckCheck,
   BadgeAlert,
@@ -34,7 +37,7 @@ export type AuditEvent = Database['public']['Tables']['audit_events']['Row'] & {
 }
 
 interface TicketAuditTimelineProps {
-  events: AuditEvent[]
+  events: TimelineAuditLikeEvent[]
   onRefresh: () => Promise<void>
 }
 
@@ -180,6 +183,48 @@ const ACTION_CONFIGS: Record<string, ActionConfig> = {
     bgClass: 'bg-[#F5F5F7]',
     borderClass: 'border-black/10',
   },
+  CUSTODY_CERTIFIED: {
+    title: 'Custodia certificada digitalmente',
+    icon: ShieldCheck,
+    colorClass: 'text-[#3A5245] dark:text-[#C5A880]',
+    bgClass: 'bg-[#3A5245]/12 dark:bg-[#3A5245]/30',
+    borderClass: 'border-[#3A5245]/30',
+  },
+  HANDWRITTEN_CUSTODY_SIGNED: {
+    title: 'Custodia firmada de forma manuscrita',
+    icon: PenLine,
+    colorClass: 'text-[#73562E] dark:text-[#E5CFA9]',
+    bgClass: 'bg-[#C5A880]/20',
+    borderClass: 'border-[#C5A880]/45',
+  },
+  PARTICIPATION_SIGNED: {
+    title: 'Participación firmada con certificado',
+    icon: FileSignature,
+    colorClass: 'text-[#3A5245] dark:text-[#C5A880]',
+    bgClass: 'bg-[#3A5245]/12 dark:bg-[#3A5245]/30',
+    borderClass: 'border-[#3A5245]/30',
+  },
+  HANDWRITTEN_PARTICIPATION_SIGNED: {
+    title: 'Participación firmada de forma manuscrita',
+    icon: PenLine,
+    colorClass: 'text-[#73562E] dark:text-[#E5CFA9]',
+    bgClass: 'bg-[#C5A880]/20',
+    borderClass: 'border-[#C5A880]/45',
+  },
+  PARTICIPATION_RENOUNCED: {
+    title: 'Renuncia de participación',
+    icon: LogOut,
+    colorClass: 'text-rose-700 dark:text-rose-300',
+    bgClass: 'bg-rose-50 dark:bg-rose-950/30',
+    borderClass: 'border-rose-200 dark:border-rose-800/40',
+  },
+  HANDWRITTEN_PARTICIPATION_RENOUNCED: {
+    title: 'Renuncia de participación (manuscrita)',
+    icon: LogOut,
+    colorClass: 'text-rose-700 dark:text-rose-300',
+    bgClass: 'bg-rose-50 dark:bg-rose-950/30',
+    borderClass: 'border-rose-200 dark:border-rose-800/40',
+  },
 }
 
 function formatFallbackActionTitle(action: string): string {
@@ -280,8 +325,19 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
             const hasLabel = Boolean(meta?.label)
             const hasReason = Boolean(meta?.reason)
             const hasPartsCount = Boolean(meta?.parts_count)
+            const hasLegalMethod = Boolean(meta?.legal_method)
+            const hasVerificationCode = Boolean(meta?.verification_code)
+            const hasCertSerial = Boolean(meta?.cert_serial)
             const hasVisibleMetadata =
-              hasPrize || Boolean(checkSourceText) || hasShortCode || hasLabel || hasReason || hasPartsCount
+              hasPrize ||
+              Boolean(checkSourceText) ||
+              hasShortCode ||
+              hasLabel ||
+              hasReason ||
+              hasPartsCount ||
+              hasLegalMethod ||
+              hasVerificationCode ||
+              hasCertSerial
 
             return (
               <div key={evt.id} className="flex items-start gap-3.5 relative z-10 text-xs">
@@ -293,18 +349,26 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
                 </div>
 
                 {/* Contenido del Evento */}
-                <div className="flex-1 bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 rounded-2xl p-3 space-y-1">
+                <div className="flex-1 bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 rounded-2xl p-3 space-y-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">{config.title}</span>
+                    <span className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                      {evt.legalTitle || config.title}
+                    </span>
 
                     {evt.percentage !== null && evt.percentage !== undefined && (
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] shadow-2xs">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white dark:bg-[#1D1D1F] border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F] dark:text-[#F5F5F7] shadow-2xs shrink-0">
                         {evt.percentage}%
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 pt-0.5">
+                  {evt.legalDescription && (
+                    <p className="text-[11px] text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80 leading-relaxed">
+                      {evt.legalDescription}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 pt-0.5 gap-2">
                     <span className="font-medium truncate max-w-[180px]">
                       {evt.actor?.display_name || evt.actor?.email || 'Sistema / Usuario'}
                     </span>
@@ -315,7 +379,17 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({
 
                   {/* Metadatos adicionales si existen detalles visibles */}
                   {meta && hasVisibleMetadata && (
-                    <div className="text-[10px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 font-mono bg-white dark:bg-[#1D1D1F] p-2 rounded-xl mt-1.5 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 space-y-0.5">
+                    <div className="text-[10px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 font-mono bg-white dark:bg-[#1D1D1F] p-2 rounded-xl mt-1.5 border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 space-y-0.5 break-all">
+                      {hasLegalMethod && <p>Método: {String(meta.legal_method)}</p>}
+                      {hasVerificationCode && (
+                        <p>
+                          Verificación:{' '}
+                          <strong className="text-[#1D1D1F] dark:text-[#F5F5F7]">
+                            {String(meta.verification_code)}
+                          </strong>
+                        </p>
+                      )}
+                      {hasCertSerial && <p>Serie cert.: {String(meta.cert_serial)}</p>}
                       {hasPrize && (
                         <p>
                           Premio total:{' '}
