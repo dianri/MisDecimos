@@ -27,6 +27,7 @@ import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../li
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { filterHomeTickets, type HomeTicketFilter } from '../lib/ticketCardHelper'
 import { buildPrizesSummary } from '../lib/prizesSummary'
+import { hasActiveDigitalParticipationSignature } from '../lib/legalAuditHelper'
 import { checkTicketPrize, toggleOwnerPrizeCollected } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
@@ -433,6 +434,33 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       setToastVariant('warning')
       setClaimToastMsg('No se encontró una participación activa para renunciar.')
       return
+    }
+
+    // Verificar si la participación fue firmada con certificado digital
+    if (user?.id) {
+      const { data: legalRows } = await supabase
+        .from('ticket_legal_events')
+        .select('event_type, actor_user_id, participation_id, signature_b64, cert_serial')
+        .eq('ticket_id', ticket.id)
+        .order('created_at', { ascending: true })
+
+      if (hasActiveDigitalParticipationSignature(legalRows || [], user.id, userShare.id)) {
+        if (onSelectTicket) {
+          onSelectTicket(ticket.id, {
+            state: {
+              fromTab: activeTab,
+              openTab: 'certificacion',
+              action: 'renounce',
+            },
+          })
+        } else {
+          setToastVariant('warning')
+          setClaimToastMsg(
+            'Esta participación está firmada con certificado digital y requiere firma electrónica para renunciar.'
+          )
+        }
+        return
+      }
     }
 
     if (

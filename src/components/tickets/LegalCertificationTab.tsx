@@ -49,6 +49,8 @@ export interface LegalCertificationTabProps {
   certification: TicketCertificationRow | null
   handwrittenSignatures?: TicketHandwrittenSignatureRow[]
   legalEvents: TicketLegalEventRow[]
+  autoOpenRenounce?: boolean
+  onAutoOpenRenounceHandled?: () => void
   onRefresh: () => Promise<void>
   onRenounced?: (percentage: number) => void
 }
@@ -62,6 +64,8 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   certification,
   handwrittenSignatures = [],
   legalEvents,
+  autoOpenRenounce = false,
+  onAutoOpenRenounceHandled,
   onRefresh,
   onRenounced,
 }) => {
@@ -129,6 +133,14 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
       if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl)
     }
   }, [photoPreviewUrl])
+
+  // Abrir automáticamente modal de firma de renuncia si viene desde Reparto, swipe o Notificaciones
+  useEffect(() => {
+    if (autoOpenRenounce && !isOwner && userShare && userShare.status === 'ACEPTADA') {
+      setSignModalMode('participant_renounce')
+      onAutoOpenRenounceHandled?.()
+    }
+  }, [autoOpenRenounce, isOwner, userShare, onAutoOpenRenounceHandled])
 
   const handlePhotoSelected = async (file: File | null) => {
     if (!file) return
@@ -487,17 +499,17 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
       )}
 
       {/* SECCIÓN 1 — Certificado Digital (Validez jurídica plena) */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-5 space-y-4 shadow-xs">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-4 sm:p-5 space-y-4 shadow-xs">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-9 h-9 rounded-xl bg-[#3A5245] text-white flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5 text-[#C5A880]" />
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
                 Certificado Digital
               </h3>
-              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
+              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 break-words">
                 {certification
                   ? `Validez jurídica plena · Verificación: ${certification.verification_code}`
                   : 'Validez jurídica plena · AutoFirma o archivo .p12 / .pfx'}
@@ -507,7 +519,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
 
           {certification && (
             <span
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ${
+              className={`self-start inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ${
                 lockState.isLocked
                   ? 'bg-[#3A5245] text-white'
                   : 'bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9]'

@@ -19,12 +19,13 @@ import {
   extractTicketIdFromNotification,
   isNotificationTicketRenounced,
 } from '../lib/renouncedAlerts'
+import { hasActiveDigitalParticipationSignature } from '../lib/legalAuditHelper'
 
 type Notification = Database['public']['Tables']['notifications']['Row']
 
 export interface AlertsPageProps {
   onBack?: () => void
-  onSelectTicket?: (ticketId: string) => void
+  onSelectTicket?: (ticketId: string, options?: { state?: Record<string, unknown> }) => void
 }
 
 export const AlertsPage: React.FC<AlertsPageProps> = ({
@@ -158,6 +159,28 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
         onSelectTicket(targetTicketId)
       }
       return
+    }
+
+    const targetTicketId = extractTicketIdFromNotification(notif)
+    if (accept && targetTicketId && user?.id) {
+      const { data: legalRows } = await supabase
+        .from('ticket_legal_events')
+        .select('event_type, actor_user_id, participation_id, signature_b64, cert_serial')
+        .eq('ticket_id', targetTicketId)
+        .order('created_at', { ascending: true })
+
+      if (hasActiveDigitalParticipationSignature(legalRows || [], user.id, shareId)) {
+        setActionMsg({
+          type: 'info',
+          text: 'Esta participación está firmada con certificado digital y requiere firma electrónica para renunciar.',
+        })
+        if (onSelectTicket) {
+          onSelectTicket(targetTicketId, {
+            state: { openTab: 'certificacion', action: 'renounce' },
+          })
+        }
+        return
+      }
     }
 
     const confirmText = accept

@@ -57,6 +57,9 @@ interface OwnershipBreakdownCardProps {
   autoOpenCreateShare?: boolean
   onAutoOpenHandled?: () => void
   onOpenShareModal?: (invitations: ShareableInviteItem[]) => void
+  hasDigitalSignatureForCurrentUser?: boolean
+  isCertifiedTicket?: boolean
+  onRequireDigitalRenounce?: () => void
 }
 
 import {
@@ -81,6 +84,9 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   autoOpenCreateShare = false,
   onAutoOpenHandled,
   onOpenShareModal,
+  hasDigitalSignatureForCurrentUser = false,
+  isCertifiedTicket = false,
+  onRequireDigitalRenounce,
 }) => {
   const { user } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -295,6 +301,13 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
   const handleConfirmVoluntaryWaiver = async () => {
     if (!renouncingShare) return
 
+    // Si la participación está firmada con certificado digital, exigir firma electrónica
+    if (hasDigitalSignatureForCurrentUser && onRequireDigitalRenounce) {
+      setRenouncingShare(null)
+      onRequireDigitalRenounce()
+      return
+    }
+
     setIsRenouncing(true)
     setActionMsg(null)
 
@@ -304,6 +317,21 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       })
 
       if (error) throw error
+
+      if (isCertifiedTicket && user?.id) {
+        await supabase.from('ticket_legal_events').insert({
+          ticket_id: ticketId,
+          participation_id: renouncingShare.id,
+          actor_user_id: user.id,
+          event_type: 'PARTICIPATION_RENOUNCED',
+          actor_name:
+            renouncingShare.profiles?.display_name ||
+            user.email?.split('@')[0] ||
+            'Partícipe',
+          payload_sha256: `std-renounce-${renouncingShare.id}-${Date.now()}`,
+          share_percentage: Number(renouncingShare.percentage),
+        })
+      }
 
       setRenouncingShare(null)
 

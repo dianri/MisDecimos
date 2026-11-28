@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.99` (Producción Estable · AutoFirma Android DER & UX)  
+**Versión Actual:** `1.0.100` (Producción Estable · Contador Reparto, Historial Legal y Blindaje Renuncia)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.99`)  
+**Rama de Producción:** `main` (Tag `v1.0.100`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
