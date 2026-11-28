@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.116] - 2026-11-28
+
+### Docs
+- **Limpieza de documentación obsoleta de comprobación de premios (`docs/SCREENS_GUIDE.md`):**
+  - Verificado que `PrizeCheckCard.tsx` sigue en uso en `TicketDetailPage.tsx` de forma condicional cuando `ticket.prize_amount_cents > 0` (`hideCheckButton={true}`).
+  - Sustituida la subsección `4.B` de `docs/SCREENS_GUIDE.md` para reflejar el flujo actual: escrutinio desde `Comprobar sorteo` en `TicketsPage.tsx` y tarjeta condicional de premio en detalle con desglose por cuota, cálculo fiscal de IRPF (> 40.000 €) y confirmación de cobro.
+
 ## [1.0.115] - 2026-11-28
 
 ### Chore
