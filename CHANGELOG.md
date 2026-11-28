@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.107] - 2026-11-28
+
+### Changed
+- **Eliminación del campo Teléfono móvil en Firma Manuscrita (`HandwrittenSignatureTab.tsx`, `handwrittenCustody.ts`, `legalPdfGenerator.ts`):**
+  - Eliminado el campo `Teléfono móvil *` de los formularios de Firma Manuscrita del Depositario y del Partícipe, ampliando el campo `DNI / NIE *` a ancho completo.
+  - Eliminada la validación obligatoria de teléfono en `validateHandwrittenForm()` para que con identidad bloqueada por Certificado Digital baste el trazo en pantalla (y foto si no existía).
+  - Eliminado `- Tel: [Teléfono]` de los eventos manuscritos en el Anexo Cronológico del PDF y en el resumen de firmas manuscritas registradas.
+
 ## [1.0.106] - 2026-11-28
 
 ### Added / Changed

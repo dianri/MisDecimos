@@ -23,11 +23,10 @@ test('validateSpanishDniNie valida DNI y NIE oficiales con letra de control', ()
   assert.equal(badFormat.valid, false)
 })
 
-test('validateHandwrittenForm exige nombre, DNI/NIE, teléfono, foto, declaración y trazo', () => {
+test('validateHandwrittenForm exige nombre, DNI/NIE, foto, declaración y trazo (sin teléfono)', () => {
   const missingStroke = validateHandwrittenForm({
     fullName: 'Carlos Ruiz',
     nif: '12345678Z',
-    phone: '600123456',
     hasPhoto: true,
     requirePhoto: true,
     declarationAccepted: true,
@@ -39,7 +38,6 @@ test('validateHandwrittenForm exige nombre, DNI/NIE, teléfono, foto, declaraci�
   const missingPhoto = validateHandwrittenForm({
     fullName: 'Carlos Ruiz',
     nif: '12345678Z',
-    phone: '600123456',
     hasPhoto: false,
     requirePhoto: true,
     declarationAccepted: true,
@@ -51,7 +49,6 @@ test('validateHandwrittenForm exige nombre, DNI/NIE, teléfono, foto, declaraci�
   const valid = validateHandwrittenForm({
     fullName: 'Carlos Ruiz',
     nif: '12345678Z',
-    phone: '600 123 456',
     hasPhoto: true,
     requirePhoto: true,
     declarationAccepted: true,
@@ -85,7 +82,6 @@ test('generateHandwrittenAgreementPdf incrusta firmas PNG manuscritas y aviso de
         role: 'custodian',
         fullName: 'Carlos Ruiz Martin',
         nif: '12345678Z',
-        phone: '600123456',
         percentage: 75,
         amountEuros: 15,
         status: 'ACEPTADA',

@@ -63,7 +63,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
 
   const [fullName, setFullName] = useState(profile?.display_name || '')
   const [nif, setNif] = useState('')
-  const [phone, setPhone] = useState('')
   const [declarationAccepted, setDeclarationAccepted] = useState(false)
   const [signaturePng, setSignaturePng] = useState<string | null>(null)
 
@@ -156,7 +155,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
     const validation = validateHandwrittenForm({
       fullName: effectiveFullName,
       nif: effectiveNif,
-      phone,
       hasPhoto: Boolean(effectivePhotoFile || reusablePhotoPath),
       requirePhoto: isOwner,
       declarationAccepted,
@@ -205,7 +203,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
         signer_role: isOwner ? 'custodian' : 'participant',
         full_name: effectiveFullName.trim(),
         nif: validation.normalizedNif,
-        phone: validation.normalizedPhone,
+        phone: '',
         photo_path: finalPhotoPath,
         photo_sha256: finalPhotoSha,
         signature_image_b64: signaturePng!,
@@ -228,7 +226,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
         share_percentage: pct,
         share_amount: amount,
         metadata: {
-          phone: validation.normalizedPhone,
           verification_code: code,
           photo_sha256: finalPhotoSha,
         },
@@ -368,7 +365,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
                       {effective.fullName} · {effective.nif}
                     </p>
                     <p className="text-[11px] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
-                      {hw.signer_role === 'custodian' ? 'Depositario' : 'Partícipe'} · Tel. {hw.phone}
+                      {hw.signer_role === 'custodian' ? 'Depositario' : 'Partícipe'}
                     </p>
                     {effective.verifiedWithCert && (
                       <p className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#3A5245] dark:text-[#A8CEB9]">
@@ -428,36 +425,20 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] mb-1">
-                  DNI / NIE *
-                </label>
-                <input
-                  type="text"
-                  required
-                  readOnly={lockedIdentity.isLocked}
-                  disabled={lockedIdentity.isLocked}
-                  value={nif}
-                  onChange={(e) => setNif(e.target.value)}
-                  placeholder="12345678Z"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm uppercase text-[#1D1D1F] dark:text-[#F5F5F7] disabled:opacity-70 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] mb-1">
-                  Teléfono móvil *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="600 123 456"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm text-[#1D1D1F] dark:text-[#F5F5F7]"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] mb-1">
+                DNI / NIE *
+              </label>
+              <input
+                type="text"
+                required
+                readOnly={lockedIdentity.isLocked}
+                disabled={lockedIdentity.isLocked}
+                value={nif}
+                onChange={(e) => setNif(e.target.value)}
+                placeholder="12345678Z"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm uppercase text-[#1D1D1F] dark:text-[#F5F5F7] disabled:opacity-70 disabled:cursor-not-allowed"
+              />
             </div>
 
             {isOwner && !hasAnyCapturedPhoto && (

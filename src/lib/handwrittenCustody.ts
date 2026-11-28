@@ -76,7 +76,7 @@ export function validateMobilePhone(raw: string): {
 export interface HandwrittenFormInput {
   fullName: string
   nif: string
-  phone: string
+  phone?: string
   hasPhoto?: boolean
   requirePhoto: boolean
   declarationAccepted: boolean
@@ -86,7 +86,6 @@ export interface HandwrittenFormInput {
 export interface HandwrittenFormValidation {
   valid: boolean
   normalizedNif: string
-  normalizedPhone: string
   errors: string[]
 }
 
@@ -100,11 +99,6 @@ export function validateHandwrittenForm(input: HandwrittenFormInput): Handwritte
   const dniCheck = validateSpanishDniNie(input.nif)
   if (!dniCheck.valid && dniCheck.error) {
     errors.push(dniCheck.error)
-  }
-
-  const phoneCheck = validateMobilePhone(input.phone)
-  if (!phoneCheck.valid && phoneCheck.error) {
-    errors.push(phoneCheck.error)
   }
 
   if (input.requirePhoto && !input.hasPhoto) {
@@ -122,7 +116,6 @@ export function validateHandwrittenForm(input: HandwrittenFormInput): Handwritte
   return {
     valid: errors.length === 0,
     normalizedNif: dniCheck.normalized,
-    normalizedPhone: phoneCheck.normalized,
     errors,
   }
 }
