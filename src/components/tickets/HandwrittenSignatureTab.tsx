@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import type { Database } from '../../types/database.types'
@@ -7,7 +7,10 @@ import type { TicketCertificationRow, TicketLegalEventRow } from './LegalCertifi
 import { SignaturePadCanvas } from './SignaturePadCanvas'
 import { TicketPhotoCaptureModal } from './TicketPhotoCaptureModal'
 import { computeSha256Hex, generateVerificationCode } from '../../lib/legalCustody'
-import { validateHandwrittenForm } from '../../lib/handwrittenCustody'
+import {
+  validateHandwrittenForm,
+  resolveLockedCertificateIdentity,
+} from '../../lib/handwrittenCustody'
 import { generateHandwrittenAgreementPdf } from '../../lib/legalPdfGenerator'
 import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
 import {
@@ -93,6 +96,24 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
     )
   }, [handwrittenSignatures, user?.id, isOwner, userShare?.id])
 
+  const lockedIdentity = useMemo(
+    () =>
+      resolveLockedCertificateIdentity({
+        isOwner,
+        certification,
+        activeUserShareId: userShare?.id,
+        legalEvents,
+      }),
+    [isOwner, certification, userShare?.id, legalEvents]
+  )
+
+  useEffect(() => {
+    if (lockedIdentity.isLocked && lockedIdentity.fullName && lockedIdentity.nif) {
+      setFullName(lockedIdentity.fullName)
+      setNif(lockedIdentity.nif)
+    }
+  }, [lockedIdentity.isLocked, lockedIdentity.fullName, lockedIdentity.nif])
+
   const reusablePhotoPath = certification?.photo_path || custodianHw?.photo_path || null
   const reusablePhotoSha = certification?.photo_sha256 || custodianHw?.photo_sha256 || null
 
@@ -112,9 +133,16 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
     if (!user?.id) return
     setFeedback(null)
 
+    const effectiveFullName =
+      lockedIdentity.isLocked && lockedIdentity.fullName
+        ? lockedIdentity.fullName
+        : fullName
+    const effectiveNif =
+      lockedIdentity.isLocked && lockedIdentity.nif ? lockedIdentity.nif : nif
+
     const validation = validateHandwrittenForm({
-      fullName,
-      nif,
+      fullName: effectiveFullName,
+      nif: effectiveNif,
       phone,
       hasPhoto: Boolean(photoFile || reusablePhotoPath),
       requirePhoto: isOwner,
@@ -162,7 +190,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
         participation_id: !isOwner && userShare ? userShare.id : null,
         signer_user_id: user.id,
         signer_role: isOwner ? 'custodian' : 'participant',
-        full_name: fullName.trim(),
+        full_name: effectiveFullName.trim(),
         nif: validation.normalizedNif,
         phone: validation.normalizedPhone,
         photo_path: finalPhotoPath,
@@ -180,7 +208,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
         participation_id: !isOwner && userShare ? userShare.id : null,
         actor_user_id: user.id,
         event_type: isOwner ? 'HANDWRITTEN_CUSTODY_SIGNED' : 'HANDWRITTEN_PARTICIPATION_SIGNED',
-        actor_name: fullName.trim(),
+        actor_name: effectiveFullName.trim(),
         actor_nif: validation.normalizedNif,
         cert_method: 'handwritten',
         payload_sha256: sigSha,
@@ -447,6 +475,13 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
           </div>
 
           <div className="space-y-3">
+            {lockedIdentity.isLocked && (
+              <div className="p-2.5 rounded-xl bg-[#3A5245]/10 dark:bg-[#3A5245]/25 border border-[#3A5245]/25 text-[11px] font-medium text-[#2B3F34] dark:text-[#A8CEB9] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-[#3A5245] dark:text-[#C5A880]" />
+                <span>Datos verificados mediante Certificado Digital</span>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] mb-1">
                 Nombre y apellidos completos *
@@ -454,10 +489,12 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
               <input
                 type="text"
                 required
+                readOnly={lockedIdentity.isLocked}
+                disabled={lockedIdentity.isLocked}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ej. Carlos Ruiz Martín"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm text-[#1D1D1F] dark:text-[#F5F5F7]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm text-[#1D1D1F] dark:text-[#F5F5F7] disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -469,10 +506,12 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
                 <input
                   type="text"
                   required
+                  readOnly={lockedIdentity.isLocked}
+                  disabled={lockedIdentity.isLocked}
                   value={nif}
                   onChange={(e) => setNif(e.target.value)}
                   placeholder="12345678Z"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm uppercase text-[#1D1D1F] dark:text-[#F5F5F7]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] dark:bg-[#2C2C2E] border border-black/10 dark:border-white/10 text-sm uppercase text-[#1D1D1F] dark:text-[#F5F5F7] disabled:opacity-70 disabled:cursor-not-allowed"
                 />
               </div>
 

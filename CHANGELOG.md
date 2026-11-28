@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.104] - 2026-11-28
+
+### Added
+- **Aislamiento de estado en `Firma Manuscrita`, bloqueo desde Certificado Digital e incrustación PNG en PDF (`handwrittenCustody.ts`, `LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`, `legalPdfGenerator.ts`):**
+  - Añadido `evaluateHandwrittenAccordionState()` para mostrar el badge **`Firmada por ti`** solo cuando el usuario actual ha firmado manuscrito (propietario por `HANDWRITTEN_CUSTODY_SIGNED` o partícipe por su `participation_id` activo) y **`Opcional`** + contador informativo de terceros (`N partícipes firmados`) cuando no ha firmado.
+  - Añadido `resolveLockedCertificateIdentity()` para autorrellenar y bloquear (`readOnly` / `disabled`) Nombre y DNI/NIE en `Firma Manuscrita` con los datos verificados del Certificado Digital previo, blindando también los valores en el envío.
+  - Unificados los eventos manuscritos en el Anexo Cronológico del PDF (`legalPdfGenerator.ts`) e incorporada la sección **`5. FIRMAS MANUSCRITAS REGISTRADAS`** con incrustación proporcional de las imágenes PNG (`embedPng` + `scaleToFit`) y paginación automática.
+
 ## [1.0.103] - 2026-11-28
 
 ### Fixed
