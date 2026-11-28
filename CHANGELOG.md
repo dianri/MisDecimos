@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.105] - 2026-11-28
+
+### Changed
+- **Unificación del Documento Legal PDF y prioridad de identidad del Certificado Digital (`legalPdfGenerator.ts`, `handwrittenCustody.ts`, `LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`):**
+  - Añadido `resolveEffectiveSignerIdentity()` para dar precedencia absoluta a la identidad verificada del Certificado Digital (`Nombre completo` y `NIF/DNI/NIE`) sobre datos previos de Firma Manuscrita en UI, Cuadro de Participaciones y Firmas (Sección 3) y Sección 5 del PDF.
+  - Eliminado el botón duplicado `Descargar Documento Privado (PDF)` y unificada toda la descarga en un único botón **`Descargar Documento Legal (PDF)`** en `LegalCertificationTab.tsx` cuando exista al menos una firma (digital o manuscrita).
+  - Adaptado `generateLegalCustodyPdf()` para soportar tanto décimos con Certificado Digital como décimos respaldados únicamente con Firma Manuscrita, manteniendo todos los eventos en español.
+
 ## [1.0.104] - 2026-11-28
 
 ### Added
