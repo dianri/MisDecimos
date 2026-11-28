@@ -12,7 +12,6 @@ import {
   resolveLockedCertificateIdentity,
   resolveEffectiveSignerIdentity,
 } from '../../lib/handwrittenCustody'
-import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
 import {
   AlertTriangle,
   ShieldCheck,
@@ -21,7 +20,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  LogOut,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -57,7 +55,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
   hasSharedPhoto,
   onSharedPhotoSelected,
   onRefresh,
-  onRenounced,
+  onRenounced: _onRenounced,
 }) => {
   const { user, profile } = useAuth()
 
@@ -240,58 +238,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
       setFeedback({
         type: 'error',
         text: err instanceof Error ? err.message : 'No se pudo guardar la firma manuscrita.',
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleParticipantRenounce = async () => {
-    if (!user?.id || !userShare) return
-    const pct = Number(userShare.percentage)
-    if (
-      !confirm(
-        `¿Seguro que quieres renunciar a tu participación del ${pct}% en el décimo #${ticket.number}? Tu porcentaje volverá al depositario.`
-      )
-    ) {
-      return
-    }
-
-    setIsSubmitting(true)
-    setFeedback(null)
-    try {
-      const { error: rpcErr } = await supabase.rpc('renounce_own_participation', {
-        p_share_id: userShare.id,
-      })
-      if (rpcErr) throw rpcErr
-
-      const payloadHash = await computeSha256Hex(
-        JSON.stringify({ ticketId: ticket.id, userId: user.id, pct, at: new Date().toISOString() })
-      )
-
-      await supabase.from('ticket_legal_events').insert({
-        ticket_id: ticket.id,
-        participation_id: userShare.id,
-        actor_user_id: user.id,
-        event_type: 'HANDWRITTEN_PARTICIPATION_RENOUNCED',
-        actor_name:
-          currentUserHw?.full_name ||
-          profile?.display_name ||
-          user.email?.split('@')[0] ||
-          'Partícipe',
-        actor_nif: currentUserHw?.nif || null,
-        cert_method: 'handwritten',
-        payload_sha256: payloadHash,
-        share_percentage: pct,
-        share_amount: (Number(ticket.ticket_price || 20) * pct) / 100,
-      })
-
-      onRenounced?.(pct)
-      await onRefresh()
-    } catch (err: unknown) {
-      setFeedback({
-        type: 'error',
-        text: extractSupabaseErrorMessage(err, 'No se pudo registrar la renuncia.'),
       })
     } finally {
       setIsSubmitting(false)
@@ -498,19 +444,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
             <span>{isSubmitting ? 'Guardando firma...' : 'Guardar firma manuscrita'}</span>
           </button>
         </form>
-      )}
-
-      {/* Botón de renuncia para partícipe activo */}
-      {!isOwner && userShare && userShare.status === 'ACEPTADA' && (
-        <button
-          type="button"
-          onClick={handleParticipantRenounce}
-          disabled={isSubmitting}
-          className="w-full py-2.5 px-4 rounded-2xl bg-[#D04848]/10 hover:bg-[#D04848]/20 text-[#D04848] border border-[#D04848]/25 text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Renunciar a participación</span>
-        </button>
       )}
 
       <TicketPhotoCaptureModal

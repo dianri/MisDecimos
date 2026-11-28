@@ -934,18 +934,22 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
                     : () => setSignModalMode('participant_sign')
                 }
                 disabled={isProcessing}
-                className="w-full py-3 px-4 rounded-2xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-45 cursor-pointer"
+                className={`w-full py-2.5 px-4 rounded-2xl font-bold inline-flex items-center justify-center gap-2 whitespace-nowrap text-xs sm:text-sm transition disabled:opacity-45 cursor-pointer ${
+                  hasCurrentUserSigned
+                    ? 'bg-[#D04848]/10 hover:bg-[#D04848]/20 text-[#D04848] border border-[#D04848]/25'
+                    : 'bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F]'
+                }`}
               >
                 {isProcessing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
                 ) : hasCurrentUserSigned ? (
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 shrink-0" />
                 ) : (
-                  <FileSignature className="w-4 h-4" />
+                  <FileSignature className="w-4 h-4 shrink-0" />
                 )}
                 <span>
                   {hasCurrentUserSigned
-                    ? 'Renunciar participación con certificado digital'
+                    ? 'Renunciar con certificado digital'
                     : 'Firmar participación con certificado digital'}
                 </span>
               </button>
