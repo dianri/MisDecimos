@@ -30,6 +30,7 @@ import { buildPrizesSummary } from '../lib/prizesSummary'
 import {
   extractSupabaseErrorMessage,
   findActiveUserShare,
+  getTicketDeletionBlockReason,
   hasActiveDigitalParticipationSignature,
   resolveTicketSealState,
 } from '../lib/legalAuditHelper'
@@ -422,11 +423,21 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     participantsCount: number,
     ticketStatus: string
   ) => {
-    if (!isOwnerTicket || participantsCount > 1 || ticketStatus === 'LIQUIDADO') {
+    const acceptedFromShares = allShares.filter(
+      (s) => s.ticket_id === ticketId && s.role === 'PARTICIPANTE' && s.status === 'ACEPTADA'
+    ).length
+    const acceptedThirdPartyCount =
+      acceptedFromShares > 0 ? acceptedFromShares : Math.max(0, participantsCount - 1)
+
+    const blockReason = getTicketDeletionBlockReason({
+      isOwner: isOwnerTicket,
+      acceptedThirdPartyCount,
+      ticketStatus,
+    })
+
+    if (blockReason) {
       setToastVariant('warning')
-      setClaimToastMsg(
-        'Solo el propietario puede eliminar décimos sin participaciones aceptadas ni liquidados.'
-      )
+      setClaimToastMsg(blockReason)
       return
     }
 
@@ -448,7 +459,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     } catch (err: unknown) {
       console.error('Error eliminando décimo:', err)
       setToastVariant('warning')
-      setClaimToastMsg(err instanceof Error ? err.message : 'No se pudo eliminar el décimo.')
+      setClaimToastMsg(extractSupabaseErrorMessage(err, 'No se pudo eliminar el décimo.'))
     }
   }
 
