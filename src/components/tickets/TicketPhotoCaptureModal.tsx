@@ -170,7 +170,7 @@ export const TicketPhotoCaptureModal: React.FC<TicketPhotoCaptureModalProps> = (
                 <span className="absolute -top-0.5 -right-0.5 h-4 w-4 border-t-2 border-r-2 border-[#7AA38D] rounded-tr-xl" />
                 <span className="absolute -bottom-0.5 -left-0.5 h-4 w-4 border-b-2 border-l-2 border-[#7AA38D] rounded-bl-xl" />
                 <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 border-b-2 border-r-2 border-[#7AA38D] rounded-br-xl" />
-                <span className="absolute -top-7 inset-x-0 text-center text-[11px] font-medium text-[#F5F5F7]/85 tracking-wide px-2 leading-tight">
+                <span className="absolute -top-9 inset-x-0 text-center text-[11px] font-medium text-[#F5F5F7]/90 tracking-wide px-2 leading-tight">
                   Encuadra el anverso completo del décimo
                 </span>
               </div>
@@ -251,7 +251,7 @@ export const TicketPhotoCaptureModal: React.FC<TicketPhotoCaptureModalProps> = (
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#F5F5F7]/[0.08] hover:bg-[#F5F5F7]/[0.14] border border-[#F5F5F7]/10 text-xs font-medium text-[#F5F5F7] transition cursor-pointer"
             >
               <FolderOpen className="h-3.5 w-3.5 text-[#C5A880] shrink-0" />
-              <span className="truncate">Elegir de galería / carpeta</span>
+              <span className="whitespace-nowrap">Galería / Archivo</span>
             </button>
 
             <button

@@ -63,7 +63,6 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   const [certPhotoSignedUrl, setCertPhotoSignedUrl] = useState<string | null>(null)
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false)
   const galleryInputRef = useRef<HTMLInputElement | null>(null)
-  const nativeCameraInputRef = useRef<HTMLInputElement | null>(null)
 
   const [signModalMode, setSignModalMode] = useState<
     'custody' | 'participant_sign' | 'participant_renounce' | null
@@ -560,7 +559,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
                 Fotografía del anverso del décimo (obligatoria)
               </label>
 
-              {/* Inputs ocultos: galería/carpeta (sin capture) y respaldo cámara nativa */}
+              {/* Input oculto para galería/archivo (sin capture) */}
               <input
                 ref={galleryInputRef}
                 type="file"
@@ -572,49 +571,16 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
                 }}
                 className="hidden"
               />
-              <input
-                ref={nativeCameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null
-                  e.target.value = ''
-                  handlePhotoSelected(file)
-                }}
-                className="hidden"
-              />
 
               {!photoPreviewUrl ? (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (
-                        typeof navigator !== 'undefined' &&
-                        navigator.mediaDevices &&
-                        typeof navigator.mediaDevices.getUserMedia === 'function'
-                      ) {
-                        setIsCameraModalOpen(true)
-                      } else {
-                        nativeCameraInputRef.current?.click()
-                      }
-                    }}
-                    className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-xs"
-                  >
-                    <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
-                    <span>Hacer foto del décimo</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => galleryInputRef.current?.click()}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 border border-[#C5A880]/55 text-[#73562E] dark:text-[#E5CFA9] text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer"
-                  >
-                    <FolderOpen className="w-4 h-4 text-[#C5A880] shrink-0" />
-                    <span>Elegir de galería / carpeta</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCameraModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border border-dashed border-[#C5A880]/70 bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 transition cursor-pointer text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]"
+                >
+                  <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
+                  <span>Adjuntar o capturar foto del anverso</span>
+                </button>
               ) : (
                 <div className="space-y-2.5">
                   <img
@@ -630,17 +596,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (
-                          typeof navigator !== 'undefined' &&
-                          navigator.mediaDevices &&
-                          typeof navigator.mediaDevices.getUserMedia === 'function'
-                        ) {
-                          setIsCameraModalOpen(true)
-                        } else {
-                          nativeCameraInputRef.current?.click()
-                        }
-                      }}
+                      onClick={() => setIsCameraModalOpen(true)}
                       className="py-2 px-3 rounded-xl bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] hover:bg-[#1D1D1F]/[0.10] text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center gap-1.5 transition cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5 shrink-0" />
