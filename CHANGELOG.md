@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.115] - 2026-11-28
+
+### Chore
+- **Sistema automático de verificación de documentación y eliminación de duplicidades:**
+  - Añadido test unitario puro `src/lib/__tests__/docsSync.test.ts` (sin `jsdom`) que valida en cada `npm test` la sincronización de versión (`package.json` ↔ `docs/STATUS.md` / `CHANGELOG.md`), páginas (`src/pages/*.tsx` ↔ `docs/SCREENS_GUIDE.md` / `README.md`) y Edge Functions (`supabase/functions/*` ↔ `docs/ARCHITECTURE.md` / `README.md`).
+  - Simplificado `docs/STATUS.md` eliminando la repetición versión por versión ya mantenida en `CHANGELOG.md`.
+  - Eliminado el bloque ASCII estático `Estructura del Proyecto` de `README.md`, manteniendo la tabla de acceso directo a módulos y scripts.
+  - Actualizado `.agent/workflows/finish-feature.md` para incluir `npm test` y la actualización obligatoria de `docs/` en ramas `feat/*`.
+
 ## [1.0.114] - 2026-11-28
 
 ### Docs

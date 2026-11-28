@@ -29,7 +29,7 @@
 | **Tarjeta de Listado** | [`src/components/tickets/TicketListItemCard.tsx`](./src/components/tickets/TicketListItemCard.tsx) | Ficha resumen con distintivo interactivo **`SIN FIRMAR` / `FIRMADO`** hacia `?tab=certification` y acciones rápidas (`Compartir`, `Comprobar sorteo`). |
 | **Alta de Décimos** | [`src/components/tickets/TicketFormModal.tsx`](./src/components/tickets/TicketFormModal.tsx) | Modal de captura (manual vs escaneo) y llamada a RPC `create_ticket`. |
 | **Escáner GS1-128 / QR** | [`src/components/tickets/BarcodeScannerModal.tsx`](./src/components/tickets/BarcodeScannerModal.tsx) · [`src/lib/selaeBarcodeParser.ts`](./src/lib/selaeBarcodeParser.ts) | Cámara con linterna, selector de foto y parser de códigos de SELAE. |
-| **Canje de Invitaciones** | [`src/components/tickets/InviteClaimModal.tsx`](./src/components/tickets/InviteClaimModal.tsx) | Previsualización y asignación/rechazo de participaciones por código o QR. |
+| **Canje de Invitaciones** | [`src/components/tickets/InviteClaimModal.tsx`](./src/components/tickets/InviteClaimModal.tsx) · [`src/pages/InvitePage.tsx`](./src/pages/InvitePage.tsx) | Previsualización y asignación/rechazo de participaciones por código, QR o enlace directo `/invite/:token`. |
 | **Detalle del Décimo** | [`src/pages/TicketDetailPage.tsx`](./src/pages/TicketDetailPage.tsx) | Vista de **3 pestañas** (`Reparto`, `Certificación Legal`, `Historial`) con custodia protegida. |
 | **Boleto Realista** | [`src/components/tickets/RealisticTicketCard.tsx`](./src/components/tickets/RealisticTicketCard.tsx) | Boleto vectorial con `SELLO DIGITAL` interactivo (`SIN FIRMAR` / `FIRMADO`) hacia certificación y activador oculto de 5 toques en `NÚMERO / SERIE / FRACCIÓN`. |
 | **Certificación Legal** | [`src/components/tickets/LegalCertificationTab.tsx`](./src/components/tickets/LegalCertificationTab.tsx) · [`src/components/tickets/TicketPhotoCaptureModal.tsx`](./src/components/tickets/TicketPhotoCaptureModal.tsx) | Pestaña unificada con prueba gráfica compartida (`SHA-256`), Certificado Digital, Firma Manuscrita desplegable, solicitud de firma al depositario y descarga de PDF único. |
@@ -64,65 +64,6 @@
   - Triggers y suscripciones Realtime.
   - Web Push nativo mediante suscripciones VAPID y Edge Functions.
 - **Fuentes de Datos de Lotería:** API pública de resultados (El País / SELAE) y fallback `loteriasapi.com`.
-
----
-
-## 📦 Estructura del Proyecto
-
-```text
-├── .agent/
-│   └── workflows/              # Workflows de inicio y finalización de tareas
-├── docs/
-│   ├── ARCHITECTURE.md         # Modelo ER, catálogo de RPCs y diseño Web Push
-│   ├── BUSINESS_RULES.md       # Reglas de negocio inmutables
-│   ├── SCREENS_GUIDE.md        # Manual funcional de pantallas y flujos
-│   └── STATUS.md               # Panel vivo del estado del proyecto
-├── public/
-│   ├── push-sw.js              # Service Worker para eventos Web Push nativos
-│   └── badge-mono.png          # Badge monocromo para notificaciones
-├── src/
-│   ├── components/
-│   │   ├── common/             # VersionBadge anti-caché y modales
-│   │   ├── layout/             # AppShell, Header y BottomNav fijo
-│   │   ├── pwa/                # PwaInstallBanner nativo e instrucciones iOS
-│   │   └── tickets/            # Escáner GS1-128, boleto realista, Certificación Legal (AutoFirma, firma manuscrita), Donut SVG, premios y auditoría
-│   ├── context/
-│   │   └── AuthContext.tsx     # Sesión OTP y persistencia de deep-links
-│   ├── lib/
-│   │   ├── __tests__/          # Suite de tests unitarios puros (node --test)
-│   │   ├── digitalSignature.ts # Parsing X.509, PKCS#7/PKCS#12 (node-forge) y SHA-256
-│   │   ├── legalCustody.ts     # Aislamiento por participation_id y validaciones legales
-│   │   ├── legalPdfGenerator.ts# Generación del Documento Legal PDF (pdf-lib)
-│   │   ├── sanitize.ts         # Sanitización XSS y validación de URLs
-│   │   ├── selaeBarcodeParser.ts # Parser de códigos de barras GS1-128 SELAE
-│   │   └── supabase.ts         # Cliente Supabase singleton
-│   ├── pages/
-│   │   ├── LoginPage.tsx       # Login OTP por Email con soporte de pegado
-│   │   ├── TicketsPage.tsx     # Dashboard unificado de Décimos y Participaciones
-│   │   ├── PrizesPage.tsx      # KPIs de Décimos Activos, Total Premios e historial
-│   │   ├── InvitePage.tsx      # Canje directo de invitaciones por enlace (/invite/:token)
-│   │   ├── TicketDetailPage.tsx# Detalle de 3 pestañas (Reparto, Certificación Legal, Historial)
-│   │   ├── AlertsPage.tsx      # Pestaña Alertas con Realtime
-│   │   ├── AuditPage.tsx       # Centro de Auditoría y Reglas de Oro
-│   │   └── ProfilePage.tsx     # Mi Perfil, subida WebP, archivados y switch Web Push
-│   ├── services/
-│   │   └── push/               # Suscripción VAPID y detección de plataforma
-│   ├── types/
-│   │   └── database.types.ts   # Tipos generados de Supabase
-│   ├── App.tsx                 # Enrutador principal de autenticación
-│   └── main.tsx                # Bootstrap de React
-├── supabase/
-│   ├── functions/
-│   │   ├── autofirma-relay/    # Relay efímero HTTPS para firma móvil AutoFirma
-│   │   ├── check-prizes/       # Comprobación oficial de premios y motor histórico
-│   │   └── send-push/          # Envío asíncrono de notificaciones Web Push
-│   └── migrations/             # Migraciones SQL secuenciales
-├── AGENTS.md                   # Normas obligatorias de gobernanza y Git Flow
-├── CHANGELOG.md                # Registro de cambios (Keep a Changelog)
-├── package.json
-├── tailwind.config.js
-└── vite.config.ts
-```
 
 ---
 

@@ -5,6 +5,10 @@ Este workflow estandariza el cierre, verificación e integración de una rama en
 ## Pasos de Ejecución
 
 1. **Validación de Calidad Técnica:**
+   - Ejecución de la suite de tests unitarios puros (incluye guardia de sincronización documental `docsSync.test.ts`):
+     ```bash
+     npm test
+     ```
    - Comprobación estricta de tipos de TypeScript:
      ```bash
      npm run typecheck
@@ -13,16 +17,17 @@ Este workflow estandariza el cierre, verificación e integración de una rama en
      ```bash
      npm run build
      ```
-   - Si existen migraciones SQL, comprobar que se han aplicado exitosamente en Supabase (`xmdghpyfrblmtjtevtru`) y que `src/types/database.types.ts` está sincronizado.
+   - Si existen migraciones SQL, comprobar que `npm run db:backup` se ejecutó previamente, que las migraciones se han aplicado exitosamente en Supabase (`xmdghpyfrblmtjtevtru`) y que `src/types/database.types.ts` está sincronizado.
 
 2. **Incremento de Versión:**
    - Actualizar `package.json` con la nueva versión SemVer (`feature`: minor, `fix`: patch).
 
 3. **Mantenimiento Documental:**
    - Registrar los cambios en `CHANGELOG.md` bajo el formato *Keep a Changelog*.
-   - Actualizar `README.md` si se añadieron componentes, rutas, variables o comandos.
-   - Actualizar `docs/STATUS.md` marcando la tarea como `[x] Completado` y actualizando la versión y último hash.
-   - Revisar `AGENTS.md` y `docs/ARCHITECTURE.md` en caso de nuevas convenciones o esquemas.
+   - Actualizar `README.md` si se añadieron componentes, páginas, Edge Functions, variables o comandos.
+   - Actualizar `docs/STATUS.md` con la versión actual y resumen de fase/pendientes (sin duplicar el changelog detallado).
+   - En ramas `feat/*` que añadan o modifiquen pantallas, flujos, esquema SQL o reglas de negocio, actualizar `docs/SCREENS_GUIDE.md`, `docs/ARCHITECTURE.md` y `docs/BUSINESS_RULES.md` antes de integrar en `develop`.
+   - Revisar `AGENTS.md` en caso de nuevas convenciones de ingeniería o flujo.
 
 4. **Integración Git (Git Flow):**
    - Confirmar todos los cambios en la rama feature:
