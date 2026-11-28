@@ -468,6 +468,12 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         }
       }
 
+      const ownerShare = shares.find((s) => s.role === 'PROPIETARIO' || s.user_id === ticket.owner_id)
+      const custodianAppName =
+        ownerShare?.profiles?.display_name ||
+        ownerShare?.profiles?.email?.split('@')[0] ||
+        null
+
       const pdfBytes = await generateLegalCustodyPdf({
         ticket: {
           id: ticket.id,
@@ -478,28 +484,50 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
           draw_date: ticket.draw_date,
           ticket_price: ticket.ticket_price,
         },
-        certification,
+        certification: {
+          ...certification,
+          custodian_app_name: custodianAppName,
+        },
         photoBytes,
         photoMimeType,
-        participants: shares.map((s) => {
-          const pct = Number(s.percentage)
-          const amountEuros = (Number(ticket.ticket_price || 20) * pct) / 100
-          const sigEv = participantSignatureByShareId.get(s.id)
-          return {
-            name:
+        participants: shares
+          .filter((s) => {
+            const st = String(s.status || '').trim().toUpperCase()
+            return st !== 'CANCELADA' && st !== 'RECHAZADA' && st !== 'CANCELLED' && st !== 'REJECTED' && st !== 'DECLINED'
+          })
+          .map((s) => {
+            const isRenounced = s.status === 'RENUNCIADA'
+            const pct = isRenounced ? 0 : Number(s.percentage)
+            const amountEuros = isRenounced ? 0 : (Number(ticket.ticket_price || 20) * pct) / 100
+            const sigEv = participantSignatureByShareId.get(s.id)
+            const hwEv =
+              s.role === 'PROPIETARIO'
+                ? handwrittenSignatures.find((h) => h.signer_role === 'custodian')
+                : handwrittenSignatures.find((h) => h.participation_id === s.id)
+            const appName =
               s.profiles?.display_name ||
               s.profiles?.email?.split('@')[0] ||
-              (s.role === 'PROPIETARIO' ? certification.custodian_name : 'Partícipe'),
-            percentage: pct,
-            amountEuros,
-            status: s.status,
-            isOwner: s.role === 'PROPIETARIO',
-            signedNif: sigEv?.actor_nif || null,
-            certIssuer: sigEv?.cert_issuer || null,
-            certSerial: sigEv?.cert_serial || null,
-            signedAt: sigEv?.created_at || null,
-          }
-        }),
+              (s.role === 'PROPIETARIO' ? certification.custodian_name : 'Partícipe')
+            const legalName =
+              s.role === 'PROPIETARIO'
+                ? certification.custodian_name
+                : sigEv?.actor_name || hwEv?.full_name || null
+
+            return {
+              name: appName,
+              appName,
+              legalName,
+              percentage: pct,
+              amountEuros,
+              status: s.status,
+              isOwner: s.role === 'PROPIETARIO',
+              signedNif: sigEv?.actor_nif || hwEv?.nif || null,
+              certIssuer: sigEv?.cert_issuer || null,
+              certSerial: sigEv?.cert_serial || null,
+              certMethod: sigEv?.cert_method || (hwEv ? 'handwritten' : null),
+              signedAt: sigEv?.created_at || hwEv?.signed_at || null,
+            }
+          }),
         events: legalEvents,
       })
 

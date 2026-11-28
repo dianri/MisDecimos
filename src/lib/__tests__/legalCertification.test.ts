@@ -418,3 +418,143 @@ test('ciclo completo de renuncia y nueva participación en el mismo décimo aís
     'Esta participación (part-1) fue firmada con certificado digital.'
   )
 })
+
+test('generateLegalCustodyPdf muestra nombres duales (app + certificado), renunciadas, sin "?" y secuencia cronológica completa con paginación', async () => {
+  const { inflateSync } = await import('node:zlib')
+
+  // Generar una lista larga de eventos incluyendo la secuencia completa
+  const baseEvents = [
+    {
+      created_at: '2026-11-28T01:00:00.000Z',
+      event_type: 'CUSTODY_CERTIFIED',
+      actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      actor_nif: '12345678Z',
+      share_percentage: 100,
+      payload_sha256: 'a'.repeat(64),
+    },
+    {
+      created_at: '2026-11-28T01:05:00.000Z',
+      event_type: 'PARTICIPATION_ACCEPTED',
+      actor_name: 'dianrie-gmail',
+      share_percentage: 25,
+      payload_sha256: 'b'.repeat(64),
+    },
+    {
+      created_at: '2026-11-28T01:10:00.000Z',
+      event_type: 'PARTICIPATION_SIGNED',
+      actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      actor_nif: '87654321B',
+      share_percentage: 25,
+      payload_sha256: 'c'.repeat(64),
+    },
+    {
+      created_at: '2026-11-28T01:15:00.000Z',
+      event_type: 'PARTICIPATION_RENOUNCED',
+      actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      actor_nif: '87654321B',
+      share_percentage: 25,
+      payload_sha256: 'd'.repeat(64),
+    },
+    {
+      created_at: '2026-11-28T01:20:00.000Z',
+      event_type: 'PARTICIPATION_ACCEPTED',
+      actor_name: 'dianrie-gmail',
+      share_percentage: 25,
+      payload_sha256: 'e'.repeat(64),
+    },
+  ]
+
+  // Añadir eventos adicionales para forzar salto de página automático en Sección 4
+  const extraEvents = Array.from({ length: 16 }, (_, idx) => ({
+    created_at: `2026-11-28T02:${String(idx).padStart(2, '0')}:00.000Z`,
+    event_type: 'PARTICIPATION_ACCEPTED',
+    actor_name: `participe-${idx} • test`,
+    share_percentage: 5,
+    payload_sha256: String(idx % 10).repeat(64),
+  }))
+
+  const pdfBytes = await generateLegalCustodyPdf({
+    ticket: {
+      id: 't-dual',
+      number: '79432',
+      serie: '001',
+      fraccion: '01',
+      draw_name: 'Sorteo Extraordinario de Navidad',
+      draw_date: '2026-12-22',
+      ticket_price: 20,
+    },
+    certification: {
+      verification_code: 'MD-2026-DUAL-0001',
+      custodian_app_name: 'dianrie',
+      custodian_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      custodian_nif: '12345678Z',
+      cert_issuer: 'AC FNMT Usuarios',
+      cert_serial: 'SER-999',
+      cert_method: 'autofirma',
+      payload_sha256: 'f'.repeat(64),
+      photo_sha256: '1'.repeat(64),
+      signed_at: '2026-11-28T01:00:00.000Z',
+    },
+    participants: [
+      {
+        name: 'dianrie',
+        appName: 'dianrie',
+        legalName: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        percentage: 75,
+        amountEuros: 15,
+        status: 'ACEPTADA',
+        isOwner: true,
+        signedNif: '12345678Z',
+      },
+      {
+        name: 'dianrie-gmail',
+        appName: 'dianrie-gmail',
+        legalName: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        percentage: 25,
+        amountEuros: 5,
+        status: 'RENUNCIADA',
+        signedNif: '87654321B',
+      },
+      {
+        name: 'dianrie-gmail',
+        appName: 'dianrie-gmail',
+        legalName: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        percentage: 25,
+        amountEuros: 5,
+        status: 'ACEPTADA',
+        signedNif: '87654321B',
+      },
+    ],
+    events: [...baseEvents, ...extraEvents],
+  })
+
+  const parsed = await PDFDocument.load(pdfBytes)
+  assert.ok(parsed.getPageCount() >= 2, 'Debe paginar automáticamente cuando el anexo supera la página 1')
+
+  // Extraer texto de los streams descomprimidos del PDF (decodificando strings hex <...> de pdf-lib)
+  const rawStr = Buffer.from(pdfBytes).toString('latin1')
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  let streamContent = ''
+  let m: RegExpExecArray | null
+  while ((m = streamRegex.exec(rawStr)) !== null) {
+    const chunk = Buffer.from(m[1], 'latin1')
+    try {
+      streamContent += inflateSync(chunk).toString('latin1') + '\n'
+    } catch {
+      streamContent += chunk.toString('latin1') + '\n'
+    }
+  }
+  const hexStrings = Array.from(streamContent.matchAll(/<([0-9a-fA-F]+)>/g)).map((match) =>
+    Buffer.from(match[1], 'hex').toString('latin1')
+  )
+  const extractedText = streamContent + '\n' + hexStrings.join('\n')
+
+  assert.ok(extractedText.includes('dianrie-gmail'), 'Debe incluir el alias de la app')
+  assert.ok(
+    extractedText.includes('DIEGO ANGEL FERNANDEZ GARCIA'),
+    'Debe incluir el nombre legal del certificado'
+  )
+  assert.ok(extractedText.includes('RENUNCIADA'), 'Debe incluir participaciones renunciadas')
+  assert.ok(extractedText.includes('Participaci') && extractedText.includes('aceptada'))
+  assert.ok(!hexStrings.some((s) => s.includes('?')), 'No debe generar caracteres "?" por símbolos WinAnsi')
+})
