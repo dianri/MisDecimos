@@ -19,6 +19,7 @@ export interface TicketListItemCardProps {
   isTogglingCollected?: boolean
   sealStatus?: TicketSealStatus
   onClick?: (ticketId: string) => void
+  onSealClick?: (ticketId: string) => void
   onShareClick?: (ticketId: string, hasParticipations: boolean) => void
   onCheckPrizeClick?: (ticket: TicketRow) => void
   onToggleCollectedClick?: (ticket: TicketRow, currentlyCollected: boolean, hasParticipations: boolean) => void
@@ -36,6 +37,7 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
   isTogglingCollected = false,
   sealStatus,
   onClick,
+  onSealClick,
   onShareClick,
   onCheckPrizeClick,
   onToggleCollectedClick,
@@ -160,17 +162,26 @@ export const TicketListItemCard: React.FC<TicketListItemCardProps> = ({
             <Calendar className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{formatDrawLabel(ticket.draw_date)}</span>
             {sealStatus && (
-              <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide shrink-0 ${
+              <button
+                type="button"
+                data-no-card-nav="true"
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSealClick?.(ticket.id)
+                }}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide shrink-0 transition active:scale-95 cursor-pointer ${
                   sealStatus.isSigned
-                    ? 'bg-[#3A5245] text-white border border-[#C5A880]/70'
-                    : 'bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60'
+                    ? 'bg-[#3A5245] hover:bg-[#2F4338] text-white border border-[#C5A880]/70'
+                    : 'bg-[#1D1D1F]/[0.06] hover:bg-[#1D1D1F]/[0.12] dark:bg-[#F5F5F7]/[0.08] dark:hover:bg-[#F5F5F7]/[0.15] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65'
                 }`}
-                title={sealStatus.subtitle}
+                title={`${sealStatus.title} · Abrir Certificación Legal`}
               >
                 <ShieldCheck className={`w-3 h-3 ${sealStatus.isSigned ? 'text-[#C5A880]' : ''}`} />
                 <span>{sealStatus.isSigned ? 'Firmado' : 'Sin firmar'}</span>
-              </span>
+              </button>
             )}
           </div>
 
