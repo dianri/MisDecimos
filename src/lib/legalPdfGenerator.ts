@@ -37,7 +37,7 @@ export interface LegalPdfInput {
     draw_date: string
     ticket_price: number
   }
-  certification: {
+  certification?: {
     verification_code: string
     custodian_name: string
     custodian_app_name?: string | null
@@ -48,7 +48,9 @@ export interface LegalPdfInput {
     payload_sha256: string
     photo_sha256: string
     signed_at: string
-  }
+  } | null
+  verification_code?: string | null
+  photo_sha256?: string | null
   photoBytes?: Uint8Array | null
   photoMimeType?: string | null
   participants: LegalPdfParticipantItem[]
@@ -104,7 +106,7 @@ function formatEventLabel(eventType: string): string {
     case 'HANDWRITTEN_PARTICIPATION_RENOUNCED':
       return 'Renuncia de participación (manuscrita)'
     default:
-      return eventType
+      return 'Evento legal registrado'
   }
 }
 
@@ -178,6 +180,11 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
     }
   }
 
+  const docVerificationCode =
+    input.certification?.verification_code || input.verification_code || 'SIN-CODIGO'
+  const docPhotoSha =
+    input.certification?.photo_sha256 || input.photo_sha256 || 'No disponible'
+
   // 1. Cabecera legal
   page.drawRectangle({
     x: margin,
@@ -186,9 +193,18 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
     height: 54,
     color: granite,
   })
-  drawText('MIS DECIMOS · CERTIFICADO LEGAL DE CUSTODIA', margin + 14, y - 22, 13, fontBold, rgb(1, 1, 1))
   drawText(
-    `Codigo de verificacion: ${input.certification.verification_code}   |   Emitido: ${formatDateEs(new Date().toISOString())}`,
+    input.certification
+      ? 'MIS DECIMOS - CERTIFICADO LEGAL DE CUSTODIA'
+      : 'MIS DECIMOS - DOCUMENTO LEGAL DE CUSTODIA',
+    margin + 14,
+    y - 22,
+    13,
+    fontBold,
+    rgb(1, 1, 1)
+  )
+  drawText(
+    `Codigo de verificacion: ${docVerificationCode}   |   Emitido: ${formatDateEs(new Date().toISOString())}`,
     margin + 14,
     y - 40,
     8.5,
@@ -232,7 +248,7 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
   )
   y -= 14
   drawWrappedLine(
-    `SHA-256 anverso: ${input.certification.photo_sha256}`,
+    `SHA-256 anverso: ${docPhotoSha}`,
     margin,
     input.photoBytes ? contentWidth - 180 : contentWidth,
     8,
@@ -278,111 +294,151 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
 
   y = Math.min(y, imageBottomY) - 12
 
-  // 3. Bloque de certificación digital del depositario
-  const custodianAppName = input.certification.custodian_app_name?.trim() || ''
-  const custodianLegalName = input.certification.custodian_name.trim()
-  const hasDualCustodianName = Boolean(
-    custodianAppName && custodianAppName.toLowerCase() !== custodianLegalName.toLowerCase()
-  )
-  const custodianBoxHeight = hasDualCustodianName ? 92 : 78
+  // 3. Bloque de certificación del depositario (con o sin Certificado Digital)
+  if (input.certification) {
+    const custodianAppName = input.certification.custodian_app_name?.trim() || ''
+    const custodianLegalName = input.certification.custodian_name.trim()
+    const hasDualCustodianName = Boolean(
+      custodianAppName && custodianAppName.toLowerCase() !== custodianLegalName.toLowerCase()
+    )
+    const custodianBoxHeight = hasDualCustodianName ? 92 : 78
 
-  ensureSpace(custodianBoxHeight + 38)
-  drawText('2. CERTIFICACION DIGITAL DEL DEPOSITARIO', margin, y, 10.5, fontBold, granite)
-  y -= 6
-  page.drawLine({
-    start: { x: margin, y },
-    end: { x: margin + contentWidth, y },
-    thickness: 1,
-    color: cava,
-  })
-  y -= 14
+    ensureSpace(custodianBoxHeight + 38)
+    drawText('2. CERTIFICACION DIGITAL DEL DEPOSITARIO', margin, y, 10.5, fontBold, granite)
+    y -= 6
+    page.drawLine({
+      start: { x: margin, y },
+      end: { x: margin + contentWidth, y },
+      thickness: 1,
+      color: cava,
+    })
+    y -= 14
 
-  page.drawRectangle({
-    x: margin,
-    y: y - (custodianBoxHeight - 4),
-    width: contentWidth,
-    height: custodianBoxHeight,
-    color: lightBg,
-    borderColor: cava,
-    borderWidth: 0.8,
-  })
+    page.drawRectangle({
+      x: margin,
+      y: y - (custodianBoxHeight - 4),
+      width: contentWidth,
+      height: custodianBoxHeight,
+      color: lightBg,
+      borderColor: cava,
+      borderWidth: 0.8,
+    })
 
-  if (hasDualCustodianName) {
-    drawText(
-      `Titular depositario: ${custodianAppName}`,
-      margin + 10,
-      y - 14,
-      9.5,
-      fontBold,
-      dark
-    )
-    drawText(
-      `${custodianLegalName} (NIF: ${input.certification.custodian_nif})`,
-      margin + 10,
-      y - 27,
-      9,
-      fontRegular,
-      dark
-    )
-    drawText(
-      `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
-      margin + 10,
-      y - 41,
-      8.5,
-      fontRegular,
-      dark
-    )
-    drawText(
-      `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
-      margin + 10,
-      y - 55,
-      8.5,
-      fontRegular,
-      dark
-    )
-    drawText(
-      `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
-      margin + 10,
-      y - 69,
-      7.5,
-      fontRegular,
-      muted
-    )
+    if (hasDualCustodianName) {
+      drawText(
+        `Titular depositario: ${custodianAppName}`,
+        margin + 10,
+        y - 14,
+        9.5,
+        fontBold,
+        dark
+      )
+      drawText(
+        `${custodianLegalName} (NIF: ${input.certification.custodian_nif})`,
+        margin + 10,
+        y - 27,
+        9,
+        fontRegular,
+        dark
+      )
+      drawText(
+        `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
+        margin + 10,
+        y - 41,
+        8.5,
+        fontRegular,
+        dark
+      )
+      drawText(
+        `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
+        margin + 10,
+        y - 55,
+        8.5,
+        fontRegular,
+        dark
+      )
+      drawText(
+        `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
+        margin + 10,
+        y - 69,
+        7.5,
+        fontRegular,
+        muted
+      )
+    } else {
+      drawText(
+        `Titular depositario: ${custodianLegalName}   (NIF: ${input.certification.custodian_nif})`,
+        margin + 10,
+        y - 14,
+        9.5,
+        fontBold,
+        dark
+      )
+      drawText(
+        `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
+        margin + 10,
+        y - 29,
+        8.5,
+        fontRegular,
+        dark
+      )
+      drawText(
+        `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
+        margin + 10,
+        y - 43,
+        8.5,
+        fontRegular,
+        dark
+      )
+      drawText(
+        `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
+        margin + 10,
+        y - 57,
+        7.5,
+        fontRegular,
+        muted
+      )
+    }
+    y -= custodianBoxHeight + 14
   } else {
+    ensureSpace(88)
+    drawText('2. CERTIFICACION DEL DEPOSITARIO', margin, y, 10.5, fontBold, granite)
+    y -= 6
+    page.drawLine({
+      start: { x: margin, y },
+      end: { x: margin + contentWidth, y },
+      thickness: 1,
+      color: cava,
+    })
+    y -= 14
+
+    page.drawRectangle({
+      x: margin,
+      y: y - 48,
+      width: contentWidth,
+      height: 52,
+      color: lightBg,
+      borderColor: cava,
+      borderWidth: 0.8,
+    })
     drawText(
-      `Titular depositario: ${custodianLegalName}   (NIF: ${input.certification.custodian_nif})`,
+      'Sin certificado digital: documento respaldado unicamente mediante firma manuscrita',
       margin + 10,
-      y - 14,
-      9.5,
+      y - 16,
+      9,
       fontBold,
       dark
     )
     drawText(
-      `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
+      'en pantalla como acuerdo privado entre particulares.',
       margin + 10,
-      y - 29,
+      y - 30,
       8.5,
-      fontRegular,
-      dark
-    )
-    drawText(
-      `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
-      margin + 10,
-      y - 43,
-      8.5,
-      fontRegular,
-      dark
-    )
-    drawText(
-      `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
-      margin + 10,
-      y - 57,
-      7.5,
       fontRegular,
       muted
     )
+    y -= 64
   }
-  y -= custodianBoxHeight + 14
 
   // 4. Tabla de partícipes
   ensureSpace(75)
@@ -417,11 +473,15 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
       : 'ACTIVA'
     const displayPct = isRenounced ? 0 : p.percentage
     const displayAmount = isRenounced ? 0 : p.amountEuros
-    const sigText = p.signedNif
-      ? `${p.certMethod === 'handwritten' ? 'Manuscrita' : 'Certificado'} (${p.signedNif})`
-      : p.isOwner
-      ? `Depositario (${input.certification.custodian_nif})`
-      : 'Aceptacion estandar'
+
+    let sigText = 'Aceptacion estandar'
+    if (p.isOwner && input.certification) {
+      sigText = `Depositario (${input.certification.custodian_nif})`
+    } else if (p.signedNif && p.certMethod && p.certMethod !== 'handwritten') {
+      sigText = `Certificado (${p.signedNif})`
+    } else if (p.signedNif) {
+      sigText = `Manuscrita (${p.signedNif})`
+    }
 
     drawText(appName.slice(0, 32), margin, y, 8.8, hasDualName ? fontBold : fontRegular, dark)
     drawText(`${displayPct}% (${displayAmount.toFixed(2)} €)`, margin + 195, y, 8.8, fontRegular, dark)

@@ -19,7 +19,10 @@ import {
 } from '../../lib/legalCustody'
 import { generateLegalCustodyPdf } from '../../lib/legalPdfGenerator'
 import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
-import { evaluateHandwrittenAccordionState } from '../../lib/handwrittenCustody'
+import {
+  evaluateHandwrittenAccordionState,
+  resolveEffectiveSignerIdentity,
+} from '../../lib/handwrittenCustody'
 import {
   ShieldCheck,
   Lock,
@@ -465,17 +468,22 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   }
 
   const handleDownloadPdf = async () => {
-    if (!certification) return
+    if (!certification && handwrittenSignatures.length === 0) return
     setIsDownloadingPdf(true)
     setFeedback(null)
     try {
       let photoBytes: Uint8Array | null = null
       let photoMimeType: string | null = null
 
-      if (certification.photo_path) {
+      const photoPath =
+        certification?.photo_path ||
+        handwrittenSignatures.find((h) => h.photo_path)?.photo_path ||
+        null
+
+      if (photoPath) {
         const { data: blobData } = await supabase.storage
           .from('ticket-certifications')
-          .download(certification.photo_path)
+          .download(photoPath)
         if (blobData) {
           photoMimeType = blobData.type
           photoBytes = new Uint8Array(await blobData.arrayBuffer())
@@ -488,6 +496,13 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         ownerShare?.profiles?.email?.split('@')[0] ||
         null
 
+      const fallbackPhotoSha =
+        certification?.photo_sha256 ||
+        handwrittenSignatures.find((h) => h.photo_sha256)?.photo_sha256 ||
+        null
+      const verificationCode =
+        certification?.verification_code || handwrittenSignatures[0]?.verification_code || 'LEGAL'
+
       const pdfBytes = await generateLegalCustodyPdf({
         ticket: {
           id: ticket.id,
@@ -498,10 +513,14 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
           draw_date: ticket.draw_date,
           ticket_price: ticket.ticket_price,
         },
-        certification: {
-          ...certification,
-          custodian_app_name: custodianAppName,
-        },
+        certification: certification
+          ? {
+              ...certification,
+              custodian_app_name: custodianAppName,
+            }
+          : null,
+        verification_code: verificationCode,
+        photo_sha256: fallbackPhotoSha,
         photoBytes,
         photoMimeType,
         participants: shares
@@ -521,11 +540,22 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             const appName =
               s.profiles?.display_name ||
               s.profiles?.email?.split('@')[0] ||
-              (s.role === 'PROPIETARIO' ? certification.custodian_name : 'Partícipe')
+              (s.role === 'PROPIETARIO' ? certification?.custodian_name || 'Depositario' : 'Partícipe')
+
+            // Precedencia absoluta del Certificado Digital sobre Firma Manuscrita
+            const isOwnerRow = s.role === 'PROPIETARIO'
             const legalName =
-              s.role === 'PROPIETARIO'
+              isOwnerRow && certification
                 ? certification.custodian_name
                 : sigEv?.actor_name || hwEv?.full_name || null
+            const signedNif =
+              isOwnerRow && certification
+                ? certification.custodian_nif
+                : sigEv?.actor_nif || hwEv?.nif || null
+            const certMethod =
+              isOwnerRow && certification
+                ? certification.cert_method
+                : sigEv?.cert_method || (hwEv ? 'handwritten' : null)
 
             return {
               name: appName,
@@ -534,11 +564,11 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
               percentage: pct,
               amountEuros,
               status: s.status,
-              isOwner: s.role === 'PROPIETARIO',
-              signedNif: sigEv?.actor_nif || hwEv?.nif || null,
+              isOwner: isOwnerRow,
+              signedNif,
               certIssuer: sigEv?.cert_issuer || null,
               certSerial: sigEv?.cert_serial || null,
-              certMethod: sigEv?.cert_method || (hwEv ? 'handwritten' : null),
+              certMethod,
               signedAt: sigEv?.created_at || hwEv?.signed_at || null,
             }
           }),
@@ -550,10 +580,18 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
               : shares.find((s) => s.id === hw.participation_id) ||
                 shares.find((s) => s.user_id === hw.signer_user_id && s.role === 'PARTICIPANTE')
           const pct = Number(share?.percentage ?? (hw.signer_role === 'custodian' ? 100 : 0))
+          const effective = resolveEffectiveSignerIdentity({
+            signerRole: hw.signer_role,
+            participationId: hw.participation_id,
+            handwrittenFullName: hw.full_name,
+            handwrittenNif: hw.nif,
+            certification,
+            legalEvents,
+          })
           return {
             role: hw.signer_role as 'custodian' | 'participant',
-            fullName: hw.full_name,
-            nif: hw.nif,
+            fullName: effective.fullName,
+            nif: effective.nif,
             phone: hw.phone,
             percentage: pct,
             amountEuros: (Number(ticket.ticket_price || 20) * pct) / 100,
@@ -572,7 +610,9 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `MisDecimos_Certificado_${ticket.number}_${certification.verification_code}.pdf`
+      a.download = certification
+        ? `MisDecimos_Certificado_${ticket.number}_${verificationCode}.pdf`
+        : `MisDecimos_DocumentoLegal_${ticket.number}_${verificationCode}.pdf`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -666,22 +706,6 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             <p className="text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 leading-relaxed">
               <strong>{lockState.statusLabel}:</strong> {lockState.statusDescription}
             </p>
-
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              disabled={isDownloadingPdf}
-              className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-            >
-              {isDownloadingPdf ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <FileDown className="w-4 h-4 text-[#C5A880]" />
-              )}
-              <span>
-                {isDownloadingPdf ? 'Generando PDF legal...' : 'Descargar Documento Legal (PDF)'}
-              </span>
-            </button>
           </div>
         ) : isOwner ? (
           <div className="space-y-3.5">
@@ -765,6 +789,24 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
           <p className="text-xs text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
             El depositario aún no ha certificado digitalmente la custodia de este décimo.
           </p>
+        )}
+
+        {(certification || handwrittenSignatures.length > 0) && (
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+          >
+            {isDownloadingPdf ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4 text-[#C5A880]" />
+            )}
+            <span>
+              {isDownloadingPdf ? 'Generando PDF legal...' : 'Descargar Documento Legal (PDF)'}
+            </span>
+          </button>
         )}
       </div>
 

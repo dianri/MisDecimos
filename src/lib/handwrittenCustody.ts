@@ -281,3 +281,94 @@ export function resolveLockedCertificateIdentity(
 
   return { isLocked: false, fullName: null, nif: null }
 }
+
+export interface EffectiveSignerIdentityInput {
+  signerRole: 'custodian' | 'participant' | string
+  participationId?: string | null
+  handwrittenFullName: string
+  handwrittenNif: string
+  certification?: {
+    custodian_name: string
+    custodian_nif: string
+  } | null
+  legalEvents: Array<{
+    event_type: string
+    participation_id?: string | null
+    actor_name: string
+    actor_nif?: string | null
+    signature_b64?: string | null
+    cert_serial?: string | null
+  }>
+}
+
+export interface EffectiveSignerIdentity {
+  fullName: string
+  nif: string
+  verifiedWithCert: boolean
+}
+
+/**
+ * Aplica precedencia absoluta de la identidad del Certificado Digital sobre
+ * cualquier nombre o DNI/NIE introducido previamente en Firma Manuscrita.
+ */
+export function resolveEffectiveSignerIdentity(
+  input: EffectiveSignerIdentityInput
+): EffectiveSignerIdentity {
+  if (input.signerRole === 'custodian') {
+    if (input.certification?.custodian_name && input.certification?.custodian_nif) {
+      return {
+        fullName: input.certification.custodian_name,
+        nif: input.certification.custodian_nif,
+        verifiedWithCert: true,
+      }
+    }
+    const custodyEv = input.legalEvents.find(
+      (ev) => ev.event_type === 'CUSTODY_CERTIFIED' && ev.actor_name && ev.actor_nif
+    )
+    if (custodyEv?.actor_nif) {
+      return {
+        fullName: custodyEv.actor_name,
+        nif: custodyEv.actor_nif,
+        verifiedWithCert: true,
+      }
+    }
+    return {
+      fullName: input.handwrittenFullName,
+      nif: input.handwrittenNif,
+      verifiedWithCert: false,
+    }
+  }
+
+  if (input.participationId) {
+    let certName: string | null = null
+    let certNif: string | null = null
+    for (const ev of input.legalEvents) {
+      if (ev.participation_id !== input.participationId) continue
+      if (
+        ev.event_type === 'PARTICIPATION_SIGNED' &&
+        ev.signature_b64 &&
+        ev.cert_serial &&
+        ev.actor_nif
+      ) {
+        certName = ev.actor_name
+        certNif = ev.actor_nif
+      } else if (ev.event_type === 'PARTICIPATION_RENOUNCED') {
+        certName = null
+        certNif = null
+      }
+    }
+    if (certName && certNif) {
+      return {
+        fullName: certName,
+        nif: certNif,
+        verifiedWithCert: true,
+      }
+    }
+  }
+
+  return {
+    fullName: input.handwrittenFullName,
+    nif: input.handwrittenNif,
+    verifiedWithCert: false,
+  }
+}
