@@ -5,6 +5,20 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.93] - 2026-11-28
+
+### Added
+- **Certificación Digital y Documento Legal PDF (`TicketDetailPage.tsx`, `LegalCertificationTab.tsx`, `CertificateSignModal.tsx`, `TicketPhotoCaptureModal.tsx`):**
+  - Nueva pestaña **Certificación Legal** dentro del detalle del décimo con indicador visual de estado certificado.
+  - Firma electrónica en cliente con **AutoFirma** (`afirma://sign` con `id` alfanumérico de 16 caracteres, relay `autofirma-relay` en Supabase Edge Functions y polling) y **Archivo `.p12` / `.pfx`** en memoria mediante `node-forge` (PKCS#7 / CMS detached con `SHA-256`).
+  - Visor de cámara en vivo (`TicketPhotoCaptureModal`) con marco guía horizontal para fotografiar el anverso del décimo, cálculo de huella `SHA-256`, subida al bucket privado `ticket-certifications` y respaldo desde galería/archivo.
+  - Migración SQL `ticket_certifications`, `ticket_legal_events` (append-only inmutable), `autofirma_sessions` y trigger defensivo de bloqueo cuando existen participaciones aceptadas.
+  - Generación y descarga de **Documento Legal PDF** (`legalPdfGenerator.ts` con `pdf-lib`) incrustando la foto del anverso, código `MD-YYYY-XXXX-XXXX`, tabla de partícipes y anexo cronológico de eventos.
+
+### Fixed
+- **Notificaciones Push en `preview` (`pushNotifications.ts`, `usePushPermissionPrompt.ts`, `PushPermissionModal.tsx`):**
+  - Añadida comprobación previa `getRegistration()`, timeout de 6 segundos y cierre garantizado del modal en `try / catch / finally`.
+
 ## [1.0.92] - 2026-11-27
 
 ### Changed
