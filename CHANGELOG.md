@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.99] - 2026-11-28
+
+### Fixed
+- **Decodificación de cadenas DER concatenadas de AutoFirma Android y UX móvil (`digitalSignature.ts`, `CertificateSignModal.tsx`):**
+  - Desactivado el modo estricto en `forge.asn1.fromDer(..., false)` y añadido soporte agnóstico al orden de segmentos (`|` / `%7C`) para extraer el certificado X.509 del titular (no-CA) incluso cuando Android `KeyChain` concatena la cadena completa de certificados en DER.
+  - Añadido aviso visible con enlace a Google Play (`es.gob.afirma`) y detección rápida de ausencia de AutoFirma (`visibilitychange` / `blur` en 3 segundos) con botón directo **`Usar archivo .p12 / .pfx`**.
+
 ## [1.0.98] - 2026-11-28
 
 ### Changed

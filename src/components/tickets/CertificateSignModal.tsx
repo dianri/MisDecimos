@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, ShieldCheck, KeyRound, Smartphone, Upload, Loader2, AlertCircle } from 'lucide-react'
+import { X, ShieldCheck, KeyRound, Smartphone, Upload, Loader2, AlertCircle, ExternalLink } from 'lucide-react'
 import { useModalBackHandler } from '../../hooks/useModalBackHandler'
 import {
   signPayloadWithP12,
@@ -31,6 +31,7 @@ export const CertificateSignModal: React.FC<CertificateSignModalProps> = ({
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isWaitingAutoFirma, setIsWaitingAutoFirma] = useState(false)
+  const [autoFirmaNotInstalled, setAutoFirmaNotInstalled] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -44,6 +45,7 @@ export const CertificateSignModal: React.FC<CertificateSignModalProps> = ({
       setPassword('')
       setP12File(null)
       setErrorMsg(null)
+      setAutoFirmaNotInstalled(false)
       setIsWaitingAutoFirma(false)
       setIsSubmitting(false)
     }
@@ -91,12 +93,38 @@ export const CertificateSignModal: React.FC<CertificateSignModalProps> = ({
 
   const handleAutoFirmaLaunch = async () => {
     setErrorMsg(null)
+    setAutoFirmaNotInstalled(false)
     abortControllerRef.current?.abort()
     const controller = new AbortController()
     abortControllerRef.current = controller
 
     setIsWaitingAutoFirma(true)
     setIsSubmitting(true)
+
+    let appSwitched = false
+    const markAppSwitched = () => {
+      if (document.hidden || !document.hasFocus()) {
+        appSwitched = true
+      }
+    }
+    const onBlur = () => {
+      appSwitched = true
+    }
+
+    document.addEventListener('visibilitychange', markAppSwitched)
+    window.addEventListener('blur', onBlur)
+
+    const launchCheckTimer = window.setTimeout(() => {
+      if (!appSwitched && !document.hidden && !controller.signal.aborted) {
+        controller.abort()
+        setAutoFirmaNotInstalled(true)
+        setErrorMsg(
+          'No se ha podido abrir AutoFirma. Asegúrate de tenerla instalada o usa tu archivo .p12 / .pfx.'
+        )
+        setIsWaitingAutoFirma(false)
+        setIsSubmitting(false)
+      }
+    }, 3000)
 
     try {
       const opId = generateAutoFirmaSessionId()
@@ -121,6 +149,9 @@ export const CertificateSignModal: React.FC<CertificateSignModalProps> = ({
         setErrorMsg(err instanceof Error ? err.message : 'No se pudo completar la firma con AutoFirma.')
       }
     } finally {
+      window.clearTimeout(launchCheckTimer)
+      document.removeEventListener('visibilitychange', markAppSwitched)
+      window.removeEventListener('blur', onBlur)
       setIsWaitingAutoFirma(false)
       setIsSubmitting(false)
       if (abortControllerRef.current === controller) {
@@ -200,17 +231,55 @@ export const CertificateSignModal: React.FC<CertificateSignModalProps> = ({
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-[#D04848]/10 border border-[#D04848]/30 text-[#D04848] text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+            <div className="p-3 rounded-xl bg-[#D04848]/10 border border-[#D04848]/30 text-[#D04848] text-xs space-y-2.5">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{errorMsg}</span>
+              </div>
+              {autoFirmaNotInstalled && (
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <a
+                    href="https://play.google.com/store/apps/details?id=es.gob.afirma"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#2C2C2E] border border-[#D04848]/25 text-[#1D1D1F] dark:text-[#F5F5F7] text-[11px] font-semibold"
+                  >
+                    <span>Instalar AutoFirma</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMethod('p12')
+                      setErrorMsg(null)
+                      setAutoFirmaNotInstalled(false)
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#3A5245] text-white text-[11px] font-semibold cursor-pointer"
+                  >
+                    <KeyRound className="w-3 h-3" />
+                    <span>Usar archivo .p12 / .pfx</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {method === 'autofirma' ? (
             <div className="space-y-3.5">
-              <p className="text-xs text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75 leading-relaxed">
-                Abre la aplicación oficial <strong>AutoFirma</strong> para firmar electrónicamente con tu certificado instalado en el dispositivo.
-              </p>
+              <div className="p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-xs text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80 leading-relaxed space-y-1.5">
+                <p>
+                  Requiere tener instalada la app oficial <strong>AutoFirma</strong> (Gobierno de España) con tu certificado importado. Si lo prefieres, puedes firmar sin instalar nada con tu <strong>Archivo .p12 / .pfx</strong>.
+                </p>
+                <a
+                  href="https://play.google.com/store/apps/details?id=es.gob.afirma"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#3A5245] dark:text-[#C5A880] hover:underline"
+                >
+                  <span>Descargar AutoFirma en Google Play</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
 
               {isWaitingAutoFirma ? (
                 <div className="p-4 rounded-2xl bg-[#FCF9F3] dark:bg-[#262017] border border-[#C5A880]/45 space-y-3 text-center">
