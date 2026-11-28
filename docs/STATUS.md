@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.116` (Producción Estable · Limpieza de Documentación de Premios en Detalle)  
+**Versión Actual:** `1.0.117` (Producción Estable · Consistencia Interna de Manual de Pantallas)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.116`)  
+**Rama de Producción:** `main` (Tag `v1.0.117`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -28,5 +28,5 @@
 
 ## 📋 Backlog / Pendientes Actuales
 
-- Sin bloqueantes abiertos en producción (`v1.0.116`).
+- Sin bloqueantes abiertos en producción (`v1.0.117`).
 - Mantenimiento continuo de cobertura unitaria pura (`npm test`) y sincronización documental automática en cada PR/merge hacia `develop`.

@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.117] - 2026-11-28
+
+### Docs
+- **Corrección de desalineaciones internas y enlaces en `docs/SCREENS_GUIDE.md`:**
+  - Corregido el ancla del punto 3 del índice (`#3-dashboard-principal-mis-décimos-compartidos`).
+  - Eliminadas las viñetas obsoletas de pestañas del Dashboard (`?tab=decimos`, `?tab=participaciones`, `?tab=archivados`), reflejando el listado principal único y unificado y la gestión de archivados desde **Mi Perfil**.
+  - Actualizada la descripción del botón `Añadir` al botón flotante en Oro Cava (`#C5A880`) sobre `BottomNav`.
+  - Unificadas las referencias restantes de *"Añadir participación"* a **`Crear participación`** y verificada la vigencia de `HandwrittenSignatureTab.tsx`, `TicketPhotoCaptureModal.tsx` y `PrizeCheckCard.tsx` en `src/components/tickets/`.
+
 ## [1.0.116] - 2026-11-28
 
 ### Docs
