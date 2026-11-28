@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import type { Database } from '../../types/database.types'
 import type { OwnershipShare } from './OwnershipBreakdownCard'
 import { CertificateSignModal } from './CertificateSignModal'
+import { TicketPhotoCaptureModal } from './TicketPhotoCaptureModal'
 import type { DigitalSignatureResult } from '../../lib/digitalSignature'
 import {
   evaluateCertifiedTicketLock,
@@ -18,6 +19,8 @@ import {
   Lock,
   Unlock,
   Camera,
+  FolderOpen,
+  RefreshCw,
   FileDown,
   Loader2,
   AlertCircle,
@@ -58,6 +61,9 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
   const [photoSha256, setPhotoSha256] = useState<string | null>(null)
   const [certPhotoSignedUrl, setCertPhotoSignedUrl] = useState<string | null>(null)
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false)
+  const galleryInputRef = useRef<HTMLInputElement | null>(null)
+  const nativeCameraInputRef = useRef<HTMLInputElement | null>(null)
 
   const [signModalMode, setSignModalMode] = useState<
     'custody' | 'participant_sign' | 'participant_renounce' | null
@@ -549,39 +555,109 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
               décimo <strong>#{ticket.number}</strong> y custodias las participaciones asignadas.
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] mb-1.5">
+            <div className="space-y-2.5">
+              <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
                 Fotografía del anverso del décimo (obligatoria)
               </label>
-              <label className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border border-dashed border-[#C5A880]/70 bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 transition cursor-pointer text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
-                <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
-                <span className="truncate">
-                  {photoFile ? photoFile.name : 'Adjuntar o capturar foto del anverso'}
-                </span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  capture="environment"
-                  onChange={(e) => handlePhotoSelected(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </label>
-            </div>
 
-            {photoPreviewUrl && (
-              <div className="space-y-1.5">
-                <img
-                  src={photoPreviewUrl}
-                  alt="Vista previa del anverso"
-                  className="w-full max-h-48 object-contain rounded-2xl border border-black/10 dark:border-white/10"
-                />
-                {photoSha256 && (
-                  <p className="text-[10px] font-mono text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 break-all">
-                    SHA-256 calculado: {photoSha256}
-                  </p>
-                )}
-              </div>
-            )}
+              {/* Inputs ocultos: galería/carpeta (sin capture) y respaldo cámara nativa */}
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  e.target.value = ''
+                  handlePhotoSelected(file)
+                }}
+                className="hidden"
+              />
+              <input
+                ref={nativeCameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  e.target.value = ''
+                  handlePhotoSelected(file)
+                }}
+                className="hidden"
+              />
+
+              {!photoPreviewUrl ? (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        typeof navigator !== 'undefined' &&
+                        navigator.mediaDevices &&
+                        typeof navigator.mediaDevices.getUserMedia === 'function'
+                      ) {
+                        setIsCameraModalOpen(true)
+                      } else {
+                        nativeCameraInputRef.current?.click()
+                      }
+                    }}
+                    className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-xs"
+                  >
+                    <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
+                    <span>Hacer foto del décimo</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 border border-[#C5A880]/55 text-[#73562E] dark:text-[#E5CFA9] text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer"
+                  >
+                    <FolderOpen className="w-4 h-4 text-[#C5A880] shrink-0" />
+                    <span>Elegir de galería / carpeta</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <img
+                    src={photoPreviewUrl}
+                    alt="Vista previa del anverso"
+                    className="w-full max-h-48 object-contain rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.02]"
+                  />
+                  {photoSha256 && (
+                    <p className="text-[10px] font-mono text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 break-all">
+                      SHA-256 calculado: {photoSha256}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          typeof navigator !== 'undefined' &&
+                          navigator.mediaDevices &&
+                          typeof navigator.mediaDevices.getUserMedia === 'function'
+                        ) {
+                          setIsCameraModalOpen(true)
+                        } else {
+                          nativeCameraInputRef.current?.click()
+                        }
+                      }}
+                      className="py-2 px-3 rounded-xl bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] hover:bg-[#1D1D1F]/[0.10] text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                      <span>Repetir foto</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => galleryInputRef.current?.click()}
+                      className="py-2 px-3 rounded-xl bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 border border-[#C5A880]/50 text-xs font-semibold text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 shrink-0" />
+                      <span>Elegir otro archivo</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button
               type="button"
@@ -691,6 +767,14 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
           </div>
         )}
       </div>
+
+      {/* Visor de cámara en vivo para fotografiar el anverso del décimo */}
+      <TicketPhotoCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        onPhotoCaptured={(file) => handlePhotoSelected(file)}
+        onPickFromGallery={() => galleryInputRef.current?.click()}
+      />
 
       {/* Modal unificado de firma digital */}
       <CertificateSignModal
