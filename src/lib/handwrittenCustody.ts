@@ -126,3 +126,158 @@ export function validateHandwrittenForm(input: HandwrittenFormInput): Handwritte
     errors,
   }
 }
+
+export interface HandwrittenAccordionStateInput {
+  isOwner: boolean
+  currentUserId?: string | null
+  activeUserShareId?: string | null
+  activeUserShareStatus?: string | null
+  shares: Array<{
+    id: string
+    user_id: string
+    role?: string | null
+    status: string
+  }>
+  legalEvents: Array<{
+    event_type: string
+    actor_user_id: string
+    participation_id?: string | null
+  }>
+}
+
+export interface HandwrittenAccordionState {
+  hasCurrentUserHandwrittenSigned: boolean
+  otherActiveHandwrittenCount: number
+}
+
+/**
+ * Evalúa de forma aislada por usuario y participation_id activo si el usuario actual
+ * ha firmado de forma manuscrita y cuántos otros partícipes activos han firmado.
+ */
+export function evaluateHandwrittenAccordionState(
+  input: HandwrittenAccordionStateInput
+): HandwrittenAccordionState {
+  const { isOwner, currentUserId, activeUserShareId, activeUserShareStatus, shares, legalEvents } =
+    input
+
+  let hasCurrentUserHandwrittenSigned = false
+  if (currentUserId) {
+    if (isOwner) {
+      hasCurrentUserHandwrittenSigned = legalEvents.some(
+        (ev) => ev.event_type === 'HANDWRITTEN_CUSTODY_SIGNED' && ev.actor_user_id === currentUserId
+      )
+    } else {
+      const normalizedStatus = String(activeUserShareStatus || '').trim().toUpperCase()
+      const isShareAccepted = normalizedStatus === 'ACEPTADA' || normalizedStatus === 'ACCEPTED'
+      if (activeUserShareId && isShareAccepted) {
+        hasCurrentUserHandwrittenSigned = legalEvents.some(
+          (ev) =>
+            ev.event_type === 'HANDWRITTEN_PARTICIPATION_SIGNED' &&
+            ev.participation_id === activeUserShareId
+        )
+      }
+    }
+  }
+
+  const activeThirdPartyShares = shares.filter((s) => {
+    if (currentUserId && s.user_id === currentUserId) return false
+    const st = String(s.status || '').trim().toUpperCase()
+    return st === 'ACEPTADA' || st === 'ACCEPTED'
+  })
+
+  const signedOtherIds = new Set<string>()
+  for (const share of activeThirdPartyShares) {
+    const hasSigned = legalEvents.some(
+      (ev) =>
+        ev.event_type === 'HANDWRITTEN_PARTICIPATION_SIGNED' &&
+        ev.participation_id === share.id
+    )
+    if (hasSigned) {
+      signedOtherIds.add(share.id)
+    }
+  }
+
+  return {
+    hasCurrentUserHandwrittenSigned,
+    otherActiveHandwrittenCount: signedOtherIds.size,
+  }
+}
+
+export interface LockedCertificateIdentityInput {
+  isOwner: boolean
+  certification?: {
+    custodian_name: string
+    custodian_nif: string
+  } | null
+  activeUserShareId?: string | null
+  legalEvents: Array<{
+    event_type: string
+    participation_id?: string | null
+    actor_name: string
+    actor_nif?: string | null
+    signature_b64?: string | null
+    cert_serial?: string | null
+  }>
+}
+
+export interface LockedCertificateIdentity {
+  isLocked: boolean
+  fullName: string | null
+  nif: string | null
+}
+
+/**
+ * Resuelve si Nombre y DNI/NIE en Firma Manuscrita deben bloquearse
+ * con los datos verificados mediante Certificado Digital previo.
+ */
+export function resolveLockedCertificateIdentity(
+  input: LockedCertificateIdentityInput
+): LockedCertificateIdentity {
+  if (input.isOwner) {
+    if (input.certification?.custodian_name && input.certification?.custodian_nif) {
+      return {
+        isLocked: true,
+        fullName: input.certification.custodian_name,
+        nif: input.certification.custodian_nif,
+      }
+    }
+    const custodyEv = input.legalEvents.find(
+      (ev) => ev.event_type === 'CUSTODY_CERTIFIED' && ev.actor_name && ev.actor_nif
+    )
+    if (custodyEv?.actor_nif) {
+      return {
+        isLocked: true,
+        fullName: custodyEv.actor_name,
+        nif: custodyEv.actor_nif,
+      }
+    }
+    return { isLocked: false, fullName: null, nif: null }
+  }
+
+  if (!input.activeUserShareId) {
+    return { isLocked: false, fullName: null, nif: null }
+  }
+
+  let activeCertName: string | null = null
+  let activeCertNif: string | null = null
+  for (const ev of input.legalEvents) {
+    if (ev.participation_id !== input.activeUserShareId) continue
+    if (ev.event_type === 'PARTICIPATION_SIGNED' && ev.signature_b64 && ev.cert_serial && ev.actor_nif) {
+      activeCertName = ev.actor_name
+      activeCertNif = ev.actor_nif
+    } else if (ev.event_type === 'PARTICIPATION_RENOUNCED') {
+      activeCertName = null
+      activeCertNif = null
+    }
+  }
+
+  if (activeCertName && activeCertNif) {
+    return {
+      isLocked: true,
+      fullName: activeCertName,
+      nif: activeCertNif,
+    }
+  }
+
+  return { isLocked: false, fullName: null, nif: null }
+}

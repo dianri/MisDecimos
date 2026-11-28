@@ -25,6 +25,10 @@ import {
   extractSupabaseErrorMessage,
   type TicketLegalEventRow,
 } from '../legalAuditHelper.ts'
+import {
+  evaluateHandwrittenAccordionState,
+  resolveLockedCertificateIdentity,
+} from '../handwrittenCustody.ts'
 
 function createTestP12(options?: { expired?: boolean; nifInCnOnly?: boolean }) {
   const keys = forge.pki.rsa.generateKeyPair(1024)
@@ -557,4 +561,217 @@ test('generateLegalCustodyPdf muestra nombres duales (app + certificado), renunc
   assert.ok(extractedText.includes('RENUNCIADA'), 'Debe incluir participaciones renunciadas')
   assert.ok(extractedText.includes('Participaci') && extractedText.includes('aceptada'))
   assert.ok(!hexStrings.some((s) => s.includes('?')), 'No debe generar caracteres "?" por símbolos WinAnsi')
+})
+
+test('evaluateHandwrittenAccordionState distingue propietario de partícipes activos e ignora renunciadas', () => {
+  const shares = [
+    { id: 'share-owner', user_id: 'u-owner', role: 'PROPIETARIO', status: 'ACEPTADA' },
+    { id: 'part-old', user_id: 'u-p1', role: 'PARTICIPANTE', status: 'RENUNCIADA' },
+    { id: 'part-active', user_id: 'u-p1', role: 'PARTICIPANTE', status: 'ACEPTADA' },
+    { id: 'part-p2', user_id: 'u-p2', role: 'PARTICIPANTE', status: 'ACEPTADA' },
+  ]
+
+  const legalEvents = [
+    {
+      event_type: 'HANDWRITTEN_PARTICIPATION_SIGNED',
+      actor_user_id: 'u-p1',
+      participation_id: 'part-old',
+    },
+    {
+      event_type: 'HANDWRITTEN_PARTICIPATION_SIGNED',
+      actor_user_id: 'u-p2',
+      participation_id: 'part-p2',
+    },
+  ]
+
+  // Propietario aún no ha firmado manuscrito: debe ver OPCIONAL + 1 partícipe firmado (u-p2)
+  const ownerState = evaluateHandwrittenAccordionState({
+    isOwner: true,
+    currentUserId: 'u-owner',
+    shares,
+    legalEvents,
+  })
+  assert.equal(ownerState.hasCurrentUserHandwrittenSigned, false)
+  assert.equal(ownerState.otherActiveHandwrittenCount, 1)
+
+  // u-p1 tiene part-active sin firma manuscrita (part-old fue renunciada): hasCurrentUserHandwrittenSigned === false
+  const p1State = evaluateHandwrittenAccordionState({
+    isOwner: false,
+    currentUserId: 'u-p1',
+    activeUserShareId: 'part-active',
+    activeUserShareStatus: 'ACEPTADA',
+    shares,
+    legalEvents,
+  })
+  assert.equal(p1State.hasCurrentUserHandwrittenSigned, false)
+  assert.equal(p1State.otherActiveHandwrittenCount, 1)
+
+  // u-p2 sí firmó en su participación activa part-p2
+  const p2State = evaluateHandwrittenAccordionState({
+    isOwner: false,
+    currentUserId: 'u-p2',
+    activeUserShareId: 'part-p2',
+    activeUserShareStatus: 'ACEPTADA',
+    shares,
+    legalEvents,
+  })
+  assert.equal(p2State.hasCurrentUserHandwrittenSigned, true)
+  assert.equal(p2State.otherActiveHandwrittenCount, 0)
+})
+
+test('resolveLockedCertificateIdentity bloquea Nombre y NIF desde el Certificado Digital cuando existe firma digital previa', () => {
+  const ownerLocked = resolveLockedCertificateIdentity({
+    isOwner: true,
+    certification: {
+      custodian_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      custodian_nif: '12345678Z',
+    },
+    legalEvents: [],
+  })
+  assert.equal(ownerLocked.isLocked, true)
+  assert.equal(ownerLocked.fullName, 'DIEGO ANGEL FERNANDEZ GARCIA')
+  assert.equal(ownerLocked.nif, '12345678Z')
+
+  const participantLocked = resolveLockedCertificateIdentity({
+    isOwner: false,
+    activeUserShareId: 'part-2',
+    legalEvents: [
+      {
+        event_type: 'PARTICIPATION_SIGNED',
+        participation_id: 'part-2',
+        actor_name: 'LUCIA GOMEZ PEREZ',
+        actor_nif: '87654321B',
+        signature_b64: 'SIG-B64',
+        cert_serial: 'SER-2',
+      },
+    ],
+  })
+  assert.equal(participantLocked.isLocked, true)
+  assert.equal(participantLocked.fullName, 'LUCIA GOMEZ PEREZ')
+  assert.equal(participantLocked.nif, '87654321B')
+
+  const participantUnlocked = resolveLockedCertificateIdentity({
+    isOwner: false,
+    activeUserShareId: 'part-3',
+    legalEvents: [
+      {
+        event_type: 'PARTICIPATION_SIGNED',
+        participation_id: 'part-2',
+        actor_name: 'LUCIA GOMEZ PEREZ',
+        actor_nif: '87654321B',
+        signature_b64: 'SIG-B64',
+        cert_serial: 'SER-2',
+      },
+    ],
+  })
+  assert.equal(participantUnlocked.isLocked, false)
+})
+
+test('generateLegalCustodyPdf incluye eventos manuscritos en anexo e incrusta firma PNG manuscrita', async () => {
+  const { inflateSync } = await import('node:zlib')
+  const validPng1x1Base64 =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+
+  const pdfBytes = await generateLegalCustodyPdf({
+    ticket: {
+      id: 't-hw',
+      number: '79432',
+      serie: '001',
+      fraccion: '01',
+      draw_name: 'Sorteo Extraordinario de Navidad',
+      draw_date: '2026-12-22',
+      ticket_price: 20,
+    },
+    certification: {
+      verification_code: 'MD-2026-HW-0001',
+      custodian_app_name: 'dianrie',
+      custodian_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      custodian_nif: '12345678Z',
+      cert_issuer: 'AC FNMT Usuarios',
+      cert_serial: 'SER-999',
+      cert_method: 'autofirma',
+      payload_sha256: 'a'.repeat(64),
+      photo_sha256: 'b'.repeat(64),
+      signed_at: '2026-11-28T01:00:00.000Z',
+    },
+    participants: [
+      {
+        name: 'dianrie',
+        appName: 'dianrie',
+        legalName: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        percentage: 100,
+        amountEuros: 20,
+        status: 'ACEPTADA',
+        isOwner: true,
+        signedNif: '12345678Z',
+      },
+    ],
+    events: [
+      {
+        created_at: '2026-11-28T01:10:00.000Z',
+        event_type: 'HANDWRITTEN_CUSTODY_SIGNED',
+        actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        actor_nif: '12345678Z',
+        share_percentage: 100,
+        payload_sha256: 'c'.repeat(64),
+        metadata: { phone: '600112233' },
+      },
+      {
+        created_at: '2026-11-28T01:15:00.000Z',
+        event_type: 'HANDWRITTEN_PARTICIPATION_SIGNED',
+        actor_name: 'LUCIA GOMEZ PEREZ',
+        actor_nif: '87654321B',
+        share_percentage: 25,
+        payload_sha256: 'd'.repeat(64),
+        metadata: { phone: '611223344' },
+      },
+      {
+        created_at: '2026-11-28T01:20:00.000Z',
+        event_type: 'HANDWRITTEN_PARTICIPATION_RENOUNCED',
+        actor_name: 'LUCIA GOMEZ PEREZ',
+        actor_nif: '87654321B',
+        share_percentage: 25,
+        payload_sha256: 'e'.repeat(64),
+      },
+    ],
+    handwrittenSigners: [
+      {
+        role: 'custodian',
+        fullName: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        nif: '12345678Z',
+        phone: '600112233',
+        percentage: 100,
+        amountEuros: 20,
+        status: 'ACEPTADA',
+        signaturePngBase64: validPng1x1Base64,
+        signatureSha256: 'f'.repeat(64),
+        signedAt: '2026-11-28T01:10:00.000Z',
+      },
+    ],
+  })
+
+  const parsed = await PDFDocument.load(pdfBytes)
+  assert.ok(parsed.getPageCount() >= 1)
+
+  const rawStr = Buffer.from(pdfBytes).toString('latin1')
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  let streamContent = ''
+  let m: RegExpExecArray | null
+  while ((m = streamRegex.exec(rawStr)) !== null) {
+    const chunk = Buffer.from(m[1], 'latin1')
+    try {
+      streamContent += inflateSync(chunk).toString('latin1') + '\n'
+    } catch {
+      streamContent += chunk.toString('latin1') + '\n'
+    }
+  }
+  const hexStrings = Array.from(streamContent.matchAll(/<([0-9a-fA-F]+)>/g)).map((match) =>
+    Buffer.from(match[1], 'hex').toString('latin1')
+  )
+  const combined = streamContent + '\n' + hexStrings.join('\n')
+
+  assert.ok(combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
+  assert.ok(combined.includes('600112233'))
+  assert.ok(combined.includes('611223344'))
+  assert.ok(rawStr.includes('/Subtype /Image'), 'Debe incrustar el objeto XObject de imagen PNG en el PDF')
 })

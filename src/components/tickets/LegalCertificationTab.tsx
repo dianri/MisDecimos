@@ -19,6 +19,7 @@ import {
 } from '../../lib/legalCustody'
 import { generateLegalCustodyPdf } from '../../lib/legalPdfGenerator'
 import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
+import { evaluateHandwrittenAccordionState } from '../../lib/handwrittenCustody'
 import {
   ShieldCheck,
   Lock,
@@ -185,6 +186,19 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
 
   const hasCurrentUserSigned = Boolean(
     userShare?.id && participantSignatureByShareId.has(userShare.id)
+  )
+
+  const handwrittenAccordionState = useMemo(
+    () =>
+      evaluateHandwrittenAccordionState({
+        isOwner,
+        currentUserId: user?.id,
+        activeUserShareId: userShare?.id,
+        activeUserShareStatus: userShare?.status,
+        shares,
+        legalEvents,
+      }),
+    [isOwner, user?.id, userShare?.id, userShare?.status, shares, legalEvents]
   )
 
   const participantShares = useMemo(
@@ -529,6 +543,27 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             }
           }),
         events: legalEvents,
+        handwrittenSigners: handwrittenSignatures.map((hw) => {
+          const share =
+            hw.signer_role === 'custodian'
+              ? shares.find((s) => s.role === 'PROPIETARIO')
+              : shares.find((s) => s.id === hw.participation_id) ||
+                shares.find((s) => s.user_id === hw.signer_user_id && s.role === 'PARTICIPANTE')
+          const pct = Number(share?.percentage ?? (hw.signer_role === 'custodian' ? 100 : 0))
+          return {
+            role: hw.signer_role as 'custodian' | 'participant',
+            fullName: hw.full_name,
+            nif: hw.nif,
+            phone: hw.phone,
+            percentage: pct,
+            amountEuros: (Number(ticket.ticket_price || 20) * pct) / 100,
+            status: share?.status || 'ACEPTADA',
+            signaturePngBase64: hw.signature_image_b64,
+            signatureSha256: hw.signature_sha256,
+            signedAt: hw.signed_at,
+            userAgent: hw.user_agent,
+          }
+        }),
       })
 
       const pdfBuffer = new Uint8Array(pdfBytes.byteLength)
@@ -878,16 +913,25 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                handwrittenSignatures.length > 0
-                  ? 'bg-[#3A5245] text-white'
-                  : 'bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65'
-              }`}
-            >
-              {handwrittenSignatures.length > 0 ? 'Firmada' : 'Opcional'}
-            </span>
+          <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
+            {handwrittenAccordionState.hasCurrentUserHandwrittenSigned ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[#3A5245] text-white">
+                Firmada por ti
+              </span>
+            ) : (
+              <>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
+                  Opcional
+                </span>
+                {handwrittenAccordionState.otherActiveHandwrittenCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9]">
+                    {handwrittenAccordionState.otherActiveHandwrittenCount === 1
+                      ? '1 partícipe firmado'
+                      : `${handwrittenAccordionState.otherActiveHandwrittenCount} partícipes firmados`}
+                  </span>
+                )}
+              </>
+            )}
             <ChevronDown
               className={`w-4 h-4 text-[#1D1D1F]/55 dark:text-[#F5F5F7]/55 transition-transform duration-200 ${
                 isHandwrittenOpen ? 'rotate-180' : ''
