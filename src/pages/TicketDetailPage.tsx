@@ -18,6 +18,7 @@ import {
   findActiveUserShare,
   hasActiveDigitalParticipationSignature,
   mergeAuditAndLegalEvents,
+  resolveTicketSealState,
 } from '../lib/legalAuditHelper'
 import { PrizeCheckCard } from '../components/tickets/PrizeCheckCard'
 import {
@@ -569,6 +570,11 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     user?.id,
     userShare?.id
   )
+  const ticketSealStatus = resolveTicketSealState({
+    hasDigitalCert: Boolean(certification),
+    hasCustodianHandwritten: handwrittenSignatures.some((h) => h.signer_role === 'custodian'),
+    verificationCode: certification?.verification_code || null,
+  })
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-16 max-w-xl mx-auto">
@@ -730,6 +736,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           ticket={ticket}
           template={template}
           variant="full"
+          sealStatus={ticketSealStatus}
           onSealClick={isOwner ? handleSealClick : undefined}
         />
 

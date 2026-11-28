@@ -31,6 +31,7 @@ import {
   extractSupabaseErrorMessage,
   findActiveUserShare,
   hasActiveDigitalParticipationSignature,
+  resolveTicketSealState,
 } from '../lib/legalAuditHelper'
 import { checkTicketPrize, toggleOwnerPrizeCollected } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
@@ -84,6 +85,8 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   const [allTickets, setAllTickets] = useState<TicketRow[]>([])
   const [allShares, setAllShares] = useState<OwnershipShareRow[]>([])
   const [archivedTicketIds, setArchivedTicketIds] = useState<Set<string>>(new Set())
+  const [certByTicketId, setCertByTicketId] = useState<Record<string, string>>({})
+  const [hwCustodianTicketIds, setHwCustodianTicketIds] = useState<Set<string>>(new Set())
   const [checkingTicketId, setCheckingTicketId] = useState<string | null>(null)
   const [togglingCollectedTicketId, setTogglingCollectedTicketId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<HomeTicketFilter>(() => {
@@ -211,6 +214,22 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
         .from('pending_invites')
         .select('ticket_id')
         .eq('status', 'PENDIENTE')
+
+      // Cargar estado de certificación digital y firma manuscrita del depositario para el Sello Digital
+      const [{ data: certsData }, { data: hwCustodianData }] = await Promise.all([
+        supabase.from('ticket_certifications').select('ticket_id, verification_code'),
+        supabase
+          .from('ticket_handwritten_signatures')
+          .select('ticket_id')
+          .eq('signer_role', 'custodian'),
+      ])
+
+      const nextCertMap: Record<string, string> = {}
+      for (const c of certsData || []) {
+        nextCertMap[c.ticket_id] = c.verification_code
+      }
+      setCertByTicketId(nextCertMap)
+      setHwCustodianTicketIds(new Set((hwCustodianData || []).map((h) => h.ticket_id)))
 
       setPendingInviteTicketIds(
         new Set((pendingInvitesData || []).map((inv) => inv.ticket_id))
@@ -624,6 +643,11 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                   isCollected={isItemCollected}
                   isCheckingPrize={checkingTicketId === item.ticket.id}
                   isTogglingCollected={togglingCollectedTicketId === item.ticket.id}
+                  sealStatus={resolveTicketSealState({
+                    hasDigitalCert: Boolean(certByTicketId[item.ticket.id]),
+                    hasCustodianHandwritten: hwCustodianTicketIds.has(item.ticket.id),
+                    verificationCode: certByTicketId[item.ticket.id] || null,
+                  })}
                   onShareClick={handleQuickShare}
                   onCheckPrizeClick={handleQuickPrizeCheck}
                   onToggleCollectedClick={handleToggleOwnerCollected}

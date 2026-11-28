@@ -18,8 +18,6 @@ import {
   ShieldCheck,
   PenLine,
   Camera,
-  FolderOpen,
-  RefreshCw,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -38,6 +36,10 @@ export interface HandwrittenSignatureTabProps {
   certification: TicketCertificationRow | null
   handwrittenSignatures: TicketHandwrittenSignatureRow[]
   legalEvents: TicketLegalEventRow[]
+  sharedPhotoFile?: File | null
+  sharedPhotoSha256?: string | null
+  hasSharedPhoto?: boolean
+  onSharedPhotoSelected?: (file: File | null) => Promise<void> | void
   onRefresh: () => Promise<void>
   onRenounced?: (percentage: number) => void
 }
@@ -50,6 +52,10 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
   certification,
   handwrittenSignatures,
   legalEvents,
+  sharedPhotoFile,
+  sharedPhotoSha256,
+  hasSharedPhoto,
+  onSharedPhotoSelected,
   onRefresh,
   onRenounced,
 }) => {
@@ -114,10 +120,19 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
 
   const reusablePhotoPath = certification?.photo_path || custodianHw?.photo_path || null
   const reusablePhotoSha = certification?.photo_sha256 || custodianHw?.photo_sha256 || null
+  const effectivePhotoFile = sharedPhotoFile ?? photoFile
+  const effectivePhotoSha = sharedPhotoSha256 ?? photoSha256
+  const hasAnyCapturedPhoto = Boolean(
+    hasSharedPhoto || photoPreviewUrl || reusablePhotoPath
+  )
 
   const handlePhotoSelected = async (file: File | null) => {
     if (!file) return
     setFeedback(null)
+    if (onSharedPhotoSelected) {
+      await onSharedPhotoSelected(file)
+      return
+    }
     if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl)
     setPhotoFile(file)
     setPhotoPreviewUrl(URL.createObjectURL(file))
@@ -142,7 +157,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
       fullName: effectiveFullName,
       nif: effectiveNif,
       phone,
-      hasPhoto: Boolean(photoFile || reusablePhotoPath),
+      hasPhoto: Boolean(effectivePhotoFile || reusablePhotoPath),
       requirePhoto: isOwner,
       declarationAccepted,
       hasSignatureStroke: Boolean(signaturePng),
@@ -158,15 +173,15 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
       let finalPhotoPath = reusablePhotoPath
       let finalPhotoSha = reusablePhotoSha
 
-      if (isOwner && photoFile && photoSha256) {
-        const ext = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+      if (isOwner && effectivePhotoFile && effectivePhotoSha) {
+        const ext = effectivePhotoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
         const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg'
         const storagePath = `${user.id}/${ticket.id}/hw-anverso-${Date.now()}.${safeExt}`
 
         const { error: uploadErr } = await supabase.storage
           .from('ticket-certifications')
-          .upload(storagePath, photoFile, {
-            contentType: photoFile.type || 'image/jpeg',
+          .upload(storagePath, effectivePhotoFile, {
+            contentType: effectivePhotoFile.type || 'image/jpeg',
             upsert: false,
           })
 
@@ -174,7 +189,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
           throw new Error(`No se pudo subir la imagen del anverso: ${uploadErr.message}`)
         }
         finalPhotoPath = storagePath
-        finalPhotoSha = photoSha256
+        finalPhotoSha = effectivePhotoSha
       }
 
       const sigSha = await computeSha256Hex(signaturePng!)
@@ -445,7 +460,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
               </div>
             </div>
 
-            {isOwner && !reusablePhotoPath && (
+            {isOwner && !hasAnyCapturedPhoto && (
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
                   Fotografía del anverso del décimo (obligatoria) *
@@ -461,43 +476,14 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
                   }}
                   className="hidden"
                 />
-
-                {!photoPreviewUrl ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsCameraModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border border-dashed border-[#C5A880]/70 bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 transition cursor-pointer text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]"
-                  >
-                    <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
-                    <span>Adjuntar o capturar foto del anverso</span>
-                  </button>
-                ) : (
-                  <div className="space-y-2">
-                    <img
-                      src={photoPreviewUrl}
-                      alt="Vista previa del anverso"
-                      className="w-full max-h-40 object-contain rounded-2xl border border-black/10 dark:border-white/10"
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsCameraModalOpen(true)}
-                        className="py-2 px-3 rounded-xl bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        <span>Repetir foto</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => galleryInputRef.current?.click()}
-                        className="py-2 px-3 rounded-xl bg-[#FCF9F3] dark:bg-[#262017] border border-[#C5A880]/50 text-xs font-semibold text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <FolderOpen className="w-3.5 h-3.5" />
-                        <span>Elegir otro archivo</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setIsCameraModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border border-dashed border-[#C5A880]/70 bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 transition cursor-pointer text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]"
+                >
+                  <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
+                  <span>Adjuntar o capturar foto del anverso</span>
+                </button>
               </div>
             )}
 

@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.106] - 2026-11-28
+
+### Added / Changed
+- **UX unificada en `Certificación Legal`, solicitud de firma al propietario, Sello Digital y trazos PNG inline en PDF (`LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`, `RealisticTicketCard.tsx`, `TicketListItemCard.tsx`, `TicketsPage.tsx`, `TicketDetailPage.tsx`, `legalPdfGenerator.ts`, `legalAuditHelper.ts`):**
+  - Unificada la fotografía del anverso del décimo en una única vista previa superior compartida entre **Certificado Digital** y **Firma Manuscrita**, ocultando los botones de captura en cuanto existe imagen.
+  - Convertida la sección **Certificado Digital** en acordeón abierto por defecto (`isDigitalCertOpen = true`), trasladado el botón primario de firma/renuncia del partícipe encima de `Descargar Documento Legal (PDF)`, mostrado el nombre completo del certificado en `PARTÍCIPES Y FIRMAS` y añadido el botón **`Solicitar firma al propietario`** con notificación en app y push.
+  - Añadido `resolveTicketSealState()` para mostrar el distintivo **`FIRMADO · SELLO DIGITAL`** (verde/oro) o **`SIN FIRMAR · SELLO DIGITAL`** en la tarjeta realista del décimo y en el listado principal.
+  - Reestructurado `generateLegalCustodyPdf()` para incluir participaciones `pending` como **`SIN RECLAMAR`**, eliminar la Sección 5 e incrustar las imágenes PNG de firmas manuscritas directamente en su posición cronológica dentro de la **Sección 4 (Anexo Cronológico)**.
+
 ## [1.0.105] - 2026-11-28
 
 ### Changed
