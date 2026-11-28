@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.100` (Producción Estable · Contador Reparto, Historial Legal y Blindaje Renuncia)  
+**Versión Actual:** `1.0.101` (Producción Estable · Aislamiento `participation_id` en Firmas y Renuncias)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.100`)  
+**Rama de Producción:** `main` (Tag `v1.0.101`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

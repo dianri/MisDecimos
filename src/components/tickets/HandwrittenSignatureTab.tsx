@@ -9,6 +9,7 @@ import { TicketPhotoCaptureModal } from './TicketPhotoCaptureModal'
 import { computeSha256Hex, generateVerificationCode } from '../../lib/legalCustody'
 import { validateHandwrittenForm } from '../../lib/handwrittenCustody'
 import { generateHandwrittenAgreementPdf } from '../../lib/legalPdfGenerator'
+import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
 import {
   AlertTriangle,
   ShieldCheck,
@@ -75,15 +76,22 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
     [handwrittenSignatures]
   )
 
-  const currentUserHw = useMemo(
-    () =>
+  const currentUserHw = useMemo(() => {
+    if (!user?.id) return null
+    if (isOwner) {
+      return (
+        handwrittenSignatures.find(
+          (s) => s.signer_user_id === user.id && s.signer_role === 'custodian'
+        ) || null
+      )
+    }
+    if (!userShare?.id) return null
+    return (
       handwrittenSignatures.find(
-        (s) =>
-          s.signer_user_id === user?.id &&
-          s.signer_role === (isOwner ? 'custodian' : 'participant')
-      ) || null,
-    [handwrittenSignatures, user?.id, isOwner]
-  )
+        (s) => s.participation_id === userShare.id && s.signer_role === 'participant'
+      ) || null
+    )
+  }, [handwrittenSignatures, user?.id, isOwner, userShare?.id])
 
   const reusablePhotoPath = certification?.photo_path || custodianHw?.photo_path || null
   const reusablePhotoSha = certification?.photo_sha256 || custodianHw?.photo_sha256 || null
@@ -245,7 +253,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
     } catch (err: unknown) {
       setFeedback({
         type: 'error',
-        text: err instanceof Error ? err.message : 'No se pudo registrar la renuncia.',
+        text: extractSupabaseErrorMessage(err, 'No se pudo registrar la renuncia.'),
       })
     } finally {
       setIsSubmitting(false)
