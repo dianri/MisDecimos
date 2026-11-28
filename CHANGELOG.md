@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.113] - 2026-11-28
+
+### Docs
+- **Auditoría y sincronización completa de documentación técnica y reglas (`docs/BUSINESS_RULES.md`, `docs/ARCHITECTURE.md`, `docs/STATUS.md`, `AGENTS.md`):**
+  - Actualizada la Sección 6 y añadida la Sección 9 en `docs/BUSINESS_RULES.md` (prueba gráfica compartida `SHA-256`, `SELLO DIGITAL`, 5 pulsaciones en `NÚMERO`, Certificado Digital vs Firma Manuscrita, precedencia de identidad, aislamiento por `participation_id`, blindaje de renuncias y PDF unificado).
+  - Actualizado `docs/ARCHITECTURE.md` con el esquema real de `ticket_certifications`, `ticket_legal_events`, `ticket_handwritten_signatures`, `autofirma_sessions`, bucket privado `ticket-certifications`, trigger `trg_guard_signed_participation_renounce`, `CertificateSignModal` en `useModalBackHandler` y Sección 7 (`autofirma-relay`, `node-forge`, `pdf-lib`).
+  - Completado `docs/STATUS.md` sin saltos desde `v1.0.65` hasta `v1.0.113` (Fase 7).
+  - Refinado `AGENTS.md` incluyendo `npm test`, cierre estándar de release y actualización obligatoria de `docs/SCREENS_GUIDE.md`, `docs/ARCHITECTURE.md` y `docs/BUSINESS_RULES.md` en ramas `feat/*`.
+
 ## [1.0.112] - 2026-11-28
 
 ### Docs
