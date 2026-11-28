@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.104` (Producción Estable · Firma Manuscrita con Bloqueo Certificado e Incrustación PNG en PDF)  
+**Versión Actual:** `1.0.105` (Producción Estable · PDF Legal Unificado y Prioridad de Identidad Digital)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.104`)  
+**Rama de Producción:** `main` (Tag `v1.0.105`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

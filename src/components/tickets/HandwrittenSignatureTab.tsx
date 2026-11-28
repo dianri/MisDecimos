@@ -10,8 +10,8 @@ import { computeSha256Hex, generateVerificationCode } from '../../lib/legalCusto
 import {
   validateHandwrittenForm,
   resolveLockedCertificateIdentity,
+  resolveEffectiveSignerIdentity,
 } from '../../lib/handwrittenCustody'
-import { generateHandwrittenAgreementPdf } from '../../lib/legalPdfGenerator'
 import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
 import {
   AlertTriangle,
@@ -20,7 +20,6 @@ import {
   Camera,
   FolderOpen,
   RefreshCw,
-  FileDown,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -45,7 +44,7 @@ export interface HandwrittenSignatureTabProps {
 
 export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = ({
   ticket,
-  shares,
+  shares: _shares,
   isOwner,
   userShare,
   certification,
@@ -69,7 +68,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
   const galleryInputRef = useRef<HTMLInputElement | null>(null)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
@@ -288,87 +286,6 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
     }
   }
 
-  const handleDownloadPrivatePdf = async () => {
-    if (handwrittenSignatures.length === 0) return
-    setIsDownloadingPdf(true)
-    setFeedback(null)
-    try {
-      const photoPath = custodianHw?.photo_path || certification?.photo_path || null
-      const photoSha = custodianHw?.photo_sha256 || certification?.photo_sha256 || null
-      let photoBytes: Uint8Array | null = null
-      let photoMimeType: string | null = null
-
-      if (photoPath) {
-        const { data: blobData } = await supabase.storage
-          .from('ticket-certifications')
-          .download(photoPath)
-        if (blobData) {
-          photoMimeType = blobData.type
-          photoBytes = new Uint8Array(await blobData.arrayBuffer())
-        }
-      }
-
-      const signers = handwrittenSignatures.map((hw) => {
-        const share =
-          hw.signer_role === 'custodian'
-            ? shares.find((s) => s.role === 'PROPIETARIO')
-            : shares.find((s) => s.user_id === hw.signer_user_id && s.role === 'PARTICIPANTE')
-        const pct = Number(share?.percentage ?? (hw.signer_role === 'custodian' ? 100 : 0))
-        return {
-          role: hw.signer_role as 'custodian' | 'participant',
-          fullName: hw.full_name,
-          nif: hw.nif,
-          phone: hw.phone,
-          percentage: pct,
-          amountEuros: (Number(ticket.ticket_price || 20) * pct) / 100,
-          status: share?.status || 'ACEPTADA',
-          signaturePngBase64: hw.signature_image_b64,
-          signatureSha256: hw.signature_sha256,
-          signedAt: hw.signed_at,
-          userAgent: hw.user_agent,
-        }
-      })
-
-      const code = custodianHw?.verification_code || handwrittenSignatures[0].verification_code
-      const pdfBytes = await generateHandwrittenAgreementPdf({
-        ticket: {
-          id: ticket.id,
-          number: ticket.number,
-          serie: ticket.serie,
-          fraccion: ticket.fraccion,
-          draw_name: ticket.draw_name,
-          draw_date: ticket.draw_date,
-          ticket_price: ticket.ticket_price,
-        },
-        verificationCode: code,
-        photoSha256: photoSha,
-        photoBytes,
-        photoMimeType,
-        signers,
-        events: legalEvents,
-      })
-
-      const pdfBuffer = new Uint8Array(pdfBytes.byteLength)
-      pdfBuffer.set(pdfBytes)
-      const blob = new Blob([pdfBuffer.buffer], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `MisDecimos_AcuerdoPrivado_${ticket.number}_${code}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (err: unknown) {
-      setFeedback({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'No se pudo generar el Documento Privado PDF.',
-      })
-    } finally {
-      setIsDownloadingPdf(false)
-    }
-  }
-
   return (
     <div className="space-y-4">
       {/* Aviso legal destacado */}
@@ -409,7 +326,7 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
         </div>
       )}
 
-      {/* Listado de firmas manuscritas registradas y descarga de PDF */}
+      {/* Listado de firmas manuscritas registradas */}
       {handwrittenSignatures.length > 0 && (
         <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-5 space-y-3 shadow-xs">
           <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
@@ -417,45 +334,43 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
           </h3>
 
           <div className="space-y-2.5">
-            {handwrittenSignatures.map((hw) => (
-              <div
-                key={hw.id}
-                className="p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] flex items-center justify-between gap-3 text-xs"
-              >
-                <div className="min-w-0 space-y-0.5">
-                  <p className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7] truncate">
-                    {hw.full_name} · {hw.nif}
-                  </p>
-                  <p className="text-[11px] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
-                    {hw.signer_role === 'custodian' ? 'Depositario' : 'Partícipe'} · Tel. {hw.phone}
-                  </p>
+            {handwrittenSignatures.map((hw) => {
+              const effective = resolveEffectiveSignerIdentity({
+                signerRole: hw.signer_role,
+                participationId: hw.participation_id,
+                handwrittenFullName: hw.full_name,
+                handwrittenNif: hw.nif,
+                certification,
+                legalEvents,
+              })
+              return (
+                <div
+                  key={hw.id}
+                  className="p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7] truncate">
+                      {effective.fullName} · {effective.nif}
+                    </p>
+                    <p className="text-[11px] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
+                      {hw.signer_role === 'custodian' ? 'Depositario' : 'Partícipe'} · Tel. {hw.phone}
+                    </p>
+                    {effective.verifiedWithCert && (
+                      <p className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#3A5245] dark:text-[#A8CEB9]">
+                        <ShieldCheck className="w-3 h-3 shrink-0" />
+                        <span>Identidad verificada con Certificado Digital</span>
+                      </p>
+                    )}
+                  </div>
+                  <img
+                    src={hw.signature_image_b64}
+                    alt={`Firma de ${effective.fullName}`}
+                    className="h-10 w-24 object-contain rounded-lg bg-white border border-black/10 shrink-0"
+                  />
                 </div>
-                <img
-                  src={hw.signature_image_b64}
-                  alt={`Firma de ${hw.full_name}`}
-                  className="h-10 w-24 object-contain rounded-lg bg-white border border-black/10 shrink-0"
-                />
-              </div>
-            ))}
+              )
+            })}
           </div>
-
-          <button
-            type="button"
-            onClick={handleDownloadPrivatePdf}
-            disabled={isDownloadingPdf}
-            className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-          >
-            {isDownloadingPdf ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileDown className="w-4 h-4 text-[#C5A880]" />
-            )}
-            <span>
-              {isDownloadingPdf
-                ? 'Generando Documento Privado...'
-                : 'Descargar Documento Privado (PDF)'}
-            </span>
-          </button>
         </div>
       )}
 

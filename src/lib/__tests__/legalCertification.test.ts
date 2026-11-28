@@ -28,6 +28,7 @@ import {
 import {
   evaluateHandwrittenAccordionState,
   resolveLockedCertificateIdentity,
+  resolveEffectiveSignerIdentity,
 } from '../handwrittenCustody.ts'
 
 function createTestP12(options?: { expired?: boolean; nifInCnOnly?: boolean }) {
@@ -774,4 +775,188 @@ test('generateLegalCustodyPdf incluye eventos manuscritos en anexo e incrusta fi
   assert.ok(combined.includes('600112233'))
   assert.ok(combined.includes('611223344'))
   assert.ok(rawStr.includes('/Subtype /Image'), 'Debe incrustar el objeto XObject de imagen PNG en el PDF')
+})
+
+test('resolveEffectiveSignerIdentity prioriza Certificado Digital sobre Firma Manuscrita previa en UI y PDF', async () => {
+  const { inflateSync } = await import('node:zlib')
+  const validPng1x1Base64 =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+
+  const legalEvents = [
+    {
+      event_type: 'PARTICIPATION_SIGNED',
+      participation_id: 'part-1',
+      actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      actor_nif: '12345678Z',
+      signature_b64: 'SIG-1',
+      cert_serial: 'SER-1',
+    },
+  ]
+
+  // Partícipe firmó primero manuscrito como "Pepe Manuscrito" / "99999999R" y luego con Certificado Digital
+  const resolved = resolveEffectiveSignerIdentity({
+    signerRole: 'participant',
+    participationId: 'part-1',
+    handwrittenFullName: 'Pepe Manuscrito',
+    handwrittenNif: '99999999R',
+    legalEvents,
+  })
+  assert.equal(resolved.verifiedWithCert, true)
+  assert.equal(resolved.fullName, 'DIEGO ANGEL FERNANDEZ GARCIA')
+  assert.equal(resolved.nif, '12345678Z')
+
+  const pdfBytes = await generateLegalCustodyPdf({
+    ticket: {
+      id: 't-prio',
+      number: '12345',
+      serie: '001',
+      fraccion: '01',
+      draw_name: 'Sorteo de Navidad',
+      draw_date: '2026-12-22',
+      ticket_price: 20,
+    },
+    certification: {
+      verification_code: 'MD-2026-PRIO-0001',
+      custodian_app_name: 'dianrie',
+      custodian_name: 'CARLOS RUIZ MARTIN',
+      custodian_nif: '87654321B',
+      cert_issuer: 'FNMT',
+      cert_serial: 'SER-OWN',
+      cert_method: 'autofirma',
+      payload_sha256: 'a'.repeat(64),
+      photo_sha256: 'b'.repeat(64),
+      signed_at: '2026-11-28T01:00:00.000Z',
+    },
+    participants: [
+      {
+        name: 'dianrie-gmail',
+        appName: 'dianrie-gmail',
+        legalName: resolved.fullName,
+        percentage: 50,
+        amountEuros: 10,
+        status: 'ACEPTADA',
+        signedNif: resolved.nif,
+        certMethod: 'autofirma',
+      },
+    ],
+    events: [],
+    handwrittenSigners: [
+      {
+        role: 'participant',
+        fullName: resolved.fullName,
+        nif: resolved.nif,
+        phone: '600998877',
+        percentage: 50,
+        amountEuros: 10,
+        status: 'ACEPTADA',
+        signaturePngBase64: validPng1x1Base64,
+        signatureSha256: 'c'.repeat(64),
+        signedAt: '2026-11-28T01:05:00.000Z',
+      },
+    ],
+  })
+
+  const rawStr = Buffer.from(pdfBytes).toString('latin1')
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  let streamContent = ''
+  let m: RegExpExecArray | null
+  while ((m = streamRegex.exec(rawStr)) !== null) {
+    const chunk = Buffer.from(m[1], 'latin1')
+    try {
+      streamContent += inflateSync(chunk).toString('latin1') + '\n'
+    } catch {
+      streamContent += chunk.toString('latin1') + '\n'
+    }
+  }
+  const hexStrings = Array.from(streamContent.matchAll(/<([0-9a-fA-F]+)>/g)).map((match) =>
+    Buffer.from(match[1], 'hex').toString('latin1')
+  )
+  const combined = streamContent + '\n' + hexStrings.join('\n')
+
+  assert.ok(combined.includes('Certificado (12345678Z)'))
+  assert.ok(!combined.includes('99999999R'))
+  assert.ok(combined.includes('DIEGO ANGEL FERNANDEZ GARCIA'))
+})
+
+test('generateLegalCustodyPdf genera PDF unificado válido solo con Firma Manuscrita (sin Certificado Digital) y textos en español', async () => {
+  const { inflateSync } = await import('node:zlib')
+  const validPng1x1Base64 =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+
+  const pdfBytes = await generateLegalCustodyPdf({
+    ticket: {
+      id: 't-hw-only',
+      number: '54321',
+      serie: '002',
+      fraccion: '05',
+      draw_name: 'Sorteo del Niño',
+      draw_date: '2027-01-06',
+      ticket_price: 20,
+    },
+    certification: null,
+    verification_code: 'MDF-2026-0001',
+    photo_sha256: 'd'.repeat(64),
+    participants: [
+      {
+        name: 'dianrie',
+        appName: 'dianrie',
+        legalName: 'CARLOS RUIZ MARTIN',
+        percentage: 100,
+        amountEuros: 20,
+        status: 'ACEPTADA',
+        isOwner: true,
+        signedNif: '12345678Z',
+        certMethod: 'handwritten',
+      },
+    ],
+    events: [
+      {
+        created_at: '2026-11-28T02:00:00.000Z',
+        event_type: 'HANDWRITTEN_CUSTODY_SIGNED',
+        actor_name: 'CARLOS RUIZ MARTIN',
+        actor_nif: '12345678Z',
+        share_percentage: 100,
+        payload_sha256: 'e'.repeat(64),
+        metadata: { phone: '600123456' },
+      },
+    ],
+    handwrittenSigners: [
+      {
+        role: 'custodian',
+        fullName: 'CARLOS RUIZ MARTIN',
+        nif: '12345678Z',
+        phone: '600123456',
+        percentage: 100,
+        amountEuros: 20,
+        status: 'ACEPTADA',
+        signaturePngBase64: validPng1x1Base64,
+        signatureSha256: 'f'.repeat(64),
+        signedAt: '2026-11-28T02:00:00.000Z',
+      },
+    ],
+  })
+
+  const parsed = await PDFDocument.load(pdfBytes)
+  assert.ok(parsed.getPageCount() >= 1)
+
+  const rawStr = Buffer.from(pdfBytes).toString('latin1')
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  let streamContent = ''
+  let m: RegExpExecArray | null
+  while ((m = streamRegex.exec(rawStr)) !== null) {
+    const chunk = Buffer.from(m[1], 'latin1')
+    try {
+      streamContent += inflateSync(chunk).toString('latin1') + '\n'
+    } catch {
+      streamContent += chunk.toString('latin1') + '\n'
+    }
+  }
+  const hexStrings = Array.from(streamContent.matchAll(/<([0-9a-fA-F]+)>/g)).map((match) =>
+    Buffer.from(match[1], 'hex').toString('latin1')
+  )
+  const combined = streamContent + '\n' + hexStrings.join('\n')
+
+  assert.ok(combined.includes('Sin certificado digital'))
+  assert.ok(combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
+  assert.ok(!combined.includes('HANDWRITTEN_CUSTODY_SIGNED'))
 })
