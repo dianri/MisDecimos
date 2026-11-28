@@ -413,6 +413,15 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
     }
   }, [ticketId, loadTicketDetails])
 
+  // Sincronizar automáticamente participaciones y datos legales al cambiar a Certificación Legal
+  const prevActiveTabRef = useRef(activeTab)
+  useEffect(() => {
+    if (activeTab === 'certificacion' && prevActiveTabRef.current !== 'certificacion') {
+      loadTicketDetails()
+    }
+    prevActiveTabRef.current = activeTab
+  }, [activeTab, loadTicketDetails])
+
   // Capturar toast de confirmación si se viene de reclamar una participación
   useEffect(() => {
     if (typeof window !== 'undefined' && window.history.state?.claimMessage) {
