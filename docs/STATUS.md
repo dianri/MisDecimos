@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.112` (Producción Estable · Regla de Documentación Funcional en AGENTS.md)  
+**Versión Actual:** `1.0.113` (Producción Estable · Auditoría Integral de Documentación Técnica y Reglas)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.112`)  
+**Rama de Producción:** `main` (Tag `v1.0.113`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -146,3 +146,56 @@
 - [x] v1.0.62: Pantalla principal limpia sin pestañas ni filtros (`TicketsPage.tsx`), traslado de **Décimos archivados** a **Mi Perfil** (`ProfilePage.tsx`, `archivedTickets.ts`) con desplegable `Décimos archivados (X)`, botones **Restaurar** y **Eliminar** (`min-h-[44px]`), toast *"Décimo archivado en tu cuenta. Puedes consultarlo en Mi Perfil."*, insignia `ARCHIVADO` en `TicketDetailPage.tsx` y tests unitarios (`archivedTickets.test.ts` con 140 tests superados al 100%).
 - [x] v1.0.63: Aislamiento de cierre/retroceso del escáner (`useModalBackHandler.ts`, `useAndroidBackNavigation.ts`) con ventana de protección de 300 ms evitando el toast de salida, banner guiado *"Selecciona una participación para compartir"* al navegar desde `Compartir` con participaciones existentes (`selectShareToShare: true` en `TicketDetailPage.tsx`), botón táctil `min-h-[44px]` en `Ver QR / Compartir` y tests unitarios (141 tests superados al 100%).
 - [x] v1.0.64: Integración de la identidad visual **4 MILLS** (bola de madera de bombo en squircle oscuro): recorte `1:1` y generación de `logo-4mills.png`, `pwa-192x192.png`, `pwa-512x512.png`, `pwa-maskable-512x512.png`, `apple-touch-icon.png`, `favicon-32x32.png` y `favicon.ico`, actualización de `vite.config.ts` e `index.html`, e integración en `AppShell.tsx`, `LoginPage.tsx` y `ShareInviteModal.tsx`.
+
+---
+
+### [x] Fase 7 (v1.0.65 a v1.0.113) — Sistema Visual OLED, Certificación Legal, AutoFirma y PDF Unificado
+- [x] v1.0.65: Recuperación del flujo de reinstalación PWA (`main.tsx`, `usePwaInstall.ts`, `usePwaInstallPrompt.ts`, `PwaInstallBanner.tsx`).
+- [x] v1.0.66: Toast flotante de selección de participación en detalle (`TicketDetailPage.tsx`, `cardQuickActions.ts`).
+- [x] v1.0.67: Nuevo sistema visual "Titanio, Oro Cava y Verde Granito" (Claro y Oscuro OLED).
+- [x] v1.0.68: Paleta oscura OLED y eliminación de tonos azules/grises en detalle (`OwnershipBreakdownCard.tsx`, `ownershipSegments.ts`).
+- [x] v1.0.69: Acabado iOS/Apple en rosco y bordes hairline OLED.
+- [x] v1.0.70: Jerarquía visual y acabado champán en tarjetas (`TicketListItemCard.tsx`, `ticketCardHelper.ts`, `PrizesPage.tsx`).
+- [x] v1.0.71: Aro champán en avatar de `Mi Perfil` (`ProfilePage.tsx`).
+- [x] v1.0.72: Simplificación del nombre de la aplicación a `MisDecimos` (`index.html`, `vite.config.ts`, `manifest.webmanifest`).
+- [x] v1.0.73: Swipe izquierdo `Renunciar` / `Solicitar renuncia` y filos finos de `3px` en detalle (`OwnershipBreakdownCard.tsx`, `SwipeableShareCard.tsx`).
+- [x] v1.0.74: Rewrite SPA en Vercel y limpieza de caché sin 404 (`vercel.json`, `VersionBadge.tsx`, `versionPurge.ts`).
+- [x] v1.0.75: Píldora de versión restringida exclusivamente a `Mi Perfil` (`LoginPage.tsx`, `versionPurge.test.ts`).
+- [x] v1.0.76: Rediseño UX/UI del modal «Código de Invitación» (`InviteClaimModal.tsx`).
+- [x] v1.0.77: Ajuste responsive de metadatos en pantallas estrechas (`TicketDetailPage.tsx`, `RealisticTicketCard.tsx`).
+- [x] v1.0.78: Extracción de error real en `supabase.functions.invoke` y blindaje de simulación (`prizeService.ts`, `edgeFunctionError.ts`, `check-prizes`).
+- [x] v1.0.79: Botón manual y paleta oficial en el escáner (`BarcodeScannerModal.tsx`).
+- [x] v1.0.80: Renovación preventiva deduplicada de sesión y reintento automático `401` (`sessionManager.ts`, `edgeFunctionError.ts`).
+- [x] v1.0.81: Renombrado de marca a «Mis Décimos» en cabecera, login y perfil.
+- [x] v1.0.82: Selector exclusivo de año para fecha del sorteo (`TicketFormModal.tsx`, `drawDateSelector.ts`).
+- [x] v1.0.83: Etiqueta `Participación` en slot de `Compartir` y margen inferior en listado (`TicketListItemCard.tsx`, `TicketsPage.tsx`).
+- [x] v1.0.84: Etiqueta `Participación` neutra y filo superior/inferior pastel por propiedad (`TicketListItemCard.tsx`, `ticketCardHelper.ts`).
+- [x] v1.0.85: Rediseño de la pantalla «Premios» e icono de navegación (`PrizesPage.tsx`, `prizesSummary.ts`, `AppShell.tsx`).
+- [x] v1.0.86: Limpieza visual en notificaciones (`AlertsPage.tsx`).
+- [x] v1.0.87: Reversión de bordes pastel superior/inferior en tarjetas (`ticketCardHelper.ts`, `winningTicketCard.test.ts`).
+- [x] v1.0.88: Acción «Marcar cobrado» para el propietario (`TicketListItemCard.tsx`, `TicketsPage.tsx`, `PrizeCheckCard.tsx`).
+- [x] v1.0.89: Ordenamiento por sorteo y número en pantalla principal (`ticketMetrics.ts`).
+- [x] v1.0.90: Apertura automática de «Compartir Participación» y selector de lote con avance automático (`CreateParticipationSheet.tsx`, `ShareInviteModal.tsx`).
+- [x] v1.0.91: Apertura automática garantizada de «Compartir Participación» en todos los flujos y tests de integración UI (`shareBatchIntegration.test.ts`).
+- [x] v1.0.92: Navegación unificada sin `BottomNav`, nueva cabecera y contadores Hero Card Bento en `Premiados` (`AppShell.tsx`, `PrizesHeroCard.tsx`).
+- [x] v1.0.93: Certificación Digital y Documento Legal PDF (`LegalCertificationTab.tsx`, `CertificateSignModal.tsx`, `TicketPhotoCaptureModal.tsx`, `autofirma-relay`) + push en `preview`.
+- [x] v1.0.94: Pestaña «Firma Manuscrita» en detalle del décimo (`HandwrittenSignatureTab.tsx`, `SignaturePadCanvas.tsx`).
+- [x] v1.0.95: Cobertura Base64URL para retorno CMS de AutoFirma (`legalCertification.test.ts`).
+- [x] v1.0.96: Reorganización de «Certificación Legal» y barra limpia de 3 pestañas (`TicketDetailPage.tsx`, `LegalCertificationTab.tsx`).
+- [x] v1.0.97: Decodificación del retorno `<cert_b64>|<cms_b64>` de AutoFirma (`digitalSignature.ts`).
+- [x] v1.0.98: Acordeón desplegable cerrado por defecto para «Firma Manuscrita» (`LegalCertificationTab.tsx`, `HandwrittenSignatureTab.tsx`).
+- [x] v1.0.99: Decodificación de cadenas DER concatenadas de AutoFirma Android y UX móvil (`digitalSignature.ts`, `CertificateSignModal.tsx`).
+- [x] v1.0.100: Contador de `Reparto (N)`, Historial Legal unificado, responsive móvil y blindaje de renuncia en UI y BD (`trg_guard_signed_participation_renounce`).
+- [x] v1.0.101: Aislamiento estricto por `participation_id` en firmas digitales y renuncias (`legalAuditHelper.ts`, `20261128031000_fix_guard_signed_share_renounce_scoping.sql`).
+- [x] v1.0.102: Actualización manual (`RefreshCw`) y sincronización automática al entrar en `Certificación Legal`.
+- [x] v1.0.103: Documento Legal PDF con nombres duales, maquetación segura y registro de `PARTICIPATION_ACCEPTED` (`inviteService.ts`, `legalPdfGenerator.ts`).
+- [x] v1.0.104: Aislamiento de estado en `Firma Manuscrita` (`FIRMADA POR TI` vs `OPCIONAL`), bloqueo de identidad desde Certificado Digital e incrustación PNG en PDF.
+- [x] v1.0.105: Unificación del Documento Legal PDF y prioridad absoluta de identidad del Certificado Digital sobre Firma Manuscrita previa.
+- [x] v1.0.106: Foto del anverso compartida, acordeón `Certificado Digital`, solicitud de firma al propietario, `SELLO DIGITAL` (`FIRMADO`/`SIN FIRMAR`), `SIN RECLAMAR` y trazos PNG inline en el Anexo del PDF.
+- [x] v1.0.107: Eliminación del campo Teléfono móvil en Firma Manuscrita y PDF.
+- [x] v1.0.108: Botón de renuncia unificado en rojo y una sola línea dentro de `Certificado Digital`.
+- [x] v1.0.109: Navegación directa desde `SELLO DIGITAL` / badge del listado a `?tab=certification` y reubicación de las 5 pulsaciones al recuadro `NÚMERO / SERIE / FRACCIÓN`.
+- [x] v1.0.110: Mensajes claros y específicos al bloquear el borrado de un décimo (`getTicketDeletionBlockReason`).
+- [x] v1.0.111: Actualización integral del manual funcional (`docs/SCREENS_GUIDE.md`).
+- [x] v1.0.112: Regla obligatoria de documentación funcional en `AGENTS.md`.
+- [x] v1.0.113: Auditoría y sincronización integral de `docs/BUSINESS_RULES.md`, `docs/ARCHITECTURE.md`, `docs/STATUS.md` y `AGENTS.md`.

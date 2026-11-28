@@ -104,11 +104,10 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   1. **Lotería de Navidad (`NAVIDAD`):** Sorteo celebrado el 22 de diciembre, precio oficial 20,00 € por décimo.
   2. **Sorteo de El Niño (`EL_NINO`):** Sorteo celebrado el 6 de enero, precio oficial 20,00 € por décimo.
   *(Quedan expresamente excluidos los sorteos ordinarios de jueves y sábados para focalizar la experiencia en custodia compartida de sorteos extraordinarios).*
-- Para evitar costes y riesgos de almacenamiento de imágenes pesadas y problemas de privacidad, **no se permite la subida libre de fotos arbitrarias de boletos al storage**.
-- Los décimos se registran mediante:
-  1. **Lectura de Código de Barras GS1-128 / Code-128:** Decodifica número (5 dígitos), serie, fracción y asigna automáticamente el sorteo (`NAVIDAD` o `EL_NINO` según fecha).
-  2. **Entrada Manual Asistida:** En caso de desgaste del código de barras, con selector exclusivo de 2 botones (**Navidad** y **El Niño**).
-- **Renderizado del Boleto Realista:** La interfaz web utiliza el motor vectorial hiperrealista nativo (con orla guilloché, capilla artística con sello digital `MisDecimos`, tipografía matricial y código GS1-128), asegurando renderizado instantáneo y fallback anti-imagen rota sin errores 404.
+- **Captura y Prueba Gráfica en Certificación Legal:**
+  - El alta de décimos en el listado se realiza mediante **Código de Barras GS1-128 / Code-128** o **Entrada Manual Asistida** (sin subida libre de fotos en el alta).
+  - No obstante, dentro de la pestaña **Certificación Legal**, el depositario **sí** puede capturar o adjuntar la **fotografía del anverso del décimo** como prueba gráfica vinculada mediante huella criptográfica `SHA-256` (almacenada en el bucket privado `ticket-certifications` y compartida entre **Certificado Digital** y **Firma Manuscrita**, ocultando los botones de captura en cuanto ya existe una imagen asociada).
+- **Renderizado del Boleto Realista y Sello Digital (`<RealisticTicketCard />`):** La interfaz web utiliza el motor vectorial hiperrealista nativo (con orla guilloché, capilla artística con **`SELLO DIGITAL`** interactivo —`SIN FIRMAR` o `FIRMADO` como acceso directo a `Certificación Legal`—, tipografía matricial y código GS1-128), asegurando renderizado instantáneo y fallback anti-imagen rota sin errores 404. El disparador oculto de 5 pulsaciones del modo simulación de premios (solo propietario) reside en el recuadro **`NÚMERO / SERIE / FRACCIÓN`**.
 
 ---
 
@@ -136,6 +135,23 @@ Un décimo (`public.tickets`) atraviesa los siguientes estados:
   2. **Queda excluido del total métrico "TOTAL PREMIOS"** (`totalPremiosGanados`) del usuario.
   3. **Desaparece de la pestaña "Participaciones"** del usuario y de la pestaña **"Archivados"** del usuario.
   4. **Trazabilidad intacta:** Permanece inmutable en el registro de auditoría (`audit_events`) y visible en el panel del custodio propietario del décimo con 0,00 € y mención expresa de renuncia formal.
+
+---
+
+## 9. Certificación Legal, Custodia y Firma de Participaciones
+
+1. **Dos Niveles de Garantía Legal:**
+   - **Certificado Digital (Validez jurídica plena):** Permite al depositario certificar la custodia (`CUSTODY_CERTIFIED`) y a los partícipes firmar su participación (`PARTICIPATION_SIGNED`) mediante **AutoFirma** (escritorio y Android/iOS a través del relay HTTPS `autofirma-relay`) o mediante certificado **`.p12 / .pfx`** procesado en memoria en cliente (`node-forge`), generando un código de verificación único (`MD-AAAA-XXXX-XXXX`).
+   - **Firma Manuscrita (Acuerdo privado simple):** Permite al depositario (`HANDWRITTEN_CUSTODY_SIGNED`) y a los partícipes (`HANDWRITTEN_PARTICIPATION_SIGNED`) suscribir un acuerdo privado mediante lienzo táctil en pantalla (`SignaturePadCanvas`) con nombre completo y DNI/NIE validado (sin campo de teléfono).
+2. **Precedencia Absoluta de Identidad del Certificado Digital:**
+   - Si el depositario o un partícipe en su `participation_id` activo dispone de firma con **Certificado Digital**, su identidad verificada (`Nombre completo` y `NIF/DNI/NIE` extraídos del certificado X.509) prevalece automáticamente sobre cualquier dato previo de Firma Manuscrita, bloqueando (`readOnly`/`disabled`) los campos de identidad en el formulario manuscrito, en la UI de firmas registradas y en el Documento Legal PDF.
+3. **Aislamiento Estricto por `participation_id` Activo:**
+   - La comprobación de firma digital o manuscrita de un partícipe se evalúa exclusivamente por el `id` de su participación vigente (`ACEPTADA` / `PENDIENTE`), sin heredar jamás firmas de participaciones históricas ya renunciadas o canceladas aunque pertenezcan al mismo usuario y décimo.
+4. **Blindaje de Renuncias de Igual Nivel:**
+   - Toda participación firmada con **Certificado Digital** (`PARTICIPATION_SIGNED`) exige obligatoriamente firma electrónica de renuncia (`PARTICIPATION_RENOUNCED`) desde **Certificación Legal**, **Reparto**, **Notificaciones** y a nivel de base de datos mediante el trigger `BEFORE UPDATE` (`trg_guard_signed_participation_renounce`) sobre `public.ownership_shares`.
+5. **Documento Legal PDF Unificado (`generateLegalCustodyPdf`):**
+   - Se exporta desde un único botón **`Descargar Documento Legal (PDF)`**, válido tanto si existe Certificado Digital como si únicamente existen Firmas Manuscritas.
+   - Incluye: **Sección 1** (datos del décimo, fotografía del anverso y `SHA-256`), **Sección 2** (certificación digital del depositario o aviso de acuerdo privado manuscrito), **Sección 3** (cuadro con participaciones `ACTIVA`, invitaciones `SIN RECLAMAR` y `RENUNCIADA` a 0%, priorizando la identidad del certificado digital) y **Sección 4** (anexo cronológico inmutable en español con `PARTICIPATION_ACCEPTED`, firmas y renuncias, huellas `SHA-256` e imágenes PNG de las firmas manuscritas incrustadas inline en orden temporal).
 
 ---
 

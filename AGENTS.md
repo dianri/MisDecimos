@@ -17,10 +17,13 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
    - `feature/<nombre-descriptivo-kebab-case>` (ej. `feature/core-foundation`, `feature/ocr-scanner`, `feature/share-participations`)
    - `fix/<nombre-del-bug>`
 3. **Validación previa a merge:** Antes de integrar en `develop`, es obligatorio ejecutar y validar:
+   - `npm test` (tests unitarios puros con `node --test --experimental-strip-types`, sin `jsdom`) con 0 fallos.
    - `npm run typecheck` (o `tsc --noEmit`) con 0 errores.
    - `npm run build` exitoso (incluyendo generación de Service Worker/PWA).
    - Migraciones SQL aplicadas y verificadas en Supabase (`xmdghpyfrblmtjtevtru`).
-4. **Integración y limpieza:** Fusionar `feature/<nombre>` en `develop` mediante `--no-ff`, actualizar documentación y eliminar la rama temporal si ya no es requerida.
+4. **Integración y cierre estándar de release:**
+   - Fusionar la rama temporal en `develop` mediante `--no-ff` y eliminar la rama temporal.
+   - Fusionar `develop` en `main` mediante `--no-ff`, crear el tag anotado `vX.Y.Z` y ejecutar `git push origin develop main --tags`, dejando activa la rama `develop`.
 5. **Informe final obligatorio:** Al cerrar cada tarea, emitir en la respuesta un **Informe Técnico** detallando: rama creada/fusionada, archivos modificados/creados, cambios en BD/Edge Functions, pruebas realizadas y estado de la documentación.
 
 ## 3. Control de Versiones y Sistema Anti-Caché
@@ -46,9 +49,9 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
 5. **Cierre de tarea:**
    - Es obligatorio actualizar `CHANGELOG.md`, `README.md`, `docs/STATUS.md` y comprobar si `AGENTS.md`, `docs/ARCHITECTURE.md` o `docs/SCREENS_GUIDE.md` requieren actualización antes de integrar la rama en `develop`.
 
-### Documentación funcional (`docs/SCREENS_GUIDE.md`)
+### Documentación funcional y técnica (`docs/`)
 - En ramas `fix/*`: no es necesario modificar `docs/SCREENS_GUIDE.md` salvo que cambie el comportamiento visible documentado.
-- En ramas `feat/*` que añadan o modifiquen pantallas, pestañas, modales, gestos o flujos de usuario: es obligatorio actualizar la sección correspondiente de `docs/SCREENS_GUIDE.md` antes de fusionar en `develop`.
+- En ramas `feat/*` que añadan o modifiquen pantallas, pestañas, modales, gestos o flujos de usuario, o que alteren esquema SQL o reglas de negocio: es obligatorio actualizar las secciones correspondientes de `docs/SCREENS_GUIDE.md`, `docs/ARCHITECTURE.md` y `docs/BUSINESS_RULES.md` antes de fusionar en `develop`.
 
 ## Regla Obligatoria de Base de Datos y Backups (Supabase Cloud)
 Estas normas son de estricto cumplimiento para cualquier tarea futura que implique cambios en la base de datos:
