@@ -542,22 +542,15 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
       }
 
       ensureSpace(inlinePngB64 ? 105 : 48)
-      const meta =
-        ev.metadata && typeof ev.metadata === 'object'
-          ? (ev.metadata as Record<string, unknown>)
-          : {}
-      const phoneStr =
-        typeof meta.phone === 'string' && meta.phone.trim() ? ` - Tel: ${meta.phone.trim()}` : ''
       const pctNum = ev.share_percentage != null ? ev.share_percentage : null
       const pctStr = pctNum != null ? ` - ${pctNum}%` : ''
       const nifPart = ev.actor_nif ? `NIF: ${ev.actor_nif}` : ''
-      const identityDetails = [nifPart, phoneStr.replace(/^ - /, '')].filter(Boolean).join(' - ')
 
       let actorDetailLine = `Actor: ${ev.actor_name}${ev.actor_nif ? ` (${ev.actor_nif})` : ''}${pctStr}`
       if (ev.event_type === 'HANDWRITTEN_CUSTODY_SIGNED') {
-        actorDetailLine = `Custodia firmada de forma manuscrita por ${ev.actor_name}${identityDetails ? ` (${identityDetails})` : ''}`
+        actorDetailLine = `Custodia firmada de forma manuscrita por ${ev.actor_name}${nifPart ? ` (${nifPart})` : ''}`
       } else if (ev.event_type === 'HANDWRITTEN_PARTICIPATION_SIGNED') {
-        actorDetailLine = `Participacion (${pctNum ?? 0}%) firmada de forma manuscrita por ${ev.actor_name}${identityDetails ? ` (${identityDetails})` : ''}`
+        actorDetailLine = `Participacion (${pctNum ?? 0}%) firmada de forma manuscrita por ${ev.actor_name}${nifPart ? ` (${nifPart})` : ''}`
       } else if (ev.event_type === 'HANDWRITTEN_PARTICIPATION_RENOUNCED') {
         actorDetailLine = `Renuncia de participacion manuscrita por ${ev.actor_name}${ev.actor_nif ? ` (NIF: ${ev.actor_nif})` : ''}`
       }
@@ -627,7 +620,7 @@ export interface HandwrittenSignaturePdfSigner {
   role: 'custodian' | 'participant'
   fullName: string
   nif: string
-  phone: string
+  phone?: string | null
   percentage: number
   amountEuros: number
   status: string
@@ -847,7 +840,7 @@ export async function generateHandwrittenAgreementPdf(input: HandwrittenPdfInput
       dark
     )
     drawText(
-      `Tel: ${signer.phone}   |   Cuota: ${signer.percentage}% (${signer.amountEuros.toFixed(2)} €)   |   Estado: ${signer.status}`,
+      `Cuota: ${signer.percentage}% (${signer.amountEuros.toFixed(2)} €)   |   Estado: ${signer.status}`,
       margin + 10,
       y - 28,
       8.3,
