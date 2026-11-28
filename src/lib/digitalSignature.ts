@@ -268,17 +268,35 @@ export function buildAutoFirmaSignUrl(params: {
   return `afirma://sign?${query.toString()}`
 }
 
+function isCaCertificate(cert: forge.pki.Certificate): boolean {
+  try {
+    const ext = cert.getExtension('basicConstraints') as { cA?: boolean } | null
+    return ext?.cA === true
+  } catch {
+    return false
+  }
+}
+
+function toHexPreview(derBytes: string, maxBytes = 12): string {
+  const limit = Math.min(derBytes.length, maxBytes)
+  const parts: string[] = []
+  for (let i = 0; i < limit; i += 1) {
+    parts.push(derBytes.charCodeAt(i).toString(16).padStart(2, '0'))
+  }
+  return parts.join(' ')
+}
+
 /**
- * Decodifica la respuesta de AutoFirma (<cert_b64>|<cms_b64> o paquete CMS/X.509 único)
- * y extrae el certificado X.509 del firmante junto a la firma en Base64 estándar.
+ * Decodifica la respuesta de AutoFirma (<cert_b64>|<cms_b64> o paquete CMS/X.509 único,
+ * incluyendo cadenas DER concatenadas de Android KeyChain) y extrae el certificado X.509 del titular.
  */
 export async function parseAutoFirmaSignature(
   rawDat: string,
   canonicalPayload: string,
   now: Date = new Date()
 ): Promise<DigitalSignatureResult> {
-  const segments = String(rawDat || '')
-    .trim()
+  const normalizedRaw = String(rawDat || '').trim().replace(/%7C/gi, '|')
+  const segments = normalizedRaw
     .split('|')
     .map((s) => s.trim())
     .filter(Boolean)
@@ -288,66 +306,75 @@ export async function parseAutoFirmaSignature(
   }
 
   let signerCert: forge.pki.Certificate | undefined
+  let fallbackCert: forge.pki.Certificate | undefined
   let signatureB64 = ''
+  const diagnostics: string[] = []
 
-  if (segments.length >= 2) {
-    const certB64 = fromBase64UrlSafeToStandard(segments[0])
+  for (const segment of segments) {
+    const stdB64 = fromBase64UrlSafeToStandard(segment)
+    let derBytes = ''
     try {
-      const certDer = forge.util.decode64(certB64)
-      const certAsn1 = forge.asn1.fromDer(certDer)
-      signerCert = forge.pki.certificateFromAsn1(certAsn1)
+      derBytes = forge.util.decode64(stdB64)
     } catch (err: unknown) {
       const detail = err instanceof Error ? err.message : String(err)
-      throw new Error(`No se pudo decodificar el certificado X.509 devuelto por AutoFirma (${detail}).`)
+      diagnostics.push(`len=${segment.length} base64_err=${detail}`)
+      continue
     }
 
-    signatureB64 = fromBase64UrlSafeToStandard(segments[1])
-    try {
-      const sigDer = forge.util.decode64(signatureB64)
-      forge.asn1.fromDer(sigDer)
-    } catch (err: unknown) {
-      const detail = err instanceof Error ? err.message : String(err)
-      throw new Error(`No se pudo validar la estructura ASN.1 de la firma CMS (${detail}).`)
-    }
-  } else {
-    signatureB64 = fromBase64UrlSafeToStandard(segments[0])
-    let derBytes: string
-    try {
-      derBytes = forge.util.decode64(signatureB64)
-    } catch (err: unknown) {
-      const detail = err instanceof Error ? err.message : String(err)
-      throw new Error(`La firma recibida desde AutoFirma no tiene un formato Base64 válido (${detail}).`)
-    }
+    diagnostics.push(`len=${derBytes.length} hex=${toHexPreview(derBytes)}`)
 
-    let asn1: forge.asn1.Asn1
+    // 1. Intentar parsear como certificado X.509 (modo no estricto para tolerar cadenas DER concatenadas en Android)
+    let parsedAsCert = false
     try {
-      asn1 = forge.asn1.fromDer(derBytes)
-    } catch (err: unknown) {
-      const detail = err instanceof Error ? err.message : String(err)
-      throw new Error(`No se pudo parsear el bloque ASN.1 devuelto por AutoFirma (${detail}).`)
-    }
-
-    try {
-      const p7 = forge.pkcs7.messageFromAsn1(asn1) as forge.pkcs7.PkcsSignedData
-      const certs = (p7 as unknown as { certificates?: forge.pki.Certificate[] }).certificates || []
-      signerCert = certs[0]
-    } catch {
-      // Intentar parseo directo como certificado X.509 si no es contenedor PKCS#7
-    }
-
-    if (!signerCert) {
-      try {
-        signerCert = forge.pki.certificateFromAsn1(asn1)
-      } catch (err: unknown) {
-        const detail = err instanceof Error ? err.message : String(err)
-        throw new Error(
-          `No se pudo decodificar el paquete CMS/PKCS#7 ni extraer el certificado X.509 (${detail}).`
-        )
+      const certAsn1 = forge.asn1.fromDer(derBytes, false)
+      const cert = forge.pki.certificateFromAsn1(certAsn1)
+      parsedAsCert = true
+      if (!isCaCertificate(cert)) {
+        if (!signerCert) signerCert = cert
+      } else if (!fallbackCert) {
+        fallbackCert = cert
       }
+    } catch {
+      // No es un certificado X.509 en cabeza
+    }
+
+    // 2. Intentar parsear como paquete PKCS#7 / CMS (modo no estricto)
+    let parsedAsPkcs7 = false
+    try {
+      const cmsAsn1 = forge.asn1.fromDer(derBytes, false)
+      const p7 = forge.pkcs7.messageFromAsn1(cmsAsn1) as forge.pkcs7.PkcsSignedData
+      parsedAsPkcs7 = true
+      signatureB64 = stdB64
+      const certs = (p7 as unknown as { certificates?: forge.pki.Certificate[] }).certificates || []
+      for (const c of certs) {
+        if (!isCaCertificate(c)) {
+          if (!signerCert) signerCert = c
+        } else if (!fallbackCert) {
+          fallbackCert = c
+        }
+      }
+    } catch {
+      // No es un paquete PKCS#7 completo o es una firma raw/detached
+    }
+
+    // Si es el segmento de firma (no certificado) y aún no hay signatureB64, conservarlo
+    if (!parsedAsCert && (parsedAsPkcs7 || !signatureB64)) {
+      signatureB64 = stdB64
     }
   }
 
-  const identity = extractIdentityFromX509Cert(signerCert, now)
+  const chosenCert = signerCert || fallbackCert
+  if (!chosenCert) {
+    throw new Error(
+      `No se pudo extraer ningún certificado X.509 válido de AutoFirma (${diagnostics.join('; ')}).`
+    )
+  }
+
+  if (!signatureB64) {
+    signatureB64 = fromBase64UrlSafeToStandard(segments[segments.length - 1])
+  }
+
+  const identity = extractIdentityFromX509Cert(chosenCert, now)
   const payloadSha256 = await computeSha256Hex(canonicalPayload)
 
   return {
