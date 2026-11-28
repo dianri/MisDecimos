@@ -5,6 +5,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.100] - 2026-11-28
+
+### Fixed
+- **Contador de `Reparto (N)`, Historial Legal, Responsive Móvil y Blindaje de Renuncia (`TicketDetailPage.tsx`, `LegalCertificationTab.tsx`, `TicketAuditTimeline.tsx`, `OwnershipBreakdownCard.tsx`, `TicketsPage.tsx`, `AlertsPage.tsx`):**
+  - Corregido el contador `Reparto (N)` mediante `countActiveRepartoItems()` para contar únicamente participaciones e invitaciones vigentes (`ACEPTADA` / `PENDIENTE`), excluyendo canceladas, renunciadas y rechazadas.
+  - Integrados los eventos de `ticket_legal_events` (certificado digital, firma manuscrita y renuncias) en la pestaña **`Historial`** (`mergeAuditAndLegalEvents`) con iconos, método y código de verificación.
+  - Corregido el diseño móvil (`< 400px`) apilando la cabecera de `Certificado Digital` en vertical (`flex-col sm:flex-row`) y ajustando las etiquetas de las 3 pestañas (`Certificación` en `< sm`) sin truncamientos.
+  - Blindada la renuncia en `Reparto`, swipe principal, `Notificaciones` y base de datos (`trg_guard_signed_participation_renounce`) exigiendo firma electrónica cuando la participación fue firmada con certificado digital.
+
 ## [1.0.99] - 2026-11-28
 
 ### Fixed

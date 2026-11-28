@@ -275,7 +275,9 @@ export const AppShell: React.FC = () => {
         {activeTab === 'alertas' && (
           <AlertsPage
             onBack={goBack}
-            onSelectTicket={(ticketId) => navigateTo({ tab: 'billetes', ticketId })}
+            onSelectTicket={(ticketId, options) =>
+              navigateTo({ tab: 'billetes', ticketId, state: options?.state })
+            }
           />
         )}
         {activeTab === 'auditoria' && (
