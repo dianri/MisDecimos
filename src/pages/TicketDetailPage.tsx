@@ -20,6 +20,10 @@ import {
   type TicketLegalEventRow,
 } from '../components/tickets/LegalCertificationTab'
 import {
+  HandwrittenSignatureTab,
+  type TicketHandwrittenSignatureRow,
+} from '../components/tickets/HandwrittenSignatureTab'
+import {
   simulateTicketPrize,
   resetTicketPrizeSimulation,
 } from '../services/prizeService'
@@ -35,6 +39,7 @@ import {
   Users,
   Shield,
   ShieldCheck,
+  PenLine,
   Loader2,
   Calendar,
   Barcode,
@@ -69,10 +74,11 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
   const [certification, setCertification] = useState<TicketCertificationRow | null>(null)
+  const [handwrittenSignatures, setHandwrittenSignatures] = useState<TicketHandwrittenSignatureRow[]>([])
   const [legalEvents, setLegalEvents] = useState<TicketLegalEventRow[]>([])
   const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'propiedad' | 'certificacion' | 'historial'>('propiedad')
+  const [activeTab, setActiveTab] = useState<'propiedad' | 'certificacion' | 'manuscrita' | 'historial'>('propiedad')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
@@ -322,13 +328,18 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
       setIsArchived(!!hideData || ticketData.status === 'ARCHIVADO')
 
-      // 7. Cargar certificación digital y eventos legales inmutables
-      const [{ data: certData }, { data: legalData }] = await Promise.all([
+      // 7. Cargar certificación digital, firmas manuscritas y eventos legales inmutables
+      const [{ data: certData }, { data: hwData }, { data: legalData }] = await Promise.all([
         supabase
           .from('ticket_certifications')
           .select('*')
           .eq('ticket_id', ticketId)
           .maybeSingle(),
+        supabase
+          .from('ticket_handwritten_signatures')
+          .select('*')
+          .eq('ticket_id', ticketId)
+          .order('signed_at', { ascending: true }),
         supabase
           .from('ticket_legal_events')
           .select('*')
@@ -337,6 +348,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       ])
 
       setCertification(certData || null)
+      setHandwrittenSignatures(hwData || [])
       setLegalEvents(legalData || [])
     } catch (err: unknown) {
       console.error('Error al cargar detalle del décimo:', err)
@@ -579,20 +591,20 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       )}
 
-      {/* 2. Pestañas de PROPIEDAD, CERTIFICACIÓN LEGAL e HISTORIAL */}
+      {/* 2. Pestañas de PROPIEDAD, CERTIFICACIÓN LEGAL, FIRMA MANUSCRITA e HISTORIAL */}
       <div className="space-y-2.5 sm:space-y-4">
-        <div className="grid grid-cols-3 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
+        <div className="flex items-center overflow-x-auto border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
           <button
             type="button"
             onClick={() => setActiveTab('propiedad')}
-            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex-1 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 px-3 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'propiedad'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <Users className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">
+            <span>
               Reparto ({shares.length + pendingInvites.length})
             </span>
           </button>
@@ -600,14 +612,14 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('certificacion')}
-            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex-1 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 px-3 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'certificacion'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Certificación Legal</span>
+            <span>Certificación Legal</span>
             {certification && (
               <span
                 aria-label="Décimo certificado"
@@ -618,15 +630,34 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
 
           <button
             type="button"
+            onClick={() => setActiveTab('manuscrita')}
+            className={`min-h-[44px] flex-1 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 px-3 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+              activeTab === 'manuscrita'
+                ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
+                : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
+            }`}
+          >
+            <PenLine className="h-3.5 w-3.5 shrink-0" />
+            <span>Firma Manuscrita</span>
+            {handwrittenSignatures.length > 0 && (
+              <span
+                aria-label="Firma manuscrita registrada"
+                className="w-2 h-2 rounded-full bg-[#C5A880] shrink-0"
+              />
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('historial')}
-            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex-1 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 px-3 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'historial'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
             }`}
           >
             <Shield className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Historial ({auditEvents.length})</span>
+            <span>Historial ({auditEvents.length})</span>
           </button>
         </div>
 
@@ -655,6 +686,18 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
             isOwner={isOwner}
             userShare={userShare}
             certification={certification}
+            legalEvents={legalEvents}
+            onRefresh={loadTicketDetails}
+            onRenounced={handleShareRenounced}
+          />
+        ) : activeTab === 'manuscrita' ? (
+          <HandwrittenSignatureTab
+            ticket={ticket}
+            shares={shares}
+            isOwner={isOwner}
+            userShare={userShare}
+            certification={certification}
+            handwrittenSignatures={handwrittenSignatures}
             legalEvents={legalEvents}
             onRefresh={loadTicketDetails}
             onRenounced={handleShareRenounced}

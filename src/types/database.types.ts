@@ -412,6 +412,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_handwritten_signatures: {
+        Row: {
+          full_name: string
+          id: string
+          nif: string
+          participation_id: string | null
+          phone: string
+          photo_path: string | null
+          photo_sha256: string | null
+          signature_image_b64: string
+          signature_sha256: string
+          signed_at: string
+          signer_role: string
+          signer_user_id: string
+          ticket_id: string
+          user_agent: string | null
+          verification_code: string
+        }
+        Insert: {
+          full_name: string
+          id?: string
+          nif: string
+          participation_id?: string | null
+          phone: string
+          photo_path?: string | null
+          photo_sha256?: string | null
+          signature_image_b64: string
+          signature_sha256: string
+          signed_at?: string
+          signer_role: string
+          signer_user_id: string
+          ticket_id: string
+          user_agent?: string | null
+          verification_code: string
+        }
+        Update: {
+          full_name?: string
+          id?: string
+          nif?: string
+          participation_id?: string | null
+          phone?: string
+          photo_path?: string | null
+          photo_sha256?: string | null
+          signature_image_b64?: string
+          signature_sha256?: string
+          signed_at?: string
+          signer_role?: string
+          signer_user_id?: string
+          ticket_id?: string
+          user_agent?: string | null
+          verification_code?: string
+        }
+        Relationships: []
+      }
       ticket_legal_events: {
         Row: {
           actor_name: string
