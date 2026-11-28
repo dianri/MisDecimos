@@ -39,7 +39,6 @@ export const PushPermissionModal: React.FC<PushPermissionModalProps> = ({
         <button
           type="button"
           onClick={onDismiss}
-          disabled={isActivating}
           className="absolute top-4 right-4 p-1.5 rounded-full text-[#1D1D1F]/50 dark:text-[#F5F5F7]/50 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition cursor-pointer"
           aria-label="Cerrar"
         >
@@ -103,7 +102,6 @@ export const PushPermissionModal: React.FC<PushPermissionModalProps> = ({
           <button
             type="button"
             onClick={onDismiss}
-            disabled={isActivating}
             className="w-full py-2 text-xs font-semibold text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] transition active:scale-98 cursor-pointer"
           >
             Ahora no

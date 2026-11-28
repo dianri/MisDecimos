@@ -14,6 +14,9 @@ export const getDismissalsKey = (userId: string) =>
 export const getSessionKey = (userId: string) =>
   `misdecimos_push_prompt_asked_session_${userId}`
 
+export const getRespondedKey = (userId: string) =>
+  `misdecimos_push_prompt_responded_${userId}`
+
 export function getPushPromptDismissals(userId: string): number {
   if (typeof window === 'undefined') return 0
   const raw = localStorage.getItem(getDismissalsKey(userId))
@@ -68,8 +71,10 @@ export function usePushPermissionPrompt({
     const permission = getNotificationPermissionState()
     if (permission === 'denied') return
 
-    // Si ya está activo en navegador y en perfil, no preguntar
-    if (permission === 'granted' && profile?.push_enabled) return
+    // Si ya está activo en navegador y en perfil, o el usuario ya respondió con permiso concedido, no preguntar
+    if (permission === 'granted' && (profile?.push_enabled || localStorage.getItem(getRespondedKey(userId)) === 'true')) {
+      return
+    }
 
     // Comprobar si ya se preguntó en esta sesión
     const sessionAsked = sessionStorage.getItem(getSessionKey(userId))
@@ -126,18 +131,24 @@ export function usePushPermissionPrompt({
     }, 5000)
   }, [userId])
 
-  // Manejo de activación
+  // Manejo de activación con cierre garantizado (try / catch / finally)
   const handleActivate = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      setIsOpen(false)
+      return
+    }
 
     setIsActivating(true)
     try {
       const success = await subscribeUserToPush(userId)
-      if (success) {
-        resetPushPromptDismissals(userId)
+      const permission = getNotificationPermissionState()
+
+      if (permission === 'granted') {
+        localStorage.setItem(getRespondedKey(userId), 'true')
         sessionStorage.setItem(getSessionKey(userId), 'true')
+        resetPushPromptDismissals(userId)
         setIsOpen(false)
-        if (refreshProfile) {
+        if (success && refreshProfile) {
           await refreshProfile()
         }
       } else {
@@ -145,10 +156,17 @@ export function usePushPermissionPrompt({
         handleDismiss()
       }
     } catch (err) {
-      console.error('Error al activar push desde modal:', err)
-      handleDismiss()
+      console.warn('Error o timeout al activar push desde modal:', err)
+      if (getNotificationPermissionState() === 'granted') {
+        localStorage.setItem(getRespondedKey(userId), 'true')
+        sessionStorage.setItem(getSessionKey(userId), 'true')
+        setIsOpen(false)
+      } else {
+        handleDismiss()
+      }
     } finally {
       setIsActivating(false)
+      setIsOpen(false)
     }
   }, [userId, refreshProfile, handleDismiss])
 

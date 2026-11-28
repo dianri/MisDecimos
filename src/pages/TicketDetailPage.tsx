@@ -15,6 +15,11 @@ import {
 } from '../components/tickets/TicketAuditTimeline'
 import { PrizeCheckCard } from '../components/tickets/PrizeCheckCard'
 import {
+  LegalCertificationTab,
+  type TicketCertificationRow,
+  type TicketLegalEventRow,
+} from '../components/tickets/LegalCertificationTab'
+import {
   simulateTicketPrize,
   resetTicketPrizeSimulation,
 } from '../services/prizeService'
@@ -29,6 +34,7 @@ import {
   Lock,
   Users,
   Shield,
+  ShieldCheck,
   Loader2,
   Calendar,
   Barcode,
@@ -62,9 +68,11 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [shares, setShares] = useState<OwnershipShare[]>([])
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([])
+  const [certification, setCertification] = useState<TicketCertificationRow | null>(null)
+  const [legalEvents, setLegalEvents] = useState<TicketLegalEventRow[]>([])
   const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'propiedad' | 'historial'>('propiedad')
+  const [activeTab, setActiveTab] = useState<'propiedad' | 'certificacion' | 'historial'>('propiedad')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
@@ -313,6 +321,23 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         .maybeSingle()
 
       setIsArchived(!!hideData || ticketData.status === 'ARCHIVADO')
+
+      // 7. Cargar certificación digital y eventos legales inmutables
+      const [{ data: certData }, { data: legalData }] = await Promise.all([
+        supabase
+          .from('ticket_certifications')
+          .select('*')
+          .eq('ticket_id', ticketId)
+          .maybeSingle(),
+        supabase
+          .from('ticket_legal_events')
+          .select('*')
+          .eq('ticket_id', ticketId)
+          .order('created_at', { ascending: true }),
+      ])
+
+      setCertification(certData || null)
+      setLegalEvents(legalData || [])
     } catch (err: unknown) {
       console.error('Error al cargar detalle del décimo:', err)
       setStatusMsg({
@@ -554,13 +579,13 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
         </div>
       )}
 
-      {/* 2. Pestañas de PROPIEDAD e HISTORIAL */}
+      {/* 2. Pestañas de PROPIEDAD, CERTIFICACIÓN LEGAL e HISTORIAL */}
       <div className="space-y-2.5 sm:space-y-4">
-        <div className="grid grid-cols-2 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
+        <div className="grid grid-cols-3 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
           <button
             type="button"
             onClick={() => setActiveTab('propiedad')}
-            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'propiedad'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
@@ -568,14 +593,33 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           >
             <Users className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">
-              Propiedad y Reparto ({shares.length + pendingInvites.length})
+              Reparto ({shares.length + pendingInvites.length})
             </span>
           </button>
 
           <button
             type="button"
+            onClick={() => setActiveTab('certificacion')}
+            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
+              activeTab === 'certificacion'
+                ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
+                : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Certificación Legal</span>
+            {certification && (
+              <span
+                aria-label="Décimo certificado"
+                className="w-2 h-2 rounded-full bg-[#3A5245] dark:bg-[#96BFA9] shrink-0"
+              />
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('historial')}
-            className={`min-h-[44px] flex items-center justify-center gap-1.5 px-2 text-xs font-bold border-b-2 transition cursor-pointer ${
+            className={`min-h-[44px] flex items-center justify-center gap-1 px-1.5 text-[11px] sm:text-xs font-bold border-b-2 transition cursor-pointer ${
               activeTab === 'historial'
                 ? 'border-[#C5A880] text-[#1D1D1F] dark:text-[#F5F5F7]'
                 : 'border-transparent text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7]'
@@ -604,6 +648,17 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
               onOpenShareModal={(invites) => setShareModalInvitations(invites)}
             />
           </div>
+        ) : activeTab === 'certificacion' ? (
+          <LegalCertificationTab
+            ticket={ticket}
+            shares={shares}
+            isOwner={isOwner}
+            userShare={userShare}
+            certification={certification}
+            legalEvents={legalEvents}
+            onRefresh={loadTicketDetails}
+            onRenounced={handleShareRenounced}
+          />
         ) : (
           <TicketAuditTimeline
             events={auditEvents}
