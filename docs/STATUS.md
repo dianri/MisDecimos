@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.111` (Producción Estable · Documentación Funcional de Certificación Legal Actualizada)  
+**Versión Actual:** `1.0.112` (Producción Estable · Regla de Documentación Funcional en AGENTS.md)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.111`)  
+**Rama de Producción:** `main` (Tag `v1.0.112`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
