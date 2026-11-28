@@ -32,6 +32,7 @@ import {
   UserCheck,
   FileSignature,
   PenLine,
+  ChevronDown,
   LogOut,
 } from 'lucide-react'
 
@@ -78,6 +79,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   >(null)
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isHandwrittenOpen, setIsHandwrittenOpen] = useState(false)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
@@ -757,33 +759,61 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         )}
       </div>
 
-      {/* SECCIÓN 2 — Firma Manuscrita (Acuerdo privado en pantalla) */}
-      <div className="pt-2 space-y-3">
-        <div className="flex items-center gap-2.5 px-1">
-          <span className="w-8 h-8 rounded-xl bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center shrink-0">
-            <PenLine className="w-4 h-4" />
-          </span>
-          <div>
-            <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-              Firma Manuscrita
-            </h3>
-            <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-              Acuerdo privado con firma táctil en pantalla
-            </p>
+      {/* SECCIÓN 2 — Firma Manuscrita (Acordeón cerrado por defecto) */}
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-xs overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setIsHandwrittenOpen((prev) => !prev)}
+          aria-expanded={isHandwrittenOpen}
+          className="w-full p-5 flex items-center justify-between gap-3 text-left hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-9 h-9 rounded-xl bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center shrink-0">
+              <PenLine className="w-4 h-4" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                Firma Manuscrita
+              </h3>
+              <p className="text-[11px] text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 truncate">
+                Acuerdo privado con firma táctil en pantalla
+              </p>
+            </div>
           </div>
-        </div>
 
-        <HandwrittenSignatureTab
-          ticket={ticket}
-          shares={shares}
-          isOwner={isOwner}
-          userShare={userShare}
-          certification={certification}
-          handwrittenSignatures={handwrittenSignatures}
-          legalEvents={legalEvents}
-          onRefresh={onRefresh}
-          onRenounced={onRenounced}
-        />
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                handwrittenSignatures.length > 0
+                  ? 'bg-[#3A5245] text-white'
+                  : 'bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65'
+              }`}
+            >
+              {handwrittenSignatures.length > 0 ? 'Firmada' : 'Opcional'}
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-[#1D1D1F]/55 dark:text-[#F5F5F7]/55 transition-transform duration-200 ${
+                isHandwrittenOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </div>
+        </button>
+
+        {isHandwrittenOpen && (
+          <div className="px-5 pb-5 pt-1 border-t border-black/[0.06] dark:border-white/[0.08]">
+            <HandwrittenSignatureTab
+              ticket={ticket}
+              shares={shares}
+              isOwner={isOwner}
+              userShare={userShare}
+              certification={certification}
+              handwrittenSignatures={handwrittenSignatures}
+              legalEvents={legalEvents}
+              onRefresh={onRefresh}
+              onRenounced={onRenounced}
+            />
+          </div>
+        )}
       </div>
 
       {/* Visor de cámara en vivo para fotografiar el anverso del décimo */}

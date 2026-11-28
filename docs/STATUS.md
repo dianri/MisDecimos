@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.97` (Producción Estable · Parser AutoFirma `<cert>|<cms>`)  
+**Versión Actual:** `1.0.98` (Producción Estable · Acordeón Firma Manuscrita)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.97`)  
+**Rama de Producción:** `main` (Tag `v1.0.98`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 

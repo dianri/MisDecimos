@@ -344,8 +344,8 @@ export const HandwrittenSignatureTab: React.FC<HandwrittenSignatureTabProps> = (
         <p className="text-[11px] leading-relaxed text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80">
           La firma manuscrita en pantalla es un acuerdo privado simple y{' '}
           <strong>no tiene la misma fuerza probatoria ni vinculación jurídica</strong> que la firma
-          con Certificado Digital (FNMT / DNIe). Si buscas máxima garantía legal, utiliza la pestaña{' '}
-          <strong>Certificación Legal</strong>.
+          con Certificado Digital (FNMT / DNIe). Si buscas máxima garantía legal, utiliza la
+          sección superior <strong>Certificado Digital</strong>.
         </p>
       </div>
 
