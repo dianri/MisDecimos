@@ -19,6 +19,12 @@ import {
   buildCanonicalLegalPayload,
 } from '../legalCustody.ts'
 import { generateLegalCustodyPdf } from '../legalPdfGenerator.ts'
+import {
+  findActiveUserShare,
+  hasActiveDigitalParticipationSignature,
+  extractSupabaseErrorMessage,
+  type TicketLegalEventRow,
+} from '../legalAuditHelper.ts'
 
 function createTestP12(options?: { expired?: boolean; nifInCnOnly?: boolean }) {
   const keys = forge.pki.rsa.generateKeyPair(1024)
@@ -324,4 +330,91 @@ test('TicketDetailPage integra pestaña Certificación Legal y CertificateSignMo
   assert.ok(migrationSource.includes('if v_cert_id is null then'))
   assert.ok(migrationSource.includes('-- ROLLBACK:'))
   assert.ok(migrationSource.includes('trg_ticket_legal_events_immutable'))
+})
+
+test('ciclo completo de renuncia y nueva participación en el mismo décimo aísla estrictamente por participation_id', () => {
+  const shares = [
+    {
+      id: 'part-1',
+      user_id: 'u-2',
+      status: 'RENUNCIADA',
+      created_at: '2026-11-28T01:00:00.000Z',
+    },
+    {
+      id: 'part-2',
+      user_id: 'u-2',
+      status: 'ACEPTADA',
+      created_at: '2026-11-28T02:00:00.000Z',
+    },
+  ]
+
+  // 1. Debe seleccionar exclusivamente la participación activa (part-2) ignorando part-1
+  const activeShare = findActiveUserShare(shares, 'u-2')
+  assert.equal(activeShare?.id, 'part-2')
+
+  // 2. part-1 fue firmada digitalmente y luego renunciada (o incluso si quedara un evento previo sin renuncia)
+  const legalEvents: TicketLegalEventRow[] = [
+    {
+      id: 'ev-1',
+      ticket_id: 't-1',
+      participation_id: 'part-1',
+      actor_user_id: 'u-2',
+      event_type: 'PARTICIPATION_SIGNED',
+      actor_name: 'Lucía Gómez',
+      actor_nif: '87654321B',
+      cert_issuer: 'FNMT',
+      cert_serial: 'SER-1',
+      cert_method: 'autofirma',
+      signature_b64: 'SIG-1',
+      payload_sha256: 'hash-1',
+      share_percentage: 25,
+      share_amount: 5,
+      metadata: {},
+      created_at: '2026-11-28T01:10:00.000Z',
+    },
+    {
+      id: 'ev-2',
+      ticket_id: 't-1',
+      participation_id: 'part-1',
+      actor_user_id: 'u-2',
+      event_type: 'PARTICIPATION_RENOUNCED',
+      actor_name: 'Lucía Gómez',
+      actor_nif: '87654321B',
+      cert_issuer: 'FNMT',
+      cert_serial: 'SER-1',
+      cert_method: 'autofirma',
+      signature_b64: 'SIG-R1',
+      payload_sha256: 'hash-r1',
+      share_percentage: 25,
+      share_amount: 5,
+      metadata: {},
+      created_at: '2026-11-28T01:20:00.000Z',
+    },
+  ]
+
+  // part-2 NO debe heredar la firma de part-1 aunque pertenezcan al mismo actor_user_id y ticket_id
+  const hasPart2Signed = hasActiveDigitalParticipationSignature(legalEvents, 'u-2', 'part-2')
+  assert.equal(hasPart2Signed, false)
+  assert.equal(requiresDigitalSignatureForRenounce(hasPart2Signed), false)
+
+  // Incluso si part-1 tuviera una firma activa sin renuncia registrada o evento huérfano null, part-2 sigue limpia
+  const orphanAndPart1Signed: TicketLegalEventRow[] = [
+    legalEvents[0],
+    {
+      ...legalEvents[0],
+      id: 'ev-orphan',
+      participation_id: null,
+    },
+  ]
+  assert.equal(hasActiveDigitalParticipationSignature(orphanAndPart1Signed, 'u-2', 'part-2'), false)
+  assert.equal(hasActiveDigitalParticipationSignature(orphanAndPart1Signed, 'u-2', 'part-1'), true)
+
+  // 3. extractSupabaseErrorMessage muestra el mensaje real de PostgREST/RPC aunque no sea instanceof Error
+  assert.equal(
+    extractSupabaseErrorMessage(
+      { message: 'Esta participación (part-1) fue firmada con certificado digital.', code: 'P0001' },
+      'Fallback'
+    ),
+    'Esta participación (part-1) fue firmada con certificado digital.'
+  )
 })

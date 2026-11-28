@@ -31,6 +31,7 @@ import {
   requestPrizePayoutConfirmation,
   confirmPrizePayoutReceived,
 } from '../../services/prizeService'
+import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
 
 export type OwnershipShare = Database['public']['Tables']['ownership_shares']['Row'] & {
   profiles?: {
@@ -349,7 +350,7 @@ export const OwnershipBreakdownCard: React.FC<OwnershipBreakdownCardProps> = ({
       console.error('Error al renunciar voluntariamente:', err)
       setActionMsg({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Error al procesar la renuncia voluntaria.',
+        text: extractSupabaseErrorMessage(err, 'Error al procesar la renuncia voluntaria.'),
       })
     } finally {
       setIsRenouncing(false)

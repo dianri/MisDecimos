@@ -15,6 +15,7 @@ import {
 } from '../components/tickets/TicketAuditTimeline'
 import {
   countActiveRepartoItems,
+  findActiveUserShare,
   hasActiveDigitalParticipationSignature,
   mergeAuditAndLegalEvents,
 } from '../lib/legalAuditHelper'
@@ -520,7 +521,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   }
 
   const isOwner = ticket.owner_id === user?.id
-  const userShare = shares.find((s) => s.user_id === user?.id)
+  const userShare = findActiveUserShare(shares, user?.id)
   const hasActiveShare = Boolean(
     isOwner ||
       (userShare &&

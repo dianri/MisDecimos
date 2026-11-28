@@ -19,7 +19,10 @@ import {
   extractTicketIdFromNotification,
   isNotificationTicketRenounced,
 } from '../lib/renouncedAlerts'
-import { hasActiveDigitalParticipationSignature } from '../lib/legalAuditHelper'
+import {
+  extractSupabaseErrorMessage,
+  hasActiveDigitalParticipationSignature,
+} from '../lib/legalAuditHelper'
 
 type Notification = Database['public']['Tables']['notifications']['Row']
 
@@ -222,7 +225,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({
       console.error('Error respondiendo a la renuncia desde alerta:', err)
       setActionMsg({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Error al responder a la solicitud de renuncia.',
+        text: extractSupabaseErrorMessage(err, 'Error al responder a la solicitud de renuncia.'),
       })
     } finally {
       setActionLoadingId(null)

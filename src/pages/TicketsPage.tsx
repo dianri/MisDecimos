@@ -27,7 +27,11 @@ import { resolveScannerHaveCodeTransition, resolveSwipeRightAction } from '../li
 import { ARCHIVE_SUCCESS_TOAST, RESTORE_SUCCESS_TOAST } from '../lib/archivedTickets'
 import { filterHomeTickets, type HomeTicketFilter } from '../lib/ticketCardHelper'
 import { buildPrizesSummary } from '../lib/prizesSummary'
-import { hasActiveDigitalParticipationSignature } from '../lib/legalAuditHelper'
+import {
+  extractSupabaseErrorMessage,
+  findActiveUserShare,
+  hasActiveDigitalParticipationSignature,
+} from '../lib/legalAuditHelper'
 import { checkTicketPrize, toggleOwnerPrizeCollected } from '../services/prizeService'
 import { DecimoIcon } from '../components/icons/DecimoIcon'
 import {
@@ -422,12 +426,9 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
   }
 
   const handleSwipeRenounce = async (ticket: TicketRow, userPercentage: number) => {
-    const userShare = allShares.find(
-      (s) =>
-        s.ticket_id === ticket.id &&
-        s.user_id === user?.id &&
-        s.role === 'PARTICIPANTE' &&
-        s.status !== 'RENUNCIADA'
+    const userShare = findActiveUserShare(
+      allShares.filter((s) => s.ticket_id === ticket.id && s.role === 'PARTICIPANTE'),
+      user?.id
     )
 
     if (!userShare) {
@@ -487,7 +488,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
       console.error('Error renunciando a participación:', err)
       setToastVariant('warning')
       setClaimToastMsg(
-        err instanceof Error ? err.message : 'No se pudo completar la renuncia a la participación.'
+        extractSupabaseErrorMessage(err, 'No se pudo completar la renuncia a la participación.')
       )
     }
   }

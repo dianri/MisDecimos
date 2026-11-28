@@ -37,22 +37,55 @@ export function countActiveRepartoItems(
 }
 
 /**
- * Determina si un usuario tiene una firma digital activa (certificado X.509) sobre una participación.
+ * Selecciona la participación vigente (ACEPTADA / PENDIENTE) de un usuario,
+ * ignorando registros históricos renunciados, cancelados o rechazados y ordenando por created_at descendente.
+ */
+export function findActiveUserShare<
+  T extends { user_id: string; status: string; created_at?: string | null }
+>(shares: T[], userId?: string | null): T | undefined {
+  if (!userId) return undefined
+  const active = shares.filter((s) => {
+    if (s.user_id !== userId) return false
+    const st = String(s.status || '').trim().toUpperCase()
+    return !INACTIVE_STATUSES.has(st) && ACTIVE_SHARE_STATUSES.has(st)
+  })
+  if (active.length <= 1) return active[0]
+  return [...active].sort((a, b) => {
+    const ta = a.created_at ? Date.parse(a.created_at) : 0
+    const tb = b.created_at ? Date.parse(b.created_at) : 0
+    return tb - ta
+  })[0]
+}
+
+/**
+ * Extrae el mensaje real de un error de Supabase/PostgREST o Error estándar.
+ */
+export function extractSupabaseErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) return err.message
+  if (err && typeof err === 'object' && 'message' in err) {
+    const msg = (err as { message?: unknown }).message
+    if (typeof msg === 'string' && msg.trim()) return msg.trim()
+  }
+  return fallback
+}
+
+/**
+ * Determina si una participación concreta tiene una firma digital activa (certificado X.509).
+ * Comprueba estrictamente por participation_id (nunca por actor_user_id suelto) para evitar
+ * que una nueva participación herede la firma de una participación previa ya renunciada.
  */
 export function hasActiveDigitalParticipationSignature(
   legalEvents: Array<
     Pick<TicketLegalEventRow, 'event_type' | 'actor_user_id' | 'participation_id' | 'signature_b64' | 'cert_serial'>
   >,
-  userId?: string | null,
+  _userId?: string | null,
   shareId?: string | null
 ): boolean {
-  if (!userId && !shareId) return false
+  if (!shareId) return false
   let signed = false
 
   for (const ev of legalEvents) {
-    const matchesActor = Boolean(userId && ev.actor_user_id === userId)
-    const matchesShare = Boolean(shareId && ev.participation_id === shareId)
-    if (!matchesActor && !matchesShare) continue
+    if (!ev.participation_id || ev.participation_id !== shareId) continue
 
     if (
       ev.event_type === 'PARTICIPATION_SIGNED' &&

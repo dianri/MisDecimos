@@ -18,6 +18,7 @@ import {
   buildCanonicalLegalPayload,
 } from '../../lib/legalCustody'
 import { generateLegalCustodyPdf } from '../../lib/legalPdfGenerator'
+import { extractSupabaseErrorMessage } from '../../lib/legalAuditHelper'
 import {
   ShieldCheck,
   Lock,
@@ -153,20 +154,27 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
     setPhotoSha256(hash)
   }
 
-  // Mapa de firmas digitales activas por partícipe
-  const participantSignatureByUser = useMemo(() => {
+  // Mapa de firmas digitales activas estrictamente por participation_id
+  const participantSignatureByShareId = useMemo(() => {
     const map = new Map<string, TicketLegalEventRow>()
     for (const ev of legalEvents) {
-      if (ev.event_type === 'PARTICIPATION_SIGNED') {
-        map.set(ev.actor_user_id, ev)
+      if (!ev.participation_id) continue
+      if (
+        ev.event_type === 'PARTICIPATION_SIGNED' &&
+        Boolean(ev.signature_b64) &&
+        Boolean(ev.cert_serial)
+      ) {
+        map.set(ev.participation_id, ev)
       } else if (ev.event_type === 'PARTICIPATION_RENOUNCED') {
-        map.delete(ev.actor_user_id)
+        map.delete(ev.participation_id)
       }
     }
     return map
   }, [legalEvents])
 
-  const hasCurrentUserSigned = Boolean(user?.id && participantSignatureByUser.has(user.id))
+  const hasCurrentUserSigned = Boolean(
+    userShare?.id && participantSignatureByShareId.has(userShare.id)
+  )
 
   const participantShares = useMemo(
     () => shares.filter((s) => s.role === 'PARTICIPANTE' || s.user_id !== ticket.owner_id),
@@ -333,11 +341,6 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
     setIsProcessing(true)
     setFeedback(null)
     try {
-      const { error: rpcErr } = await supabase.rpc('renounce_own_participation', {
-        p_share_id: userShare.id,
-      })
-      if (rpcErr) throw rpcErr
-
       const payloadHash =
         sig?.payloadSha256 ||
         (await computeSha256Hex(
@@ -357,32 +360,50 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
           })
         ))
 
-      await supabase.from('ticket_legal_events').insert({
-        ticket_id: ticket.id,
-        participation_id: userShare.id,
-        actor_user_id: user.id,
-        event_type: 'PARTICIPATION_RENOUNCED',
-        actor_name:
-          sig?.identity.fullName ||
-          profile?.display_name ||
-          user.email?.split('@')[0] ||
-          'Partícipe',
-        actor_nif: sig?.identity.nif || null,
-        cert_issuer: sig?.identity.issuer || null,
-        cert_serial: sig?.identity.serialNumber || null,
-        cert_method: sig?.method || null,
-        signature_b64: sig?.signatureB64 || null,
-        payload_sha256: payloadHash,
-        share_percentage: pct,
-        share_amount: amount,
-      })
+      const insertRenounceEvent = async () => {
+        const { error: insertErr } = await supabase.from('ticket_legal_events').insert({
+          ticket_id: ticket.id,
+          participation_id: userShare.id,
+          actor_user_id: user.id,
+          event_type: 'PARTICIPATION_RENOUNCED',
+          actor_name:
+            sig?.identity.fullName ||
+            profile?.display_name ||
+            user.email?.split('@')[0] ||
+            'Partícipe',
+          actor_nif: sig?.identity.nif || null,
+          cert_issuer: sig?.identity.issuer || null,
+          cert_serial: sig?.identity.serialNumber || null,
+          cert_method: sig?.method || null,
+          signature_b64: sig?.signatureB64 || null,
+          payload_sha256: payloadHash,
+          share_percentage: pct,
+          share_amount: amount,
+        })
+        if (insertErr) throw insertErr
+      }
+
+      if (sig) {
+        // Si hay firma digital de renuncia, registrar el evento antes del RPC para que el trigger BEFORE UPDATE lo valide
+        await insertRenounceEvent()
+        const { error: rpcErr } = await supabase.rpc('renounce_own_participation', {
+          p_share_id: userShare.id,
+        })
+        if (rpcErr) throw rpcErr
+      } else {
+        const { error: rpcErr } = await supabase.rpc('renounce_own_participation', {
+          p_share_id: userShare.id,
+        })
+        if (rpcErr) throw rpcErr
+        await insertRenounceEvent()
+      }
 
       onRenounced?.(pct)
       await onRefresh()
     } catch (err: unknown) {
       setFeedback({
         type: 'error',
-        text: err instanceof Error ? err.message : 'No se pudo completar la renuncia.',
+        text: extractSupabaseErrorMessage(err, 'No se pudo completar la renuncia.'),
       })
     } finally {
       setIsProcessing(false)
@@ -439,7 +460,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         participants: shares.map((s) => {
           const pct = Number(s.percentage)
           const amountEuros = (Number(ticket.ticket_price || 20) * pct) / 100
-          const sigEv = participantSignatureByUser.get(s.user_id)
+          const sigEv = participantSignatureByShareId.get(s.id)
           return {
             name:
               s.profiles?.display_name ||
@@ -676,7 +697,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         ) : (
           <div className="space-y-2">
             {participantShares.map((s) => {
-              const sig = participantSignatureByUser.get(s.user_id)
+              const sig = participantSignatureByShareId.get(s.id)
               const name =
                 s.profiles?.display_name || s.profiles?.email?.split('@')[0] || 'Partícipe'
               return (
