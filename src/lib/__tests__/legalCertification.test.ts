@@ -150,8 +150,9 @@ test('signPayloadWithP12 firma en memoria con SHA-256 y rechaza certificados cad
     /máximo 20 caracteres/
   )
 
-  // Decodificación CMS/PKCS#7 devuelto por AutoFirma
-  const cmsRes = await decodeCmsSignatureAndExtractIdentity(res.signatureB64, payload)
+  // Decodificación CMS/PKCS#7 devuelto por AutoFirma (incluyendo formato Base64URL sin padding '=')
+  const cmsBase64Url = res.signatureB64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  const cmsRes = await decodeCmsSignatureAndExtractIdentity(cmsBase64Url, payload)
   assert.equal(cmsRes.method, 'autofirma')
   assert.equal(cmsRes.identity.fullName, 'CARLOS RUIZ MARTIN')
   assert.equal(cmsRes.identity.nif, '12345678Z')
