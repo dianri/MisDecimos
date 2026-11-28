@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.102] - 2026-11-28
+
+### Fixed
+- **Actualización manual y sincronización automática en `Certificación Legal` (`LegalCertificationTab.tsx`, `TicketDetailPage.tsx`):**
+  - Añadido botón circular de actualización (`RefreshCw` con animación `animate-spin`) en la cabecera de **`PARTÍCIPES Y FIRMAS (N)`** para recargar desde Supabase las participaciones, invitaciones, certificaciones y eventos legales sincronizando los contadores de las tres pestañas.
+  - Disparada recarga automática de datos (`loadTicketDetails()`) cada vez que el usuario cambia a la pestaña `Certificación Legal` para reflejar al instante participaciones creadas, canceladas, borradas o renunciadas en `Reparto`.
+  - Filtrado estricto en `PARTÍCIPES Y FIRMAS` excluyendo registros con estado `CANCELADA`, `RECHAZADA`, `CANCELLED`, `REJECTED` o `DECLINED`.
+
 ## [1.0.101] - 2026-11-28
 
 ### Fixed

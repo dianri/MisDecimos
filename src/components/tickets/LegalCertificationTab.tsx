@@ -84,7 +84,18 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   >(null)
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isHandwrittenOpen, setIsHandwrittenOpen] = useState(false)
+
+  const handleManualRefresh = async () => {
+    if (isRefreshing) return
+    setIsRefreshing(true)
+    try {
+      await onRefresh()
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   )
@@ -177,7 +188,20 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   )
 
   const participantShares = useMemo(
-    () => shares.filter((s) => s.role === 'PARTICIPANTE' || s.user_id !== ticket.owner_id),
+    () =>
+      shares.filter((s) => {
+        const st = String(s.status || '').trim().toUpperCase()
+        if (
+          st === 'CANCELADA' ||
+          st === 'RECHAZADA' ||
+          st === 'CANCELLED' ||
+          st === 'REJECTED' ||
+          st === 'DECLINED'
+        ) {
+          return false
+        }
+        return s.role === 'PARTICIPANTE' || s.user_id !== ticket.owner_id
+      }),
     [shares, ticket.owner_id]
   )
 
@@ -683,11 +707,23 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
 
       {/* Partícipes y Firmas (aceptados, renunciados e invitaciones pendientes) */}
       <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-5 space-y-3 shadow-xs">
-        <div className="flex items-center gap-2">
-          <UserCheck className="w-4 h-4 text-[#C5A880]" />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
-            Partícipes y Firmas ({participantShares.length + activePendingInvites.length})
-          </h4>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <UserCheck className="w-4 h-4 text-[#C5A880]" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
+              Partícipes y Firmas ({participantShares.length + activePendingInvites.length})
+            </h4>
+          </div>
+          <button
+            type="button"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="p-1.5 rounded-xl border border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 hover:text-[#1D1D1F] dark:hover:text-[#F5F5F7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition active:scale-95 cursor-pointer"
+            title="Actualizar partícipes y firmas"
+            aria-label="Actualizar partícipes y firmas"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-[#C5A880]' : ''}`} />
+          </button>
         </div>
 
         {participantShares.length + activePendingInvites.length === 0 ? (
