@@ -404,3 +404,285 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
 
   return doc.save()
 }
+
+export interface HandwrittenSignaturePdfSigner {
+  role: 'custodian' | 'participant'
+  fullName: string
+  nif: string
+  phone: string
+  percentage: number
+  amountEuros: number
+  status: string
+  signaturePngBase64: string
+  signatureSha256: string
+  signedAt: string
+  userAgent?: string | null
+}
+
+export interface HandwrittenPdfInput {
+  ticket: {
+    id: string
+    number: string
+    serie: string | null
+    fraccion: string | null
+    draw_name: string
+    draw_date: string
+    ticket_price: number
+  }
+  verificationCode: string
+  photoSha256?: string | null
+  photoBytes?: Uint8Array | null
+  photoMimeType?: string | null
+  signers: HandwrittenSignaturePdfSigner[]
+  events: LegalPdfEventItem[]
+}
+
+function decodeDataUrlPngBytes(dataUrlOrB64: string): Uint8Array {
+  const b64 = dataUrlOrB64.includes(',') ? dataUrlOrB64.split(',')[1] : dataUrlOrB64
+  if (typeof atob === 'function') {
+    const bin = atob(b64)
+    const out = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i)
+    return out
+  }
+  return Uint8Array.from(Buffer.from(b64, 'base64'))
+}
+
+/**
+ * Genera el Documento Privado PDF suscrito mediante firma manuscrita en pantalla (sin certificado digital).
+ */
+export async function generateHandwrittenAgreementPdf(input: HandwrittenPdfInput): Promise<Uint8Array> {
+  const doc = await PDFDocument.create()
+  const fontRegular = await doc.embedFont(StandardFonts.Helvetica)
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold)
+
+  const pageWidth = 595.28
+  const pageHeight = 841.89
+  const margin = 42
+  const contentWidth = pageWidth - margin * 2
+
+  const dark = rgb(0.11, 0.11, 0.12)
+  const muted = rgb(0.38, 0.38, 0.41)
+  const granite = rgb(0.227, 0.322, 0.271)
+  const cava = rgb(0.773, 0.659, 0.502)
+  const warnBg = rgb(0.99, 0.96, 0.9)
+  const border = rgb(0.85, 0.85, 0.87)
+
+  let page: PDFPage = doc.addPage([pageWidth, pageHeight])
+  let y = pageHeight - margin
+
+  const ensureSpace = (needed: number) => {
+    if (y - needed < margin + 20) {
+      page = doc.addPage([pageWidth, pageHeight])
+      y = pageHeight - margin
+    }
+  }
+
+  const drawText = (
+    text: string,
+    x: number,
+    yPos: number,
+    size: number,
+    font: PDFFont = fontRegular,
+    color = dark
+  ) => {
+    page.drawText(safePdfText(text), { x, y: yPos, size, font, color })
+  }
+
+  // Cabecera
+  page.drawRectangle({
+    x: margin,
+    y: y - 54,
+    width: contentWidth,
+    height: 54,
+    color: granite,
+  })
+  drawText(
+    'MIS DECIMOS · DOCUMENTO PRIVADO (FIRMA MANUSCRITA)',
+    margin + 14,
+    y - 22,
+    12.5,
+    fontBold,
+    rgb(1, 1, 1)
+  )
+  drawText(
+    `Codigo: ${input.verificationCode}   |   Emitido: ${formatDateEs(new Date().toISOString())}`,
+    margin + 14,
+    y - 40,
+    8.5,
+    fontRegular,
+    rgb(0.92, 0.88, 0.8)
+  )
+  y -= 68
+
+  // Aviso explícito de firma manuscrita sin certificado digital
+  page.drawRectangle({
+    x: margin,
+    y: y - 36,
+    width: contentWidth,
+    height: 36,
+    color: warnBg,
+    borderColor: cava,
+    borderWidth: 0.8,
+  })
+  drawText(
+    'AVISO: Documento suscrito mediante firma manuscrita en pantalla (sin certificado digital).',
+    margin + 10,
+    y - 14,
+    8.5,
+    fontBold,
+    dark
+  )
+  drawText(
+    'Constituye un acuerdo privado simple entre particulares sin fuerza de firma electronica cualificada.',
+    margin + 10,
+    y - 27,
+    8,
+    fontRegular,
+    muted
+  )
+  y -= 52
+
+  // 1. Datos del décimo y foto del anverso
+  drawText('1. IDENTIFICACION DEL DECIMO', margin, y, 10.5, fontBold, granite)
+  y -= 6
+  page.drawLine({ start: { x: margin, y }, end: { x: margin + contentWidth, y }, thickness: 1, color: cava })
+  y -= 16
+
+  const imgTopY = y
+  drawText(`Numero: ${input.ticket.number}`, margin, y, 11, fontBold, dark)
+  y -= 14
+  drawText(
+    `Serie: ${input.ticket.serie || '001'}   |   Fraccion: ${input.ticket.fraccion || '01'}`,
+    margin,
+    y,
+    9.5,
+    fontRegular,
+    dark
+  )
+  y -= 14
+  drawText(`Sorteo: ${input.ticket.draw_name} (${input.ticket.draw_date})`, margin, y, 9.5, fontRegular, dark)
+  y -= 14
+  drawText(
+    `Precio nominal: ${Number(input.ticket.ticket_price || 20).toFixed(2)} €`,
+    margin,
+    y,
+    9.5,
+    fontRegular,
+    dark
+  )
+  y -= 14
+  if (input.photoSha256) {
+    drawText(`SHA-256 anverso: ${input.photoSha256.slice(0, 40)}...`, margin, y, 8, fontRegular, muted)
+    y -= 14
+  }
+
+  let imgBottomY = y
+  if (input.photoBytes && input.photoBytes.length > 0) {
+    try {
+      const isPng =
+        input.photoMimeType?.includes('png') ||
+        (input.photoBytes[0] === 0x89 && input.photoBytes[1] === 0x50)
+      const embeddedImg = isPng
+        ? await doc.embedPng(input.photoBytes)
+        : await doc.embedJpg(input.photoBytes)
+      const scale = Math.min(155 / embeddedImg.width, 85 / embeddedImg.height)
+      const imgW = embeddedImg.width * scale
+      const imgH = embeddedImg.height * scale
+      const imgX = margin + contentWidth - imgW
+      const imgY = imgTopY - imgH + 8
+      page.drawRectangle({ x: imgX - 2, y: imgY - 2, width: imgW + 4, height: imgH + 4, borderColor: border, borderWidth: 0.8 })
+      page.drawImage(embeddedImg, { x: imgX, y: imgY, width: imgW, height: imgH })
+      imgBottomY = imgY - 8
+    } catch {
+      // ignorar si falla el embebido
+    }
+  }
+
+  y = Math.min(y, imgBottomY) - 10
+
+  // 2. Firmantes y firmas manuscritas PNG
+  ensureSpace(90)
+  drawText('2. FIRMANTES Y TRAZOS MANUSCRITOS', margin, y, 10.5, fontBold, granite)
+  y -= 6
+  page.drawLine({ start: { x: margin, y }, end: { x: margin + contentWidth, y }, thickness: 1, color: cava })
+  y -= 14
+
+  for (const signer of input.signers) {
+    ensureSpace(92)
+    page.drawRectangle({
+      x: margin,
+      y: y - 78,
+      width: contentWidth,
+      height: 82,
+      borderColor: border,
+      borderWidth: 0.8,
+    })
+
+    const roleLabel = signer.role === 'custodian' ? 'DEPOSITARIO' : 'PARTICIPE'
+    drawText(
+      `${roleLabel}: ${signer.fullName}   |   DNI/NIE: ${signer.nif}`,
+      margin + 10,
+      y - 14,
+      9.2,
+      fontBold,
+      dark
+    )
+    drawText(
+      `Tel: ${signer.phone}   |   Cuota: ${signer.percentage}% (${signer.amountEuros.toFixed(2)} €)   |   Estado: ${signer.status}`,
+      margin + 10,
+      y - 28,
+      8.3,
+      fontRegular,
+      dark
+    )
+    drawText(
+      `Fecha: ${formatDateEs(signer.signedAt)}   |   SHA-256 firma: ${signer.signatureSha256.slice(0, 24)}...`,
+      margin + 10,
+      y - 42,
+      7.6,
+      fontRegular,
+      muted
+    )
+
+    try {
+      const sigBytes = decodeDataUrlPngBytes(signer.signaturePngBase64)
+      const sigImg = await doc.embedPng(sigBytes)
+      const scale = Math.min(115 / sigImg.width, 46 / sigImg.height)
+      const sw = sigImg.width * scale
+      const sh = sigImg.height * scale
+      page.drawImage(sigImg, {
+        x: margin + contentWidth - sw - 12,
+        y: y - 68,
+        width: sw,
+        height: sh,
+      })
+    } catch {
+      // mantener datos si la imagen PNG no es válida
+    }
+
+    y -= 92
+  }
+
+  // 3. Eventos cronológicos
+  ensureSpace(50)
+  drawText('3. REGISTRO DE EVENTOS (FIRMA MANUSCRITA)', margin, y, 10.5, fontBold, granite)
+  y -= 6
+  page.drawLine({ start: { x: margin, y }, end: { x: margin + contentWidth, y }, thickness: 1, color: cava })
+  y -= 14
+
+  for (const ev of input.events) {
+    ensureSpace(28)
+    drawText(
+      `${formatDateEs(ev.created_at)} — ${ev.event_type} — ${ev.actor_name}${ev.actor_nif ? ` (${ev.actor_nif})` : ''}`,
+      margin,
+      y,
+      8.3,
+      fontRegular,
+      dark
+    )
+    y -= 13
+  }
+
+  return doc.save()
+}
