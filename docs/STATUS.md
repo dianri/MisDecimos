@@ -1,8 +1,8 @@
 # Panel de Estado del Proyecto — MisDecimos
 
-**Versión Actual:** `1.0.113` (Producción Estable · Auditoría Integral de Documentación Técnica y Reglas)  
+**Versión Actual:** `1.0.114` (Producción Estable · Actualización Integral de README.md)  
 **Última Actualización:** 2026-11-28  
-**Rama de Producción:** `main` (Tag `v1.0.113`)  
+**Rama de Producción:** `main` (Tag `v1.0.114`)  
 **Rama Activa de Desarrollo:** `develop`  
 **Backend Supabase:** `xmdghpyfrblmtjtevtru`
 
@@ -199,3 +199,4 @@
 - [x] v1.0.111: Actualización integral del manual funcional (`docs/SCREENS_GUIDE.md`).
 - [x] v1.0.112: Regla obligatoria de documentación funcional en `AGENTS.md`.
 - [x] v1.0.113: Auditoría y sincronización integral de `docs/BUSINESS_RULES.md`, `docs/ARCHITECTURE.md`, `docs/STATUS.md` y `AGENTS.md`.
+- [x] v1.0.114: Actualización integral de `README.md` (sorteos Navidad/El Niño, certificación legal, `PrizesPage.tsx`, `autofirma-relay`, stack criptográfico/PDF y scripts `npm test` / `npm run db:backup`).
