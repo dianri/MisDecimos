@@ -13,6 +13,7 @@ export interface RealisticTicketCardProps {
   className?: string
   sealStatus?: TicketSealStatus
   onSealClick?: () => void
+  onNumberBoxClick?: () => void
 }
 
 export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
@@ -22,6 +23,7 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
   className = '',
   sealStatus,
   onSealClick,
+  onNumberBoxClick,
 }) => {
   const [imageLoadError, setImageLoadError] = useState(false)
   const isCompact = variant === 'compact'
@@ -166,7 +168,7 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
                     : isPrized
                     ? 'bg-[#C5A880]/15 border-[#C5A880]/60'
                     : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10'
-                } ${onSealClick ? 'cursor-pointer select-none active:scale-95 transition' : ''}`}
+                } ${onSealClick ? 'cursor-pointer select-none hover:opacity-90 active:scale-95 transition' : ''}`}
               >
                 <div
                   className={`h-8 w-8 rounded-full border flex items-center justify-center mb-1.5 ${
@@ -198,7 +200,12 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
               </div>
 
               {/* Número Principal */}
-              <div className="col-span-8 flex flex-col justify-center items-center rounded-2xl border p-3 bg-[#F5F5F7] dark:bg-[#2C2C2E] border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
+              <div
+                onClick={onNumberBoxClick}
+                className={`col-span-8 flex flex-col justify-center items-center rounded-2xl border p-3 bg-[#F5F5F7] dark:bg-[#2C2C2E] border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10 ${
+                  onNumberBoxClick ? 'cursor-pointer select-none' : ''
+                }`}
+              >
                 <span className="text-[10px] font-semibold tracking-widest uppercase mb-0.5 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
                   NÚMERO
                 </span>
