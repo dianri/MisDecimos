@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { buildCanonicalLegalPayload, computeSha256Hex } from '../lib/legalCustody'
 
 export interface InvitePreviewResult {
   valid: boolean
@@ -70,6 +71,77 @@ export async function claimInvite(codeOrToken: string): Promise<InviteClaimResul
 
   if (!ticketId) {
     throw new Error('La confirmación de la participación no devolvió el identificador del décimo (ticket_id).')
+  }
+
+  // Registrar evento PARTICIPATION_ACCEPTED en ticket_legal_events para trazabilidad completa
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user?.id) {
+      const [{ data: profileData }, { data: activeShare }, { data: ticketData }] =
+        await Promise.all([
+          supabase
+            .from('profiles')
+            .select('display_name, email')
+            .eq('id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('ownership_shares')
+            .select('id, percentage')
+            .eq('ticket_id', ticketId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACEPTADA')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from('tickets')
+            .select('number, serie, fraccion, draw_name, draw_date, ticket_price')
+            .eq('id', ticketId)
+            .maybeSingle(),
+        ])
+
+      const pct = Number(activeShare?.percentage ?? result?.percentage ?? 0)
+      const ticketPrice = Number(ticketData?.ticket_price ?? 20)
+      const amount = (ticketPrice * pct) / 100
+      const actorName =
+        profileData?.display_name ||
+        profileData?.email?.split('@')[0] ||
+        user.email?.split('@')[0] ||
+        'Partícipe'
+
+      const payloadHash = await computeSha256Hex(
+        buildCanonicalLegalPayload({
+          eventType: 'PARTICIPATION_ACCEPTED',
+          ticketId,
+          ticketNumber: ticketData?.number || '',
+          drawDate: ticketData?.draw_date || '',
+          drawName: ticketData?.draw_name || '',
+          serie: ticketData?.serie || null,
+          fraccion: ticketData?.fraccion || null,
+          ticketPrice,
+          photoSha256: null,
+          actorUserId: user.id,
+          sharePercentage: pct,
+          timestampIso: new Date().toISOString(),
+        })
+      )
+
+      await supabase.from('ticket_legal_events').insert({
+        ticket_id: ticketId,
+        participation_id: activeShare?.id ?? null,
+        actor_user_id: user.id,
+        event_type: 'PARTICIPATION_ACCEPTED',
+        actor_name: actorName,
+        share_percentage: pct,
+        share_amount: amount,
+        payload_sha256: payloadHash,
+      })
+    }
+  } catch (legalErr) {
+    console.warn('No se pudo registrar PARTICIPATION_ACCEPTED en ticket_legal_events:', legalErr)
   }
 
   return {

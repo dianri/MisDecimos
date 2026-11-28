@@ -147,6 +147,10 @@ export function formatLegalEventForTimeline(ev: TicketLegalEventRow): TimelineAu
       legalTitle = 'Custodia firmada de forma manuscrita'
       legalDescription = `Custodia firmada de forma manuscrita por ${ev.actor_name}${nifSuffix}`
       break
+    case 'PARTICIPATION_ACCEPTED':
+      legalTitle = 'Participación aceptada'
+      legalDescription = `Participación (${pctText}) aceptada por ${ev.actor_name}${nifSuffix}`
+      break
     case 'PARTICIPATION_SIGNED':
       legalTitle = 'Participación firmada con Certificado Digital'
       legalDescription = `Participación (${pctText}) firmada con Certificado Digital por ${ev.actor_name}${nifSuffix}`

@@ -2,6 +2,8 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 
 export interface LegalPdfParticipantItem {
   name: string
+  appName?: string | null
+  legalName?: string | null
   percentage: number
   amountEuros: number
   status: string
@@ -9,6 +11,7 @@ export interface LegalPdfParticipantItem {
   signedNif?: string | null
   certIssuer?: string | null
   certSerial?: string | null
+  certMethod?: string | null
   signedAt?: string | null
 }
 
@@ -36,6 +39,7 @@ export interface LegalPdfInput {
   certification: {
     verification_code: string
     custodian_name: string
+    custodian_app_name?: string | null
     custodian_nif: string
     cert_issuer: string
     cert_serial: string
@@ -51,12 +55,18 @@ export interface LegalPdfInput {
 }
 
 /**
- * Normaliza texto a caracteres seguros para fuentes estándar WinAnsi en pdf-lib.
+ * Normaliza texto a caracteres seguros para fuentes estándar WinAnsi en pdf-lib,
+ * sustituyendo viñetas y símbolos Unicode no soportados por separadores ASCII estándar.
  */
 function safePdfText(text: string): string {
   return String(text || '')
     .replace(/\u00A0/g, ' ')
-    .replace(/[^\x20-\x7E\xA0-\xFF€]/g, '?')
+    .replace(/[\u2022\u2023\u25E6\u2043\u00B7]/g, '-')
+    .replace(/[\u2013\u2014\u2212]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2192/g, '->')
+    .replace(/[^\x20-\x7E\xA0-\xFF€]/g, '')
 }
 
 function formatDateEs(iso: string): string {
@@ -79,12 +89,18 @@ function formatEventLabel(eventType: string): string {
   switch (eventType) {
     case 'CUSTODY_CERTIFIED':
       return 'Custodia certificada digitalmente'
+    case 'HANDWRITTEN_CUSTODY_SIGNED':
+      return 'Custodia firmada de forma manuscrita'
     case 'PARTICIPATION_ACCEPTED':
       return 'Participación aceptada'
     case 'PARTICIPATION_SIGNED':
       return 'Participación firmada con certificado'
+    case 'HANDWRITTEN_PARTICIPATION_SIGNED':
+      return 'Participación firmada de forma manuscrita'
     case 'PARTICIPATION_RENOUNCED':
       return 'Renuncia de participación'
+    case 'HANDWRITTEN_PARTICIPATION_RENOUNCED':
+      return 'Renuncia de participación (manuscrita)'
     default:
       return eventType
   }
@@ -114,7 +130,7 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
   let y = pageHeight - margin
 
   const ensureSpace = (needed: number) => {
-    if (y - needed < margin + 20) {
+    if (y - needed < 70) {
       page = doc.addPage([pageWidth, pageHeight])
       y = pageHeight - margin
     }
@@ -234,38 +250,41 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
         ? await doc.embedPng(input.photoBytes)
         : await doc.embedJpg(input.photoBytes)
 
-      const maxBoxW = 165
-      const maxBoxH = 95
-      const scale = Math.min(maxBoxW / embeddedImg.width, maxBoxH / embeddedImg.height)
-      const imgW = embeddedImg.width * scale
-      const imgH = embeddedImg.height * scale
-      const imgX = margin + contentWidth - imgW
-      const imgY = ticketLeftY - imgH + 8
+      const dims = embeddedImg.scaleToFit(165, 95)
+      const imgX = margin + contentWidth - dims.width
+      const imgY = ticketLeftY - dims.height + 8
 
       page.drawRectangle({
         x: imgX - 2,
         y: imgY - 2,
-        width: imgW + 4,
-        height: imgH + 4,
+        width: dims.width + 4,
+        height: dims.height + 4,
         borderColor: border,
         borderWidth: 0.8,
       })
       page.drawImage(embeddedImg, {
         x: imgX,
         y: imgY,
-        width: imgW,
-        height: imgH,
+        width: dims.width,
+        height: dims.height,
       })
-      imageBottomY = imgY - 8
+      imageBottomY = imgY - 12
     } catch {
       // Si la imagen no pudiera embeberse, se conserva su huella SHA-256
     }
   }
 
-  y = Math.min(y, imageBottomY) - 10
+  y = Math.min(y, imageBottomY) - 12
 
   // 3. Bloque de certificación digital del depositario
-  ensureSpace(110)
+  const custodianAppName = input.certification.custodian_app_name?.trim() || ''
+  const custodianLegalName = input.certification.custodian_name.trim()
+  const hasDualCustodianName = Boolean(
+    custodianAppName && custodianAppName.toLowerCase() !== custodianLegalName.toLowerCase()
+  )
+  const custodianBoxHeight = hasDualCustodianName ? 92 : 78
+
+  ensureSpace(custodianBoxHeight + 38)
   drawText('2. CERTIFICACION DIGITAL DEL DEPOSITARIO', margin, y, 10.5, fontBold, granite)
   y -= 6
   page.drawLine({
@@ -278,50 +297,93 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
 
   page.drawRectangle({
     x: margin,
-    y: y - 74,
+    y: y - (custodianBoxHeight - 4),
     width: contentWidth,
-    height: 78,
+    height: custodianBoxHeight,
     color: lightBg,
     borderColor: cava,
     borderWidth: 0.8,
   })
 
-  drawText(
-    `Titular depositario: ${input.certification.custodian_name}   (NIF: ${input.certification.custodian_nif})`,
-    margin + 10,
-    y - 14,
-    9.5,
-    fontBold,
-    dark
-  )
-  drawText(
-    `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
-    margin + 10,
-    y - 29,
-    8.5,
-    fontRegular,
-    dark
-  )
-  drawText(
-    `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
-    margin + 10,
-    y - 43,
-    8.5,
-    fontRegular,
-    dark
-  )
-  drawText(
-    `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
-    margin + 10,
-    y - 57,
-    7.5,
-    fontRegular,
-    muted
-  )
-  y -= 92
+  if (hasDualCustodianName) {
+    drawText(
+      `Titular depositario: ${custodianAppName}`,
+      margin + 10,
+      y - 14,
+      9.5,
+      fontBold,
+      dark
+    )
+    drawText(
+      `${custodianLegalName} (NIF: ${input.certification.custodian_nif})`,
+      margin + 10,
+      y - 27,
+      9,
+      fontRegular,
+      dark
+    )
+    drawText(
+      `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
+      margin + 10,
+      y - 41,
+      8.5,
+      fontRegular,
+      dark
+    )
+    drawText(
+      `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
+      margin + 10,
+      y - 55,
+      8.5,
+      fontRegular,
+      dark
+    )
+    drawText(
+      `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
+      margin + 10,
+      y - 69,
+      7.5,
+      fontRegular,
+      muted
+    )
+  } else {
+    drawText(
+      `Titular depositario: ${custodianLegalName}   (NIF: ${input.certification.custodian_nif})`,
+      margin + 10,
+      y - 14,
+      9.5,
+      fontBold,
+      dark
+    )
+    drawText(
+      `Metodo: ${input.certification.cert_method === 'autofirma' ? 'AutoFirma' : 'Certificado X.509 (.p12/.pfx)'}   |   Emisor: ${input.certification.cert_issuer}`,
+      margin + 10,
+      y - 29,
+      8.5,
+      fontRegular,
+      dark
+    )
+    drawText(
+      `N.º Serie Certificado: ${input.certification.cert_serial}   |   Firmado: ${formatDateEs(input.certification.signed_at)}`,
+      margin + 10,
+      y - 43,
+      8.5,
+      fontRegular,
+      dark
+    )
+    drawText(
+      `Huella SHA-256 firma: ${input.certification.payload_sha256}`,
+      margin + 10,
+      y - 57,
+      7.5,
+      fontRegular,
+      muted
+    )
+  }
+  y -= custodianBoxHeight + 14
 
   // 4. Tabla de partícipes
-  ensureSpace(70)
+  ensureSpace(75)
   drawText('3. CUADRO DE PARTICIPACIONES Y FIRMAS', margin, y, 10.5, fontBold, granite)
   y -= 6
   page.drawLine({
@@ -334,28 +396,40 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
 
   drawText('Titular / Participe', margin, y, 8.5, fontBold, muted)
   drawText('Cuota', margin + 195, y, 8.5, fontBold, muted)
-  drawText('Estado', margin + 265, y, 8.5, fontBold, muted)
-  drawText('Firma digital / NIF', margin + 350, y, 8.5, fontBold, muted)
+  drawText('Estado', margin + 275, y, 8.5, fontBold, muted)
+  drawText('Firma digital / NIF', margin + 355, y, 8.5, fontBold, muted)
   y -= 12
 
   for (const p of input.participants) {
-    ensureSpace(20)
-    const statusText =
-      p.status === 'RENUNCIADA'
-        ? 'RENUNCIADA'
-        : p.status === 'PENDIENTE'
-        ? 'PENDIENTE'
-        : 'ACTIVA'
+    const appName = (p.appName || p.name || '').trim()
+    const legalName = (p.legalName || '').trim()
+    const hasDualName = Boolean(legalName && legalName.toLowerCase() !== appName.toLowerCase())
+
+    ensureSpace(hasDualName ? 28 : 18)
+
+    const isRenounced = p.status === 'RENUNCIADA' || p.status === 'RENOUNCED'
+    const statusText = isRenounced
+      ? 'RENUNCIADA'
+      : p.status === 'PENDIENTE'
+      ? 'PENDIENTE'
+      : 'ACTIVA'
+    const displayPct = isRenounced ? 0 : p.percentage
+    const displayAmount = isRenounced ? 0 : p.amountEuros
     const sigText = p.signedNif
-      ? `Certificado (${p.signedNif})`
+      ? `${p.certMethod === 'handwritten' ? 'Manuscrita' : 'Certificado'} (${p.signedNif})`
       : p.isOwner
       ? `Depositario (${input.certification.custodian_nif})`
       : 'Aceptacion estandar'
 
-    drawText(p.name.slice(0, 32), margin, y, 8.8, fontRegular, dark)
-    drawText(`${p.percentage}% (${p.amountEuros.toFixed(2)} €)`, margin + 195, y, 8.8, fontRegular, dark)
-    drawText(statusText, margin + 265, y, 8.5, fontBold, statusText === 'RENUNCIADA' ? muted : granite)
-    drawText(sigText.slice(0, 30), margin + 350, y, 8.3, fontRegular, muted)
+    drawText(appName.slice(0, 32), margin, y, 8.8, hasDualName ? fontBold : fontRegular, dark)
+    drawText(`${displayPct}% (${displayAmount.toFixed(2)} €)`, margin + 195, y, 8.8, fontRegular, dark)
+    drawText(statusText, margin + 275, y, 8.5, fontBold, isRenounced ? muted : granite)
+    drawText(sigText.slice(0, 30), margin + 355, y, 8.3, fontRegular, muted)
+
+    if (hasDualName) {
+      y -= 10
+      drawText(legalName.slice(0, 38), margin, y, 7.8, fontRegular, muted)
+    }
     y -= 14
   }
 
@@ -378,27 +452,37 @@ export async function generateLegalCustodyPdf(input: LegalPdfInput): Promise<Uin
     y -= 14
   } else {
     for (const ev of input.events) {
-      ensureSpace(34)
-      const pctStr = ev.share_percentage != null ? ` · ${ev.share_percentage}%` : ''
+      ensureSpace(46)
+      const pctStr = ev.share_percentage != null ? ` - ${ev.share_percentage}%` : ''
       const nifStr = ev.actor_nif ? ` (${ev.actor_nif})` : ''
       drawText(
-        `${formatDateEs(ev.created_at)} — ${formatEventLabel(ev.event_type)}`,
+        `${formatDateEs(ev.created_at)} - ${formatEventLabel(ev.event_type)}`,
         margin,
         y,
         8.8,
         fontBold,
         dark
       )
-      y -= 11
+      y -= 12
       drawText(
-        `Actor: ${ev.actor_name}${nifStr}${pctStr}   |   SHA-256: ${ev.payload_sha256.slice(0, 24)}...`,
+        `Actor: ${ev.actor_name}${nifStr}${pctStr}`,
         margin + 10,
         y,
-        7.8,
+        8,
+        fontRegular,
+        dark
+      )
+      y -= 11
+      drawWrappedLine(
+        `SHA-256: ${ev.payload_sha256}`,
+        margin + 10,
+        contentWidth - 10,
+        7.5,
+        10,
         fontRegular,
         muted
       )
-      y -= 14
+      y -= 6
     }
   }
 
@@ -472,7 +556,7 @@ export async function generateHandwrittenAgreementPdf(input: HandwrittenPdfInput
   let y = pageHeight - margin
 
   const ensureSpace = (needed: number) => {
-    if (y - needed < margin + 20) {
+    if (y - needed < 70) {
       page = doc.addPage([pageWidth, pageHeight])
       y = pageHeight - margin
     }
