@@ -23,6 +23,7 @@ import {
   findActiveUserShare,
   hasActiveDigitalParticipationSignature,
   extractSupabaseErrorMessage,
+  resolveTicketSealState,
   type TicketLegalEventRow,
 } from '../legalAuditHelper.ts'
 import {
@@ -771,10 +772,10 @@ test('generateLegalCustodyPdf incluye eventos manuscritos en anexo e incrusta fi
   )
   const combined = streamContent + '\n' + hexStrings.join('\n')
 
-  assert.ok(combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
+  assert.ok(!combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
   assert.ok(combined.includes('600112233'))
   assert.ok(combined.includes('611223344'))
-  assert.ok(rawStr.includes('/Subtype /Image'), 'Debe incrustar el objeto XObject de imagen PNG en el PDF')
+  assert.ok(rawStr.includes('/Subtype /Image'), 'Debe incrustar el objeto XObject de imagen PNG inline en el Anexo')
 })
 
 test('resolveEffectiveSignerIdentity prioriza Certificado Digital sobre Firma Manuscrita previa en UI y PDF', async () => {
@@ -957,6 +958,124 @@ test('generateLegalCustodyPdf genera PDF unificado válido solo con Firma Manusc
   const combined = streamContent + '\n' + hexStrings.join('\n')
 
   assert.ok(combined.includes('Sin certificado digital'))
-  assert.ok(combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
+  assert.ok(!combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
+  assert.ok(rawStr.includes('/Subtype /Image'))
   assert.ok(!combined.includes('HANDWRITTEN_CUSTODY_SIGNED'))
+})
+
+test('generateLegalCustodyPdf incluye participaciones pending (SIN RECLAMAR), elimina Sección 5 e incrusta PNG inline en Anexo (Sección 4)', async () => {
+  const { inflateSync } = await import('node:zlib')
+  const validPng1x1Base64 =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+
+  const pdfBytes = await generateLegalCustodyPdf({
+    ticket: {
+      id: 't-pending-inline',
+      number: '88888',
+      serie: '001',
+      fraccion: '01',
+      draw_name: 'Sorteo Extraordinario de Navidad',
+      draw_date: '2026-12-22',
+      ticket_price: 20,
+    },
+    certification: {
+      verification_code: 'MD-2026-INL-0001',
+      custodian_app_name: 'dianrie',
+      custodian_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+      custodian_nif: '12345678Z',
+      cert_issuer: 'FNMT',
+      cert_serial: 'SER-1',
+      cert_method: 'autofirma',
+      payload_sha256: 'a'.repeat(64),
+      photo_sha256: 'b'.repeat(64),
+      signed_at: '2026-11-28T01:00:00.000Z',
+    },
+    participants: [
+      {
+        name: 'dianrie',
+        appName: 'dianrie',
+        legalName: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        percentage: 75,
+        amountEuros: 15,
+        status: 'ACEPTADA',
+        isOwner: true,
+        signedNif: '12345678Z',
+      },
+      {
+        name: 'Parte 2',
+        appName: 'Parte 2',
+        legalName: null,
+        percentage: 25,
+        amountEuros: 5,
+        status: 'PENDIENTE',
+      },
+    ],
+    events: [
+      {
+        created_at: '2026-11-28T01:00:00.000Z',
+        event_type: 'CUSTODY_CERTIFIED',
+        actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        actor_nif: '12345678Z',
+        share_percentage: 100,
+        payload_sha256: 'c'.repeat(64),
+      },
+      {
+        created_at: '2026-11-28T01:05:00.000Z',
+        event_type: 'HANDWRITTEN_CUSTODY_SIGNED',
+        actor_name: 'DIEGO ANGEL FERNANDEZ GARCIA',
+        actor_nif: '12345678Z',
+        share_percentage: 100,
+        payload_sha256: 'd'.repeat(64),
+        metadata: { phone: '600111222' },
+        signaturePngBase64: validPng1x1Base64,
+      },
+    ],
+  })
+
+  const rawStr = Buffer.from(pdfBytes).toString('latin1')
+  const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g
+  let streamContent = ''
+  let m: RegExpExecArray | null
+  while ((m = streamRegex.exec(rawStr)) !== null) {
+    const chunk = Buffer.from(m[1], 'latin1')
+    try {
+      streamContent += inflateSync(chunk).toString('latin1') + '\n'
+    } catch {
+      streamContent += chunk.toString('latin1') + '\n'
+    }
+  }
+  const hexStrings = Array.from(streamContent.matchAll(/<([0-9a-fA-F]+)>/g)).map((match) =>
+    Buffer.from(match[1], 'hex').toString('latin1')
+  )
+  const combined = streamContent + '\n' + hexStrings.join('\n')
+
+  assert.ok(combined.includes('SIN RECLAMAR'))
+  assert.ok(combined.includes('Pendiente de reclamar'))
+  assert.ok(!combined.includes('5. FIRMAS MANUSCRITAS REGISTRADAS'))
+  assert.ok(rawStr.includes('/Subtype /Image'))
+})
+
+test('resolveTicketSealState devuelve FIRMADO para digital/manuscrita y SIN FIRMAR cuando no hay firma', () => {
+  const digital = resolveTicketSealState({
+    hasDigitalCert: true,
+    hasCustodianHandwritten: false,
+    verificationCode: 'MD-2026-1234',
+  })
+  assert.equal(digital.isSigned, true)
+  assert.equal(digital.title, 'FIRMADO · SELLO DIGITAL')
+  assert.ok(digital.subtitle.includes('MD-2026-1234'))
+
+  const hw = resolveTicketSealState({
+    hasDigitalCert: false,
+    hasCustodianHandwritten: true,
+  })
+  assert.equal(hw.isSigned, true)
+  assert.equal(hw.subtitle, 'ACUERDO MANUSCRITO')
+
+  const unsigned = resolveTicketSealState({
+    hasDigitalCert: false,
+    hasCustodianHandwritten: false,
+  })
+  assert.equal(unsigned.isSigned, false)
+  assert.equal(unsigned.title, 'SIN FIRMAR · SELLO DIGITAL')
 })

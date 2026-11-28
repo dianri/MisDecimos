@@ -39,6 +39,7 @@ import {
   PenLine,
   ChevronDown,
   LogOut,
+  Bell,
 } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -89,7 +90,10 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isDigitalCertOpen, setIsDigitalCertOpen] = useState(true)
   const [isHandwrittenOpen, setIsHandwrittenOpen] = useState(false)
+  const [isRequestingOwnerSign, setIsRequestingOwnerSign] = useState(false)
+  const [ownerSignRequestSent, setOwnerSignRequestSent] = useState(false)
 
   const handleManualRefresh = async () => {
     if (isRefreshing) return
@@ -118,17 +122,29 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
     [certification, acceptedThirdPartyCount]
   )
 
-  // Cargar URL firmada de la foto del anverso si ya está certificado
+  const existingPhotoPath =
+    certification?.photo_path ||
+    handwrittenSignatures.find((h) => h.photo_path)?.photo_path ||
+    null
+  const sharedPhotoSha256 =
+    photoSha256 ||
+    certification?.photo_sha256 ||
+    handwrittenSignatures.find((h) => h.photo_sha256)?.photo_sha256 ||
+    null
+  const sharedPhotoUrl = photoPreviewUrl || certPhotoSignedUrl
+  const hasCapturedPhoto = Boolean(sharedPhotoUrl)
+
+  // Cargar URL firmada de la foto del anverso si ya existe en certificación o firma manuscrita
   useEffect(() => {
     let active = true
-    if (!certification?.photo_path) {
+    if (!existingPhotoPath) {
       setCertPhotoSignedUrl(null)
       return
     }
 
     supabase.storage
       .from('ticket-certifications')
-      .createSignedUrl(certification.photo_path, 3600)
+      .createSignedUrl(existingPhotoPath, 3600)
       .then(({ data }) => {
         if (active && data?.signedUrl) {
           setCertPhotoSignedUrl(data.signedUrl)
@@ -141,7 +157,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
     return () => {
       active = false
     }
-  }, [certification?.photo_path])
+  }, [existingPhotoPath])
 
   // Limpiar ObjectURL local
   useEffect(() => {
@@ -239,7 +255,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         serie: ticket.serie,
         fraccion: ticket.fraccion,
         ticketPrice: ticket.ticket_price,
-        photoSha256,
+        photoSha256: sharedPhotoSha256,
         actorUserId: user?.id || '',
         sharePercentage: 100,
         timestampIso: nowIso,
@@ -278,23 +294,27 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
   }, [signModalMode, ticket, photoSha256, certification?.photo_sha256, user?.id, userShare])
 
   const handleCertifyCustody = async (sig: DigitalSignatureResult) => {
-    if (!user?.id || !photoFile || !photoSha256) {
+    if (!user?.id || !sharedPhotoSha256 || (!photoFile && !existingPhotoPath)) {
       throw new Error('Debes adjuntar la fotografía del anverso del décimo antes de certificar.')
     }
 
-    const ext = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg'
-    const storagePath = `${user.id}/${ticket.id}/anverso-${Date.now()}.${safeExt}`
+    let finalStoragePath = existingPhotoPath
+    if (photoFile) {
+      const ext = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg'
+      const storagePath = `${user.id}/${ticket.id}/anverso-${Date.now()}.${safeExt}`
 
-    const { error: uploadErr } = await supabase.storage
-      .from('ticket-certifications')
-      .upload(storagePath, photoFile, {
-        contentType: photoFile.type || 'image/jpeg',
-        upsert: false,
-      })
+      const { error: uploadErr } = await supabase.storage
+        .from('ticket-certifications')
+        .upload(storagePath, photoFile, {
+          contentType: photoFile.type || 'image/jpeg',
+          upsert: false,
+        })
 
-    if (uploadErr) {
-      throw new Error(`No se pudo subir la imagen del anverso: ${uploadErr.message}`)
+      if (uploadErr) {
+        throw new Error(`No se pudo subir la imagen del anverso: ${uploadErr.message}`)
+      }
+      finalStoragePath = storagePath
     }
 
     const verificationCode = generateVerificationCode()
@@ -303,8 +323,8 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
       ticket_id: ticket.id,
       custodian_user_id: user.id,
       status: 'certified',
-      photo_path: storagePath,
-      photo_sha256: photoSha256,
+      photo_path: finalStoragePath!,
+      photo_sha256: sharedPhotoSha256,
       custodian_name: sig.identity.fullName,
       custodian_nif: sig.identity.nif,
       cert_issuer: sig.identity.issuer,
@@ -317,7 +337,9 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
     })
 
     if (certErr) {
-      await supabase.storage.from('ticket-certifications').remove([storagePath])
+      if (photoFile && finalStoragePath) {
+        await supabase.storage.from('ticket-certifications').remove([finalStoragePath])
+      }
       throw new Error(certErr.message)
     }
 
@@ -451,6 +473,37 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
     }
   }
 
+  const handleRequestOwnerSign = async () => {
+    if (!user?.id || isOwner || isRequestingOwnerSign || ownerSignRequestSent) return
+    setIsRequestingOwnerSign(true)
+    setFeedback(null)
+    try {
+      const requesterName =
+        profile?.display_name || user.email?.split('@')[0] || 'Un partícipe'
+      const { error } = await supabase.from('notifications').insert({
+        user_id: ticket.owner_id,
+        ticket_id: ticket.id,
+        type: 'CUSTODY_SIGN_REQUEST',
+        title: `Solicitud de firma legal · Décimo #${ticket.number}`,
+        body: `${requesterName} solicita que certifiques legalmente la custodia del décimo #${ticket.number}.`,
+        action_url: `/tickets/${ticket.id}?tab=certificacion`,
+      })
+      if (error) throw error
+      setOwnerSignRequestSent(true)
+      setFeedback({
+        type: 'success',
+        text: 'Solicitud de firma enviada al propietario del décimo.',
+      })
+    } catch (err: unknown) {
+      setFeedback({
+        type: 'error',
+        text: extractSupabaseErrorMessage(err, 'No se pudo enviar la solicitud al propietario.'),
+      })
+    } finally {
+      setIsRequestingOwnerSign(false)
+    }
+  }
+
   const handleRenounceClick = async () => {
     if (!userShare) return
     if (requiresDigitalSignatureForRenounce(hasCurrentUserSigned)) {
@@ -523,56 +576,93 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         photo_sha256: fallbackPhotoSha,
         photoBytes,
         photoMimeType,
-        participants: shares
-          .filter((s) => {
-            const st = String(s.status || '').trim().toUpperCase()
-            return st !== 'CANCELADA' && st !== 'RECHAZADA' && st !== 'CANCELLED' && st !== 'REJECTED' && st !== 'DECLINED'
-          })
-          .map((s) => {
-            const isRenounced = s.status === 'RENUNCIADA'
-            const pct = isRenounced ? 0 : Number(s.percentage)
-            const amountEuros = isRenounced ? 0 : (Number(ticket.ticket_price || 20) * pct) / 100
-            const sigEv = participantSignatureByShareId.get(s.id)
-            const hwEv =
-              s.role === 'PROPIETARIO'
-                ? handwrittenSignatures.find((h) => h.signer_role === 'custodian')
-                : handwrittenSignatures.find((h) => h.participation_id === s.id)
-            const appName =
-              s.profiles?.display_name ||
-              s.profiles?.email?.split('@')[0] ||
-              (s.role === 'PROPIETARIO' ? certification?.custodian_name || 'Depositario' : 'Partícipe')
+        participants: [
+          ...shares
+            .filter((s) => {
+              const st = String(s.status || '').trim().toUpperCase()
+              return st !== 'CANCELADA' && st !== 'RECHAZADA' && st !== 'CANCELLED' && st !== 'REJECTED' && st !== 'DECLINED'
+            })
+            .map((s) => {
+              const isRenounced = s.status === 'RENUNCIADA'
+              const pct = isRenounced ? 0 : Number(s.percentage)
+              const amountEuros = isRenounced ? 0 : (Number(ticket.ticket_price || 20) * pct) / 100
+              const sigEv = participantSignatureByShareId.get(s.id)
+              const hwEv =
+                s.role === 'PROPIETARIO'
+                  ? handwrittenSignatures.find((h) => h.signer_role === 'custodian')
+                  : handwrittenSignatures.find((h) => h.participation_id === s.id)
+              const appName =
+                s.profiles?.display_name ||
+                s.profiles?.email?.split('@')[0] ||
+                (s.role === 'PROPIETARIO' ? certification?.custodian_name || 'Depositario' : 'Partícipe')
 
-            // Precedencia absoluta del Certificado Digital sobre Firma Manuscrita
-            const isOwnerRow = s.role === 'PROPIETARIO'
-            const legalName =
-              isOwnerRow && certification
-                ? certification.custodian_name
-                : sigEv?.actor_name || hwEv?.full_name || null
-            const signedNif =
-              isOwnerRow && certification
-                ? certification.custodian_nif
-                : sigEv?.actor_nif || hwEv?.nif || null
-            const certMethod =
-              isOwnerRow && certification
-                ? certification.cert_method
-                : sigEv?.cert_method || (hwEv ? 'handwritten' : null)
+              // Precedencia absoluta del Certificado Digital sobre Firma Manuscrita
+              const isOwnerRow = s.role === 'PROPIETARIO'
+              const legalName =
+                isOwnerRow && certification
+                  ? certification.custodian_name
+                  : sigEv?.actor_name || hwEv?.full_name || null
+              const signedNif =
+                isOwnerRow && certification
+                  ? certification.custodian_nif
+                  : sigEv?.actor_nif || hwEv?.nif || null
+              const certMethod =
+                isOwnerRow && certification
+                  ? certification.cert_method
+                  : sigEv?.cert_method || (hwEv ? 'handwritten' : null)
 
+              return {
+                name: appName,
+                appName,
+                legalName,
+                percentage: pct,
+                amountEuros,
+                status: s.status,
+                isOwner: isOwnerRow,
+                signedNif,
+                certIssuer: sigEv?.cert_issuer || null,
+                certSerial: sigEv?.cert_serial || null,
+                certMethod,
+                signedAt: sigEv?.created_at || hwEv?.signed_at || null,
+              }
+            }),
+          ...activePendingInvites.map((inv) => {
+            const pct = Number(inv.percentage)
             return {
-              name: appName,
-              appName,
-              legalName,
+              name: inv.label || `Invitación ${inv.short_code}`,
+              appName: inv.label || `Invitación ${inv.short_code}`,
+              legalName: null,
               percentage: pct,
-              amountEuros,
-              status: s.status,
-              isOwner: isOwnerRow,
-              signedNif,
-              certIssuer: sigEv?.cert_issuer || null,
-              certSerial: sigEv?.cert_serial || null,
-              certMethod,
-              signedAt: sigEv?.created_at || hwEv?.signed_at || null,
+              amountEuros: (Number(ticket.ticket_price || 20) * pct) / 100,
+              status: 'PENDIENTE',
+              isOwner: false,
+              signedNif: null,
+              certIssuer: null,
+              certSerial: null,
+              certMethod: null,
+              signedAt: null,
             }
           }),
-        events: legalEvents,
+        ],
+        events: legalEvents.map((ev) => {
+          let signaturePngBase64: string | null = null
+          if (ev.event_type === 'HANDWRITTEN_CUSTODY_SIGNED') {
+            signaturePngBase64 =
+              handwrittenSignatures.find((h) => h.signer_role === 'custodian')?.signature_image_b64 ||
+              null
+          } else if (ev.event_type === 'HANDWRITTEN_PARTICIPATION_SIGNED') {
+            signaturePngBase64 =
+              handwrittenSignatures.find(
+                (h) =>
+                  (ev.participation_id && h.participation_id === ev.participation_id) ||
+                  (h.signer_role === 'participant' && h.signer_user_id === ev.actor_user_id)
+              )?.signature_image_b64 || null
+          }
+          return {
+            ...ev,
+            signaturePngBase64,
+          }
+        }),
         handwrittenSigners: handwrittenSignatures.map((hw) => {
           const share =
             hw.signer_role === 'custodian'
@@ -646,9 +736,57 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
         </div>
       )}
 
-      {/* SECCIÓN 1 — Certificado Digital (Validez jurídica plena) */}
-      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-4 sm:p-5 space-y-4 shadow-xs">
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+      {/* Vista única compartida de la fotografía del anverso del décimo */}
+      {hasCapturedPhoto && sharedPhotoUrl && (
+        <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] p-4 space-y-2.5 shadow-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
+              Anverso del décimo #{ticket.number}
+            </span>
+            {sharedPhotoSha256 && (
+              <span className="text-[10px] font-mono text-[#1D1D1F]/55 dark:text-[#F5F5F7]/55">
+                SHA-256: {sharedPhotoSha256.slice(0, 12)}...
+              </span>
+            )}
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-black/[0.02]">
+            <img
+              src={sharedPhotoUrl}
+              alt="Anverso del décimo"
+              className="w-full max-h-56 object-contain"
+            />
+          </div>
+          {!certification && isOwner && !existingPhotoPath && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCameraModalOpen(true)}
+                className="py-2 px-3 rounded-xl bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] hover:bg-[#1D1D1F]/[0.10] text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                <span>Repetir foto</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                className="py-2 px-3 rounded-xl bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 border border-[#C5A880]/50 text-xs font-semibold text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <FolderOpen className="w-3.5 h-3.5 shrink-0" />
+                <span>Elegir otro archivo</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SECCIÓN 1 — Certificado Digital (Acordeón abierto por defecto) */}
+      <div className="bg-white dark:bg-[#1D1D1F] rounded-[22px] border border-[#1D1D1F]/[0.07] dark:border-[#F5F5F7]/[0.08] shadow-xs overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setIsDigitalCertOpen((prev) => !prev)}
+          aria-expanded={isDigitalCertOpen}
+          className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 text-left hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition cursor-pointer"
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-9 h-9 rounded-xl bg-[#3A5245] text-white flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5 text-[#C5A880]" />
@@ -665,148 +803,172 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
             </div>
           </div>
 
-          {certification && (
-            <span
-              className={`self-start inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ${
-                lockState.isLocked
-                  ? 'bg-[#3A5245] text-white'
-                  : 'bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9]'
-              }`}
-            >
-              {lockState.isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-              <span>{lockState.isLocked ? 'Bloqueado · Custodia protegida' : 'Editable'}</span>
-            </span>
-          )}
-        </div>
-
-        {certification ? (
-          <div className="space-y-3">
-            <div className="p-3.5 rounded-2xl bg-[#FCF9F3] dark:bg-[#262017] border border-[#C5A880]/45 space-y-1.5 text-xs">
-              <p className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
-                {certification.custodian_name} · NIF {certification.custodian_nif}
-              </p>
-              <p className="text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
-                Emisor: {certification.cert_issuer} · Serie: {certification.cert_serial}
-              </p>
-              <p className="text-[11px] font-mono text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65 break-all">
-                SHA-256 anverso: {certification.photo_sha256}
-              </p>
-            </div>
-
-            {certPhotoSignedUrl && (
-              <div className="rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-black/[0.02]">
-                <img
-                  src={certPhotoSignedUrl}
-                  alt="Anverso certificado del décimo"
-                  className="w-full max-h-56 object-contain"
-                />
-              </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {certification && (
+              <span
+                className={`hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                  lockState.isLocked
+                    ? 'bg-[#3A5245] text-white'
+                    : 'bg-[#C5A880]/20 text-[#73562E] dark:text-[#E5CFA9]'
+                }`}
+              >
+                {lockState.isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                <span>{lockState.isLocked ? 'Bloqueado' : 'Editable'}</span>
+              </span>
             )}
-
-            <p className="text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 leading-relaxed">
-              <strong>{lockState.statusLabel}:</strong> {lockState.statusDescription}
-            </p>
+            <ChevronDown
+              className={`w-4 h-4 text-[#1D1D1F]/55 dark:text-[#F5F5F7]/55 transition-transform duration-200 ${
+                isDigitalCertOpen ? 'rotate-180' : ''
+              }`}
+            />
           </div>
-        ) : isOwner ? (
-          <div className="space-y-3.5">
-            <div className="p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[11px] text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75 leading-relaxed">
-              Al certificar la custodia declaras bajo tu responsabilidad que posees físicamente el
-              décimo <strong>#{ticket.number}</strong> y custodias las participaciones asignadas.
-            </div>
+        </button>
 
-            <div className="space-y-2.5">
-              <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
-                Fotografía del anverso del décimo (obligatoria)
-              </label>
+        {isDigitalCertOpen && (
+          <div className="px-4 sm:px-5 pb-5 pt-1 space-y-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+            {certification ? (
+              <div className="space-y-3 pt-2">
+                <div className="p-3.5 rounded-2xl bg-[#FCF9F3] dark:bg-[#262017] border border-[#C5A880]/45 space-y-1.5 text-xs">
+                  <p className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                    {certification.custodian_name} · NIF {certification.custodian_nif}
+                  </p>
+                  <p className="text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70">
+                    Emisor: {certification.cert_issuer} · Serie: {certification.cert_serial}
+                  </p>
+                  <p className="text-[11px] font-mono text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65 break-all">
+                    SHA-256 anverso: {certification.photo_sha256}
+                  </p>
+                </div>
 
-              {/* Input oculto para galería/archivo (sin capture) */}
-              <input
-                ref={galleryInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null
-                  e.target.value = ''
-                  handlePhotoSelected(file)
-                }}
-                className="hidden"
-              />
+                <p className="text-[11px] text-[#1D1D1F]/70 dark:text-[#F5F5F7]/70 leading-relaxed">
+                  <strong>{lockState.statusLabel}:</strong> {lockState.statusDescription}
+                </p>
+              </div>
+            ) : isOwner ? (
+              <div className="space-y-3.5 pt-2">
+                <div className="p-3.5 rounded-2xl bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[11px] text-[#1D1D1F]/75 dark:text-[#F5F5F7]/75 leading-relaxed">
+                  Al certificar la custodia declaras bajo tu responsabilidad que posees físicamente el
+                  décimo <strong>#{ticket.number}</strong> y custodias las participaciones asignadas.
+                </div>
 
-              {!photoPreviewUrl ? (
-                <button
-                  type="button"
-                  onClick={() => setIsCameraModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border border-dashed border-[#C5A880]/70 bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 transition cursor-pointer text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]"
-                >
-                  <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
-                  <span>Adjuntar o capturar foto del anverso</span>
-                </button>
-              ) : (
-                <div className="space-y-2.5">
-                  <img
-                    src={photoPreviewUrl}
-                    alt="Vista previa del anverso"
-                    className="w-full max-h-48 object-contain rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.02]"
-                  />
-                  {photoSha256 && (
-                    <p className="text-[10px] font-mono text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60 break-all">
-                      SHA-256 calculado: {photoSha256}
-                    </p>
-                  )}
-                  <div className="grid grid-cols-2 gap-2">
+                {/* Input oculto para galería/archivo (sin capture) */}
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null
+                    e.target.value = ''
+                    handlePhotoSelected(file)
+                  }}
+                  className="hidden"
+                />
+
+                {!hasCapturedPhoto && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+                      Fotografía del anverso del décimo (obligatoria)
+                    </label>
                     <button
                       type="button"
                       onClick={() => setIsCameraModalOpen(true)}
-                      className="py-2 px-3 rounded-xl bg-[#1D1D1F]/[0.06] dark:bg-[#F5F5F7]/[0.08] hover:bg-[#1D1D1F]/[0.10] text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center justify-center gap-1.5 transition cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border border-dashed border-[#C5A880]/70 bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 transition cursor-pointer text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]"
                     >
-                      <RefreshCw className="w-3.5 h-3.5 shrink-0" />
-                      <span>Repetir foto</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => galleryInputRef.current?.click()}
-                      className="py-2 px-3 rounded-xl bg-[#FCF9F3] dark:bg-[#262017] hover:bg-[#C5A880]/15 border border-[#C5A880]/50 text-xs font-semibold text-[#73562E] dark:text-[#E5CFA9] flex items-center justify-center gap-1.5 transition cursor-pointer"
-                    >
-                      <FolderOpen className="w-3.5 h-3.5 shrink-0" />
-                      <span>Elegir otro archivo</span>
+                      <Camera className="w-4 h-4 text-[#C5A880] shrink-0" />
+                      <span>Adjuntar o capturar foto del anverso</span>
                     </button>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
 
-            <button
-              type="button"
-              disabled={!photoFile || !photoSha256}
-              onClick={() => setSignModalMode('custody')}
-              className="w-full py-3 px-4 rounded-2xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-45 cursor-pointer"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Certificar custodia con certificado digital</span>
-            </button>
-          </div>
-        ) : (
-          <p className="text-xs text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
-            El depositario aún no ha certificado digitalmente la custodia de este décimo.
-          </p>
-        )}
-
-        {(certification || handwrittenSignatures.length > 0) && (
-          <button
-            type="button"
-            onClick={handleDownloadPdf}
-            disabled={isDownloadingPdf}
-            className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-          >
-            {isDownloadingPdf ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+                <button
+                  type="button"
+                  disabled={!sharedPhotoSha256 || (!photoFile && !existingPhotoPath)}
+                  onClick={() => setSignModalMode('custody')}
+                  className="w-full py-3 px-4 rounded-2xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-45 cursor-pointer"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Certificar custodia con certificado digital</span>
+                </button>
+              </div>
             ) : (
-              <FileDown className="w-4 h-4 text-[#C5A880]" />
+              <div className="space-y-3 pt-2">
+                <p className="text-xs text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
+                  El depositario aún no ha certificado digitalmente la custodia de este décimo.
+                </p>
+
+                {userShare && (userShare.status === 'ACEPTADA' || userShare.status === 'PENDIENTE') && (
+                  <button
+                    type="button"
+                    onClick={handleRequestOwnerSign}
+                    disabled={isRequestingOwnerSign || ownerSignRequestSent}
+                    className={`w-full py-3 px-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                      ownerSignRequestSent
+                        ? 'bg-[#3A5245]/12 text-[#3A5245] dark:text-[#A8CEB9] border border-[#3A5245]/25 cursor-default'
+                        : 'bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] disabled:opacity-50'
+                    }`}
+                  >
+                    {isRequestingOwnerSign ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : ownerSignRequestSent ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <Bell className="w-4 h-4" />
+                    )}
+                    <span>
+                      {ownerSignRequestSent
+                        ? 'Solicitud enviada al propietario'
+                        : 'Solicitar firma al propietario'}
+                    </span>
+                  </button>
+                )}
+              </div>
             )}
-            <span>
-              {isDownloadingPdf ? 'Generando PDF legal...' : 'Descargar Documento Legal (PDF)'}
-            </span>
-          </button>
+
+            {/* Botón unificado del partícipe dentro de Certificado Digital (encima de Descargar PDF) */}
+            {!isOwner && certification && userShare && userShare.status === 'ACEPTADA' && (
+              <button
+                type="button"
+                onClick={
+                  hasCurrentUserSigned
+                    ? () => setSignModalMode('participant_renounce')
+                    : () => setSignModalMode('participant_sign')
+                }
+                disabled={isProcessing}
+                className="w-full py-3 px-4 rounded-2xl bg-[#C5A880] hover:bg-[#B8996E] text-[#1D1D1F] text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-45 cursor-pointer"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : hasCurrentUserSigned ? (
+                  <LogOut className="w-4 h-4" />
+                ) : (
+                  <FileSignature className="w-4 h-4" />
+                )}
+                <span>
+                  {hasCurrentUserSigned
+                    ? 'Renunciar participación con certificado digital'
+                    : 'Firmar participación con certificado digital'}
+                </span>
+              </button>
+            )}
+
+            {(certification || handwrittenSignatures.length > 0) && (
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isDownloadingPdf}
+                className="w-full py-3 px-4 rounded-2xl bg-[#3A5245] hover:bg-[#2F4338] text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+              >
+                {isDownloadingPdf ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileDown className="w-4 h-4 text-[#C5A880]" />
+                )}
+                <span>
+                  {isDownloadingPdf ? 'Generando PDF legal...' : 'Descargar Documento Legal (PDF)'}
+                </span>
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -848,7 +1010,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
                 >
                   <div className="min-w-0">
                     <p className="font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] truncate">
-                      {name} ({s.percentage}%)
+                      {sig ? `${sig.actor_name} (${name})` : name} ({s.percentage}%)
                     </p>
                     <p className="text-[11px] text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
                       {s.status === 'RENUNCIADA'
@@ -897,21 +1059,9 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
           </div>
         )}
 
-        {/* Acciones del partícipe actual */}
-        {!isOwner && userShare && userShare.status === 'ACEPTADA' && (
-          <div className="pt-2 space-y-2 border-t border-black/[0.06] dark:border-white/[0.08]">
-            {!hasCurrentUserSigned && certification && (
-              <button
-                type="button"
-                onClick={() => setSignModalMode('participant_sign')}
-                disabled={isProcessing}
-                className="w-full py-2.5 px-4 rounded-2xl bg-[#3A5245]/12 hover:bg-[#3A5245]/20 text-[#2B3F34] dark:text-[#A8CEB9] border border-[#3A5245]/25 text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
-              >
-                <FileSignature className="w-4 h-4" />
-                <span>Firmar mi participación con certificado digital</span>
-              </button>
-            )}
-
+        {/* Renuncia simple del partícipe cuando su participación aún no tiene firma digital */}
+        {!isOwner && userShare && userShare.status === 'ACEPTADA' && !hasCurrentUserSigned && (
+          <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
             <button
               type="button"
               onClick={handleRenounceClick}
@@ -923,11 +1073,7 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
               ) : (
                 <LogOut className="w-4 h-4" />
               )}
-              <span>
-                {hasCurrentUserSigned
-                  ? 'Renunciar a participación (requiere firma)'
-                  : 'Renunciar a participación'}
-              </span>
+              <span>Renunciar a participación</span>
             </button>
           </div>
         )}
@@ -992,6 +1138,10 @@ export const LegalCertificationTab: React.FC<LegalCertificationTabProps> = ({
               certification={certification}
               handwrittenSignatures={handwrittenSignatures}
               legalEvents={legalEvents}
+              sharedPhotoFile={photoFile}
+              sharedPhotoSha256={sharedPhotoSha256}
+              hasSharedPhoto={hasCapturedPhoto}
+              onSharedPhotoSelected={handlePhotoSelected}
               onRefresh={onRefresh}
               onRenounced={onRenounced}
             />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { Database } from '../../types/database.types'
+import type { TicketSealStatus } from '../../lib/legalAuditHelper'
 import { ShieldCheck, Trophy } from 'lucide-react'
 
 type TicketRow = Database['public']['Tables']['tickets']['Row']
@@ -10,6 +11,7 @@ export interface RealisticTicketCardProps {
   template?: DrawTemplate | null
   variant?: 'full' | 'compact'
   className?: string
+  sealStatus?: TicketSealStatus
   onSealClick?: () => void
 }
 
@@ -18,6 +20,7 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
   template,
   variant = 'full',
   className = '',
+  sealStatus,
   onSealClick,
 }) => {
   const [imageLoadError, setImageLoadError] = useState(false)
@@ -147,28 +150,50 @@ export const RealisticTicketCard: React.FC<RealisticTicketCardProps> = ({
                       }
                     : undefined
                 }
-                aria-label={onSealClick ? 'MISDECIMOS SELLO DIGITAL' : undefined}
-                title={onSealClick ? 'MISDECIMOS SELLO DIGITAL' : undefined}
+                aria-label={
+                  onSealClick
+                    ? sealStatus?.title || 'MISDECIMOS SELLO DIGITAL'
+                    : undefined
+                }
+                title={
+                  onSealClick
+                    ? sealStatus?.title || 'MISDECIMOS SELLO DIGITAL'
+                    : undefined
+                }
                 className={`col-span-4 rounded-2xl border p-2.5 flex flex-col items-center justify-center text-center ${
-                  isPrized
+                  sealStatus?.isSigned
+                    ? 'bg-[#3A5245]/12 dark:bg-[#3A5245]/35 border-[#C5A880]'
+                    : isPrized
                     ? 'bg-[#C5A880]/15 border-[#C5A880]/60'
                     : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10'
                 } ${onSealClick ? 'cursor-pointer select-none active:scale-95 transition' : ''}`}
               >
                 <div
                   className={`h-8 w-8 rounded-full border flex items-center justify-center mb-1.5 ${
-                    isPrized
+                    sealStatus?.isSigned
+                      ? 'bg-[#3A5245] border-[#C5A880] text-[#C5A880]'
+                      : isPrized
                       ? 'bg-[#C5A880] border-[#C5A880] text-[#1D1D1F]'
                       : 'bg-white dark:bg-[#1D1D1F] border-[#C5A880]/50 text-[#C5A880]'
                   }`}
                 >
                   <ShieldCheck className="h-4 w-4" />
                 </div>
-                <p className="text-[9px] font-extrabold uppercase tracking-wider leading-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
-                  MisDecimos
+                <p
+                  className={`text-[8.5px] font-extrabold uppercase tracking-wider leading-tight ${
+                    sealStatus?.isSigned
+                      ? 'text-[#3A5245] dark:text-[#C5A880]'
+                      : 'text-[#1D1D1F] dark:text-[#F5F5F7]'
+                  }`}
+                >
+                  {sealStatus?.isSigned ? 'FIRMADO' : 'SIN FIRMAR'}
                 </p>
-                <p className="text-[8px] font-mono leading-none mt-0.5 text-[#1D1D1F]/60 dark:text-[#F5F5F7]/60">
-                  SELLO DIGITAL
+                <p className="text-[7.5px] font-mono leading-tight mt-0.5 text-[#1D1D1F]/65 dark:text-[#F5F5F7]/65">
+                  {sealStatus?.isSigned
+                    ? sealStatus.mode === 'digital'
+                      ? sealStatus.verificationCode || 'CUSTODIA CERTIFICADA'
+                      : 'ACUERDO MANUSCRITO'
+                    : 'SELLO DIGITAL'}
                 </p>
               </div>
 
