@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.112] - 2026-11-28
+
+### Docs
+- **Regla de documentación funcional en `AGENTS.md`:**
+  - Añadida la directriz obligatoria de actualizar `docs/SCREENS_GUIDE.md` en ramas `feat/*` que modifiquen pantallas, pestañas, modales, gestos o flujos de usuario antes de fusionar en `develop` (y solo en `fix/*` si cambia el comportamiento visible documentado).
+
 ## [1.0.111] - 2026-11-28
 
 ### Docs

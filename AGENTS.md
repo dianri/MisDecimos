@@ -46,6 +46,10 @@ Este documento define las normas obligatorias de arquitectura, flujo Git, docume
 5. **Cierre de tarea:**
    - Es obligatorio actualizar `CHANGELOG.md`, `README.md`, `docs/STATUS.md` y comprobar si `AGENTS.md`, `docs/ARCHITECTURE.md` o `docs/SCREENS_GUIDE.md` requieren actualización antes de integrar la rama en `develop`.
 
+### Documentación funcional (`docs/SCREENS_GUIDE.md`)
+- En ramas `fix/*`: no es necesario modificar `docs/SCREENS_GUIDE.md` salvo que cambie el comportamiento visible documentado.
+- En ramas `feat/*` que añadan o modifiquen pantallas, pestañas, modales, gestos o flujos de usuario: es obligatorio actualizar la sección correspondiente de `docs/SCREENS_GUIDE.md` antes de fusionar en `develop`.
+
 ## Regla Obligatoria de Base de Datos y Backups (Supabase Cloud)
 Estas normas son de estricto cumplimiento para cualquier tarea futura que implique cambios en la base de datos:
 1. **Backup previo obligatorio:** Antes de crear, modificar o aplicar cualquier migración SQL (`supabase/migrations/*`), trigger, función RPC o cambio de esquema/RLS en Supabase, el agente **debe ejecutar primero `npm run db:backup`** y confirmar que el archivo `.sql` en `backups/` se ha generado correctamente y no está vacío (`> 0 bytes`). Si no puede ejecutarse por faltar `SUPABASE_DB_URL` en `.env.local`, debe detenerse y pedírsela al usuario antes de tocar la base de datos.
