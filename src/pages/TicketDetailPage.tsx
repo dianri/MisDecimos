@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from '../hooks/useSearchParams'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { RealisticTicketCard } from '../components/tickets/RealisticTicketCard'
@@ -81,16 +82,76 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [legalEvents, setLegalEvents] = useState<TicketLegalEventRow[]>([])
   const [isArchived, setIsArchived] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'propiedad' | 'certificacion' | 'historial'>(() => {
-    if (typeof window !== 'undefined') {
-      const stateTab = (window.history.state as { openTab?: string } | null)?.openTab
-      const queryTab = new URLSearchParams(window.location.search).get('tab')
-      if (stateTab === 'certificacion' || queryTab === 'certification' || queryTab === 'certificacion') {
-        return 'certificacion'
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabsSectionRef = useRef<HTMLDivElement | null>(null)
+
+  const resolveDetailTab = useCallback(
+    (queryTab: string | null, stateTab?: string): 'propiedad' | 'certificacion' | 'historial' | null => {
+      const candidate = (queryTab || stateTab || '').trim().toLowerCase()
+      if (candidate === 'certification' || candidate === 'certificacion') return 'certificacion'
+      if (candidate === 'historial' || candidate === 'history') return 'historial'
+      if (candidate === 'propiedad' || candidate === 'reparto') return 'propiedad'
+      return null
+    },
+    []
+  )
+
+  const [activeTab, setActiveTabState] = useState<'propiedad' | 'certificacion' | 'historial'>(() => {
+    const stateTab =
+      typeof window !== 'undefined'
+        ? (window.history.state as { openTab?: string } | null)?.openTab
+        : undefined
+    return resolveDetailTab(searchParams.get('tab'), stateTab) || 'propiedad'
+  })
+
+  const setActiveTab = useCallback(
+    (nextTab: 'propiedad' | 'certificacion' | 'historial') => {
+      setActiveTabState(nextTab)
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.set('tab', nextTab === 'certificacion' ? 'certification' : nextTab)
+          return next
+        },
+        { replace: true }
+      )
+    },
+    [setSearchParams]
+  )
+
+  // Sincronizar ?tab=... y history.state tanto en entrada inicial como al navegar entre rutas
+  useEffect(() => {
+    const syncTabFromUrlOrState = () => {
+      const stateTab =
+        typeof window !== 'undefined'
+          ? (window.history.state as { openTab?: string } | null)?.openTab
+          : undefined
+      const queryTab =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('tab')
+          : searchParams.get('tab')
+      const resolved = resolveDetailTab(queryTab, stateTab)
+      if (resolved) {
+        setActiveTabState(resolved)
+        if (!queryTab) {
+          setSearchParams(
+            (prev) => {
+              const next = new URLSearchParams(prev)
+              next.set('tab', resolved === 'certificacion' ? 'certification' : resolved)
+              return next
+            },
+            { replace: true }
+          )
+        }
       }
     }
-    return 'propiedad'
-  })
+
+    syncTabFromUrlOrState()
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', syncTabFromUrlOrState)
+      return () => window.removeEventListener('popstate', syncTabFromUrlOrState)
+    }
+  }, [searchParams, ticketId, resolveDetailTab, setSearchParams])
   const [autoOpenRenounceModal, setAutoOpenRenounceModal] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const stateAction = (window.history.state as { action?: string } | null)?.action
@@ -164,7 +225,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
   const [isSimulating, setIsSimulating] = useState(false)
   const lastTapRef = useRef<number>(0)
 
-  const handleSealClick = () => {
+  const handleNumberBoxClick = () => {
     const now = Date.now()
     if (now - lastTapRef.current > 2500) {
       setSealTapCount(1)
@@ -177,6 +238,11 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       }
     }
     lastTapRef.current = now
+  }
+
+  const handleOpenCertificationFromSeal = () => {
+    setActiveTab('certificacion')
+    tabsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const handleSimulatePrize = async (amount: number = 1000) => {
@@ -634,7 +700,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
       )}
 
       {/* 2. Pestañas de PROPIEDAD, CERTIFICACIÓN LEGAL e HISTORIAL */}
-      <div className="space-y-2.5 sm:space-y-4">
+      <div ref={tabsSectionRef} className="space-y-2.5 sm:space-y-4">
         <div className="grid grid-cols-3 border-b border-[#1D1D1F]/10 dark:border-[#F5F5F7]/10">
           <button
             type="button"
@@ -737,7 +803,8 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({
           template={template}
           variant="full"
           sealStatus={ticketSealStatus}
-          onSealClick={isOwner ? handleSealClick : undefined}
+          onSealClick={handleOpenCertificationFromSeal}
+          onNumberBoxClick={isOwner ? handleNumberBoxClick : undefined}
         />
 
         {/* Fila inferior de metadatos */}

@@ -289,6 +289,14 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
     }
   }
 
+  const handleSealBadgeClick = (ticketId: string) => {
+    if (onSelectTicket) {
+      onSelectTicket(ticketId, { state: { fromTab: activeTab, openTab: 'certificacion' } })
+    } else if (typeof window !== 'undefined') {
+      window.location.href = `/tickets/${ticketId}?tab=certification`
+    }
+  }
+
   const handleQuickShare = (ticketId: string, hasParticipations: boolean) => {
     if (!onSelectTicket) return
     const target = resolveShareButtonNavigation({
@@ -649,6 +657,7 @@ export const TicketsPage: React.FC<TicketsPageProps> = ({
                     verificationCode: certByTicketId[item.ticket.id] || null,
                   })}
                   onShareClick={handleQuickShare}
+                  onSealClick={handleSealBadgeClick}
                   onCheckPrizeClick={handleQuickPrizeCheck}
                   onToggleCollectedClick={handleToggleOwnerCollected}
                 />

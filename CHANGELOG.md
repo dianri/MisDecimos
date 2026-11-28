@@ -5,6 +5,14 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.109] - 2026-11-28
+
+### Changed
+- **Navegación directa desde el Sello Digital / badge de firma y reubicación de las 5 pulsaciones (`TicketListItemCard.tsx`, `TicketsPage.tsx`, `RealisticTicketCard.tsx`, `TicketDetailPage.tsx`):**
+  - Convertido el badge `SIN FIRMAR` / `FIRMADO` de `TicketListItemCard` en un botón clickable con `stopPropagation()` que navega directamente a `/tickets/${ticket.id}?tab=certification`.
+  - Sincronizado `?tab=...` (`certification`, `propiedad`, `historial`) y `location.state` en `TicketDetailPage.tsx` tanto en entrada inicial como al navegar entre rutas.
+  - Reubicado el disparador de 5 pulsaciones de simulación de premio al recuadro de `NÚMERO / SERIE / FRACCIÓN`, y convertido el recuadro `SELLO DIGITAL` en botón interactivo que abre la pestaña `Certificación Legal` (`?tab=certification`) con scroll suave.
+
 ## [1.0.108] - 2026-11-28
 
 ### Changed
