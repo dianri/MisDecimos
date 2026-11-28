@@ -73,7 +73,7 @@ flowchart TD
    - En ordenadores y tabletas (`>= 768px`), la barra inferior se oculta automáticamente y el relleno inferior de la pantalla se reduce (`pb-24 md:pb-10`), posicionando los toasts flotantes de forma ergonómica (`bottom-20 md:bottom-6`).
    - **Historial Completo de Navegación:** El cambio de pestaña añade entradas al historial de navegación (sin `replace: true`), permitiendo que el botón o gesto "Atrás" de Android regrese naturalmente a la vista anterior.
 3. **Gestión del Botón Atrás de Android y Protección contra Cierre PWA (`useAndroidBackNavigation` y `useModalBackHandler`):**
-   - **Cierre Natural de Modales y Sheets:** Al abrir cualquier diálogo (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal` o el modal de `<VersionBadge />`), pulsar el botón Atrás cierra limpiamente el modal sin abandonar la pantalla actual ni cerrar la aplicación.
+   - **Cierre Natural de Modales y Sheets:** Al abrir cualquier diálogo (`TicketFormModal`, `CreateParticipationSheet`, `BarcodeScannerModal`, `ShareInviteModal`, `InviteClaimModal`, `CertificateSignModal`, `TicketPhotoCaptureModal` o el modal de `<VersionBadge />`), pulsar el botón Atrás cierra limpiamente el modal sin abandonar la pantalla actual ni cerrar la aplicación.
    - **Navegación Interior:** En pantallas secundarias (`/alertas`, `/auditoria`, `/perfil`, `/billetes/:id`), pulsar Atrás regresa a la pantalla previa. Si se accedió por enlace profundo o notificación sin historial (`idx === 0`), redirige a la raíz `/` en vez de cerrar la PWA.
    - **Guardia Centinela en Ruta Raíz y Confirmación Doble Tap:** En la vista principal (`/`), el primer toque de Atrás muestra un toast flotante (`z-50`, encima de `BottomNav`): *"Pulsa atrás de nuevo para cerrar la aplicación"*. Si se pulsa de nuevo en menos de 2,5 segundos, la aplicación se cierra; si no, el aviso desaparece y la protección se rearma automáticamente.
 4. **Componente `<VersionBadge />` (píldora flotante exclusiva en `Mi Perfil`):**
@@ -129,6 +129,7 @@ flowchart TD
   - **Deslizar hacia la izquierda:** Revela en el fondo derecho el botón **Eliminar** (solicita confirmación antes de borrar).
   - Solo una tarjeta permanece abierta a la vez; pulsar una tarjeta abierta cierra el desplazamiento sin navegar.
 - **Acciones Rápidas en Cada Tarjeta (`<TicketListItemCard />`):**
+  - **Badge Interactivo `SIN FIRMAR` / `FIRMADO`:** Situado junto a la fecha del sorteo como botón independiente (`<button type="button" data-no-card-nav="true">`) con `e.stopPropagation()` para no disparar la navegación por defecto hacia `Reparto`. Muestra el estado visual del sello (`Firmado` en verde/oro cuando existe certificación digital o firma manuscrita del depositario; `Sin firmar` en gris neutro cuando no hay firma) y al pulsarlo navega directamente al detalle del décimo abriendo la pestaña **Certificación Legal** (`/billetes/:id?tab=certification`).
   - **Botón `Compartir`:** Situado a la derecha de la fecha del sorteo (con `e.stopPropagation()`). Si el décimo no tiene participaciones ni invitaciones pendientes, navega al detalle abriendo automáticamente el modal de nueva participación (`openCreateShare: true`); si ya tiene participaciones, navega con `selectShareToShare: true` y dispara un toast flotante dentro del detalle (*"Selecciona una participación para compartir"* · *"Pulsa sobre cualquiera de las participaciones de la lista para ver su enlace o código."*).
   - **Botón `Comprobar sorteo`:** Situado en la esquina inferior izquierda (con `e.stopPropagation()`). Si la fecha del sorteo es futura (`draw_date > hoy`), muestra un aviso claro sin invocar red; si ya se celebró (`draw_date <= hoy`), ejecuta la Edge Function `check-prizes`, actualiza el estado del décimo y notifica el resultado en un toast.
 1. **Botón Único de Ancho Completo `Añadir` (Escáner Unificado):**
@@ -164,24 +165,27 @@ flowchart TD
 - **Comprobación de Premios:** [`src/components/tickets/PrizeCheckCard.tsx`](../src/components/tickets/PrizeCheckCard.tsx)
 - **Reparto y Participaciones:** [`src/components/tickets/CreateParticipationSheet.tsx`](../src/components/tickets/CreateParticipationSheet.tsx)
 - **Modal de Compartición (QR / Link / WhatsApp):** [`src/components/tickets/ShareInviteModal.tsx`](../src/components/tickets/ShareInviteModal.tsx)
+- **Certificación Legal y Firma:** [`src/components/tickets/LegalCertificationTab.tsx`](../src/components/tickets/LegalCertificationTab.tsx), [`src/components/tickets/HandwrittenSignatureTab.tsx`](../src/components/tickets/HandwrittenSignatureTab.tsx), [`src/components/tickets/CertificateSignModal.tsx`](../src/components/tickets/CertificateSignModal.tsx)
 
 ### Estructura Vertical y Jerarquía de Contenidos:
 1. **Cabecera Superior Fija:** Botón ergonómico de retroceso contextual (`<-`, área táctil accesible `>= 44×44 px` con `aria-label="Volver atrás"`), título *"Detalles del Décimo"*, subtítulo con número y sorteo (`#número · Sorteo...`) e insignia de estado (`VALIDADO` / `PENDIENTE` / `¡PREMIADO!`).
-2. **Bloque Principal de Reparto e Historial (Cabecera de Contenido):**
-   - Selector de pestañas simétrico (`grid-cols-2`, altura táctil `>= 44 px`) con espaciado vertical compacto en móvil para mantener el décimo visible en el primer pliegue: **Propiedad y Reparto** (`Users`) e **Historial** (`Shield`).
-   - Vista **Propiedad y Reparto**: Gráfico Donut SVG de precisión, desglose de cotitulares con importes y estados, y botón de acción *"Añadir participación"*.
-   - Vista **Historial**: Línea cronológica inmutable de eventos de auditoría (`TicketAuditTimeline`).
+2. **Bloque Principal de 3 Pestañas (`Reparto`, `Certificación Legal` e `Historial`):**
+   - Selector de pestañas simétrico (`grid-cols-3`, altura táctil `>= 44 px`) con sincronización en URL (`?tab=propiedad`, `?tab=certification` / `certificacion`, `?tab=historial`):
+     - **`Reparto (N)`**: contabiliza exclusivamente las participaciones vigentes (`ACEPTADA` y `PENDIENTE`, excluyendo `RENUNCIADA`, `CANCELADA` y `RECHAZADA`) y las invitaciones pendientes. Muestra el gráfico Donut SVG de precisión, desglose de cotitulares con importes y estados, y el botón *"Añadir participación"*.
+     - **`Certificación Legal`** (adaptada a `Certificación` en pantallas estrechas `< sm`): incluye punto indicador cuando existe firma digital o manuscrita registrada. Agrupa **Certificado Digital** (abierto por defecto) y **Firma Manuscrita** (acordeón cerrado por defecto), el cuadro `PARTÍCIPES Y FIRMAS (N)` y la descarga del Documento Legal PDF Unificado.
+     - **`Historial (N)`**: línea cronológica inmutable (`TicketAuditTimeline`) que unifica cronológicamente tanto las mutaciones del décimo (`audit_events`) como todos los eventos legales de `ticket_legal_events`.
 3. **Boleto Realista y Metadatos Técnicos:**
-   - Tarjeta visual completa del décimo (`RealisticTicketCard`) con sello digital interactivo (5 pulsaciones para panel de diagnóstico en custodios).
+   - Tarjeta visual completa del décimo (`RealisticTicketCard`) con **`SELLO DIGITAL`** clickable (`SIN FIRMAR` / `FIRMADO`) que abre directamente la pestaña `Certificación Legal` (`?tab=certification`) con scroll suave, y recuadro **`NÚMERO / SERIE / FRACCIÓN`** con disparador oculto de 5 pulsaciones para el panel de diagnóstico en custodios.
    - Fila de metadatos inferiores (`FECHA SORTEO` y `ORIGEN: Escáner GS1-128 / Manual`).
 4. **Tarjeta de Premio Oficial (condicional):** Si el décimo tiene premio (`prize_amount_cents > 0`), muestra la tarjeta esmeralda de resultado, desglose proporcional y confirmación de cobro (sin botón de comprobación manual, ya unificado en el listado).
-5. **Panel Diagnóstico de Simulación:** Panel desplegable púrpura (oculto, accesible con 5 toques sobre el sello digital del décimo) para simular premios y restablecer estados de prueba.
+5. **Panel Diagnóstico de Simulación:** Panel desplegable púrpura (oculto, accesible para el propietario con 5 toques consecutivos sobre el recuadro de **`NÚMERO / SERIE / FRACCIÓN`** del décimo) para simular premios y restablecer estados de prueba.
 6. **Salvaguarda de Cotitulares:** Aviso de protección cuando existen participaciones aceptadas.
 
 ### Módulos Integrados en el Detalle:
 
 #### A) Tarjeta de Décimo Realista (`<RealisticTicketCard />`)
 - Representación visual del décimo con diseño fiel al papel oficial de SELAE, textura guilloché de seguridad, código de barras simulado, fecha del sorteo, precio e insignia de custodia legal asignada al propietario.
+- **Sello Digital Interactivo (`SIN FIRMAR` / `FIRMADO`):** Cuando el décimo cuenta con certificación digital activa o firma manuscrita del depositario, el recuadro izquierdo cambia a acabado destacado verde/dorado con icono de escudo verificado (`ShieldCheck`) y texto **`FIRMADO`** (`CUSTODIA CERTIFICADA · MD-...` o `ACUERDO MANUSCRITO`); en caso contrario muestra **`SIN FIRMAR · SELLO DIGITAL`**. Al pulsarlo, abre directamente la pestaña **Certificación Legal** (`?tab=certification`) y realiza scroll suave hacia la cabecera de pestañas.
 - **Mecanismo de Fallback Anti-Imagen Rota:** Integra un listener reactivo `onError` que, ante cualquier fallo de carga o ausencia de imagen de plantilla externa (`template_image_url`), conmuta de forma automática e inmediata al motor vectorial completo (filigrana guilloché, capilla artística con sello digital `MisDecimos`, número matricial y código GS1-128), evitando iconos de imagen rota en el navegador.
 
 #### B) Comprobador Oficial de Premios (`<PrizeCheckCard />`)
@@ -200,7 +204,7 @@ flowchart TD
 - **Confirmación de Cobro:** Botón *"He recibido mi premio"*, disponible para cotitulares cuando el estado es `VALIDADO`. Ejecuta `confirm_prize_paid` registrando fecha, hora e IP para la liquidación formal unánime.
 
 #### B.1) Panel Diagnóstico: Modo Prueba de Premio (Simulación de Custodio)
-- **Activación Segura:** Visible exclusivamente para el custodio propietario (`isOwner === true`) en entornos de desarrollo (`import.meta.env.DEV`) o al tocar 5 veces consecutivas sobre el `"MISDECIMOS SELLO DIGITAL"` en el décimo realista.
+- **Activación Segura:** Visible exclusivamente para el custodio propietario (`isOwner === true`) en entornos de desarrollo (`import.meta.env.DEV`) o al tocar 5 veces consecutivas (con reinicio tras 2,5 s) sobre el recuadro **`NÚMERO / SERIE / FRACCIÓN`** en el décimo realista (`onNumberBoxClick`).
 - **Botón "Simular premio (1.000 €)":** Invoca la Edge Function `check-prizes` con `simulatedPrizePerDecimo: 1000`. Ejecuta la tubería oficial transaccional de escrutinio (`record_ticket_prize_check`), distribuyendo el premio en céntimos y euros entre todas las cuotas en estado `ACEPTADA`, registrando el evento de auditoría `PREMIO_REGISTRADO` con `shares_breakdown` y despachando alertas Web Push nativas a los cotitulares.
 - **Botón "Restablecer décimo":** Invoca la Edge Function `check-prizes` con `resetSimulation: true` ejecutando `reset_ticket_prize_simulation`, que restablece atómicamente el décimo a 0,00 € y estado `PENDIENTE`, resetea confirmaciones de cobro y añade el evento de auditoría `SIMULACION_PREMIO_RESTABLECIDA`.
 
@@ -215,7 +219,10 @@ flowchart TD
 - **Invitaciones Pendientes (Privacidad Exclusiva del Propietario):**
   - **Renderizado Condicional Estricto (`isOwner === true`):** El listado de tarjetas amarillas de invitaciones pendientes, los códigos PIN de 6 dígitos, los botones *"Ver QR / Compartir"*, *"Eliminar"* y *"Cancelar todas las pendientes"* solo se muestran si el usuario es el propietario del décimo.
   - **Vista Neutra para Participantes (`!isOwner`):** En el gráfico Donut y su leyenda, cualquier cuota pendiente o aún no aceptada se visualiza como un porcentaje agregado neutro (*"Sin asignar / Pendiente (X%)"*) sin mostrar nombres, códigos PIN ni enlaces de invitaciones.
-- **Añadir Participación y Eliminación de Décimo:** El botón inferior *"Añadir participación"* permanece disponible tanto en `PENDIENTE` como en `VALIDADO` mientras el propietario conserve cuota libre. Asimismo, el botón *"Eliminar décimo"* está habilitado en ambos estados siempre que no existan cuotas de terceros en estado `ACEPTADA`.
+- **Añadir Participación y Eliminación de Décimo:** El botón inferior *"Añadir participación"* permanece disponible tanto en `PENDIENTE` como en `VALIDADO` mientras el propietario conserve cuota libre. Asimismo, la eliminación del décimo (vía swipe o en archivados) valida mediante `getTicketDeletionBlockReason()` y muestra mensajes claros y específicos según la causa exacta de bloqueo:
+  - **No propietario:** *"Solo el propietario del décimo puede eliminarlo."*
+  - **Con participaciones aceptadas:** *"No puedes eliminar este décimo porque tiene 1 participación aceptada. Para eliminarlo, el partícipe debe renunciar antes a su participación."* (o su plural correspondiente para `N` participaciones).
+  - **Sorteo liquidado:** *"No puedes eliminar este décimo porque el sorteo ya está liquidado."*
 - **Flujo Bilateral de Renuncia de Participaciones (Gesto Swipe Izquierdo):**
   - El custodio puede deslizar hacia la izquierda la tarjeta de cualquier participante aceptado en estado `PENDIENTE` (identificada con un filo derecho de `3px` en Rojo Coral `#D04848`) para revelar **`Solicitar renuncia`**.
   - El participante recibe una alerta y puede *"Aceptar y devolver"* (reintegrando el porcentaje al propietario) o *"Rechazar"*.
@@ -249,7 +256,31 @@ flowchart TD
     - Mecanismo de respaldo (fallback) para WhatsApp Escritorio (macOS/Windows): al pulsar "Enviar por WhatsApp", el mensaje completo se copia automáticamente al portapapeles y se muestra un banner contextual indicando que el usuario puede usar *Pegar (Cmd+V / Ctrl+V)* en caso de que el cliente de escritorio descarte el cuerpo y solo pegue la URL.
 
 #### E) Auditoría del Décimo (`<TicketAuditTimeline />`)
-- Historial inmutable y cronológico de todas las mutaciones producidas sobre el décimo: creación, escaneos, cesión de porcentajes, invitaciones reclamadas, renuncias solicitadas/aceptadas y confirmaciones de cobro de premios.
+- Historial inmutable y cronológico de todas las mutaciones producidas sobre el décimo (`audit_events`): creación, escaneos, cesión de porcentajes, invitaciones reclamadas, renuncias solicitadas/aceptadas y confirmaciones de cobro de premios.
+- Unifica cronológicamente todos los eventos de `ticket_legal_events` (`CUSTODY_CERTIFIED`, `HANDWRITTEN_CUSTODY_SIGNED`, `PARTICIPATION_ACCEPTED`, `PARTICIPATION_SIGNED`, `HANDWRITTEN_PARTICIPATION_SIGNED`, `PARTICIPATION_RENOUNCED`, `HANDWRITTEN_PARTICIPATION_RENOUNCED`) mostrando icono, método (`AutoFirma`, `.p12 / .pfx`, `Firma manuscrita`), código de verificación y número de serie del certificado.
+
+#### F) Certificación Legal, Firma Electrónica y PDF Unificado
+- **Archivos Implicados:** [`src/components/tickets/LegalCertificationTab.tsx`](../src/components/tickets/LegalCertificationTab.tsx), [`src/components/tickets/HandwrittenSignatureTab.tsx`](../src/components/tickets/HandwrittenSignatureTab.tsx), [`src/components/tickets/CertificateSignModal.tsx`](../src/components/tickets/CertificateSignModal.tsx), [`src/components/tickets/SignaturePadCanvas.tsx`](../src/components/tickets/SignaturePadCanvas.tsx), [`src/lib/digitalSignature.ts`](../src/lib/digitalSignature.ts), [`src/lib/legalCustody.ts`](../src/lib/legalCustody.ts), [`src/lib/handwrittenCustody.ts`](../src/lib/handwrittenCustody.ts), [`src/lib/legalPdfGenerator.ts`](../src/lib/legalPdfGenerator.ts) y la Edge Function [`supabase/functions/autofirma-relay/index.ts`](../supabase/functions/autofirma-relay/index.ts).
+- **Prueba Gráfica Compartida del Anverso:** Captura o adjunto único del anverso del décimo con cálculo automático de huella criptográfica `SHA-256` en cliente. El estado de la fotografía (`sharedPhotoUrl`, `sharedPhotoSha256`) y la vista previa superior son compartidos entre **Certificado Digital** y **Firma Manuscrita**, ocultando los botones de captura en ambas secciones en cuanto ya existe una imagen asociada.
+- **Sección 1 — Certificado Digital (abierta por defecto):**
+  - Acordeón inicializado abierto (`isDigitalCertOpen = true`) con cabecera colapsable (`ChevronDown`).
+  - Permite al depositario certificar la custodia (`CUSTODY_CERTIFIED`) y a los partícipes firmar (`PARTICIPATION_SIGNED`) o renunciar (`PARTICIPATION_RENOUNCED`) mediante **AutoFirma** (escritorio y móvil Android/iOS vía `autofirma-relay` con payload Base64URL, decodificación ASN.1/DER no estricta para cadenas de Android `KeyChain`, `id <= 20` alfanumérico y detección de app instalada con fallback a Google Play) o mediante archivo **`.p12 / .pfx`** procesado en memoria en el navegador (`node-forge`), generando un código de verificación único (`MD-AAAA-XXXX-XXXX`).
+  - **Control de Inmutabilidad:** Muestra el estado **`BLOQUEADO · CUSTODIA PROTEGIDA`** cuando existen participaciones aceptadas (bloqueando ediciones críticas y borrado del décimo) frente a **`EDITABLE`** cuando aún no hay partícipes aceptados.
+  - **Botón `Solicitar firma al propietario`:** Visible dentro de `Certificado Digital` para los partícipes (`ACEPTADA` / `PENDIENTE`) cuando el décimo aún no está certificado por el depositario; envía una notificación en la app y Web Push (`CUSTODY_SIGN_REQUEST`) al propietario y pasa a estado confirmado **`Solicitud enviada al propietario`**.
+- **Sección 2 — Firma Manuscrita (acordeón cerrado por defecto):**
+  - Acordeón inicializado cerrado (`isHandwrittenOpen = false`) que ofrece un acuerdo privado mediante lienzo táctil (`SignaturePadCanvas`), sin campo de teléfono y con validación de DNI/NIE (`validateHandwrittenForm`).
+  - **Aislamiento de Estado por Usuario (`evaluateHandwrittenAccordionState`):** Muestra el badge **`FIRMADA POR TI`** únicamente cuando el usuario actual ha firmado manuscrito (depositario por `HANDWRITTEN_CUSTODY_SIGNED` o partícipe por su `participation_id` activo), frente a **`OPCIONAL`** acompañado de un badge informativo neutro (`1 partícipe firmado` / `N partícipes firmados`) cuando solo han firmado terceros activos.
+  - **Bloqueo Automático de Identidad (`resolveLockedCertificateIdentity`):** Si el depositario o el partícipe en su `participation_id` activo ya firmó con Certificado Digital, autorrellena y bloquea (`readOnly` / `disabled`) **Nombre y apellidos** y **DNI / NIE** con los datos verificados del certificado (sobrescribiendo también cualquier alteración en el envío).
+- **`PARTÍCIPES Y FIRMAS (N)` y Blindaje de Renuncias:**
+  - Incluye botón circular de actualización manual (`RefreshCw`), recarga automática al entrar en la pestaña `Certificación Legal`, exclusión de participaciones `CANCELADA`/`RECHAZADA`, visualización del nombre completo del Certificado Digital junto al alias de la app y aislamiento estricto por `participation_id` activo (`hasActiveDigitalParticipationSignature`), sin heredar firmas de participaciones anteriores renunciadas.
+  - Exige firma electrónica (**`Renunciar con certificado digital`**, en diseño rojo de alerta y una sola línea encima de `Descargar Documento Legal (PDF)`) para renunciar a participaciones firmadas digitalmente desde `Certificación Legal`, `Reparto`, `Notificaciones` y mediante trigger `BEFORE UPDATE` en Supabase (`trg_guard_signed_participation_renounce`).
+- **Documento Legal PDF Unificado (`generateLegalCustodyPdf`):**
+  - Unifica toda la exportación en un único botón **`Descargar Documento Legal (PDF)`**, disponible siempre que exista al menos una firma (Certificado Digital o Firma Manuscrita).
+  - Estructura en 4 secciones compatibles con WinAnsi (sin caracteres `?`):
+    1. **`1. IDENTIFICACION DEL DECIMO Y PRUEBA GRAFICA`**: metadatos del décimo, fotografía del anverso escalada (`scaleToFit`) y huella `SHA-256`.
+    2. **`2. CERTIFICACION DIGITAL DEL DEPOSITARIO`** (o `2. CERTIFICACION DEL DEPOSITARIO` con aviso explícito de acuerdo privado si solo hay firma manuscrita).
+    3. **`3. CUADRO DE PARTICIPACIONES Y FIRMAS`**: lista participaciones activas (`ACTIVA`), invitaciones pendientes (`SIN RECLAMAR` / `Pendiente de reclamar`) y participaciones renunciadas (`RENUNCIADA`, `0%`), dando precedencia absoluta a la identidad del Certificado Digital (`resolveEffectiveSignerIdentity`) sobre formularios manuscritos previos.
+    4. **`4. ANEXO CRONOLOGICO INMUTABLE DE EVENTOS Y RENUNCIAS`**: todos los eventos en español en estricto orden cronológico (`PARTICIPATION_ACCEPTED`, firmas digitales, firmas manuscritas y renuncias) con su huella `SHA-256` y las imágenes PNG de las firmas manuscritas incrustadas inline (`embedPng`) debajo de su evento correspondiente con paginación automática.
 
 ---
 
@@ -263,8 +294,9 @@ flowchart TD
 2. **Formato Temporal:** Estampas temporales formateadas en `HH:mm - DD/MM` (ej. `14:35 - 22/12`).
 3. **Acciones Rápidas y Protección de Acceso en la Alerta:**
    - Si la alerta corresponde a una solicitud de renuncia de participación activa, ofrece directamente dos botones:
-     - ✅ **Aceptar Renuncia:** Ejecuta `respond_share_waiver(..., p_accept = true)`.
+     - ✅ **Aceptar Renuncia:** Verifica primero si la participación activa está firmada con certificado digital (`hasActiveDigitalParticipationSignature`). Si lo está, bloquea la renuncia directa desde la alerta y redirige a `/billetes/:id?tab=certification` (`action: 'renounce'`) para exigir firma electrónica; en caso contrario ejecuta `respond_share_waiver(..., p_accept = true)`.
      - ❌ **Rechazar:** Ejecuta `respond_share_waiver(..., p_accept = false)`.
+   - **Notificaciones de Solicitud de Firma (`CUSTODY_SIGN_REQUEST`):** Cuando un partícipe pulsa *«Solicitar firma al propietario»*, el depositario recibe la alerta correspondiente en su bandeja y por Web Push con acceso directo a la pestaña `Certificación Legal` del décimo.
    - **Bloqueo de Décimos Renunciados:** Si el usuario ya ha renunciado a su participación en el billete al que apunta la alerta (`status === 'RENUNCIADA'`):
      - La tarjeta de alerta y los botones de acción inhabilitan la navegación hacia `/billete/:id`.
      - El enlace *"Ver billete"* se sustituye por la insignia deshabilitada `Participación renunciada · Sin acceso`.
