@@ -8,7 +8,10 @@ import {
   extractNifFromText,
   extractIdentityFromX509Cert,
   signPayloadWithP12,
+  generateAutoFirmaSessionId,
   buildAutoFirmaSignUrl,
+  decodeCmsSignatureAndExtractIdentity,
+  ALPHANUMERIC_ID_REGEX,
 } from '../digitalSignature.ts'
 import {
   evaluateCertifiedTicketLock,
@@ -119,9 +122,33 @@ test('signPayloadWithP12 firma en memoria con SHA-256 y rechaza certificados cad
     /caducado/
   )
 
-  const afirmaUrl = buildAutoFirmaSignUrl({ canonicalPayload: payload, opId: 'op-1' })
+  const opId = generateAutoFirmaSessionId()
+  assert.match(opId, ALPHANUMERIC_ID_REGEX)
+  assert.ok(!opId.includes('-'))
+
+  const afirmaUrl = buildAutoFirmaSignUrl({ canonicalPayload: payload, opId })
   assert.ok(afirmaUrl.startsWith('afirma://sign?'))
-  assert.ok(afirmaUrl.includes('format=CAdES'))
+  const parsedParams = new URLSearchParams(afirmaUrl.split('?')[1])
+  assert.equal(parsedParams.get('op'), 'sign')
+  assert.match(parsedParams.get('id') || '', /^[A-Za-z0-9]+$/)
+  assert.ok((parsedParams.get('stservlet') || '').endsWith('/functions/v1/autofirma-relay'))
+  assert.ok((parsedParams.get('rtservlet') || '').endsWith('/functions/v1/autofirma-relay'))
+  assert.equal(parsedParams.get('format'), 'CAdES')
+  assert.equal(parsedParams.get('algorithm'), 'SHA256withRSA')
+  assert.equal(parsedParams.get('mode'), 'explicit')
+  assert.ok((parsedParams.get('dat') || '').length > 10)
+
+  assert.throws(
+    () => buildAutoFirmaSignUrl({ canonicalPayload: payload, opId: 'invalid-id-1' }),
+    /estrictamente alfanumérico/
+  )
+
+  // Decodificación CMS/PKCS#7 devuelto por AutoFirma
+  const cmsRes = await decodeCmsSignatureAndExtractIdentity(res.signatureB64, payload)
+  assert.equal(cmsRes.method, 'autofirma')
+  assert.equal(cmsRes.identity.fullName, 'CARLOS RUIZ MARTIN')
+  assert.equal(cmsRes.identity.nif, '12345678Z')
+  assert.equal(cmsRes.identity.serialNumber, '01AB23CD')
 })
 
 test('evaluateCertifiedTicketLock y requiresDigitalSignatureForRenounce controlan bloqueo y renuncia', () => {
@@ -236,8 +263,12 @@ test('generateLegalCustodyPdf genera un PDF válido con imagen incrustada, part�
   assert.ok(parsed.getPageCount() >= 1)
 })
 
-test('TicketDetailPage integra pestaña Certificación Legal y la migración incluye bloqueo defensivo y ROLLBACK', () => {
+test('TicketDetailPage integra pestaña Certificación Legal y CertificateSignModal prioriza AutoFirma', () => {
   const detailSource = readFileSync(resolve(process.cwd(), 'src/pages/TicketDetailPage.tsx'), 'utf8')
+  const modalSource = readFileSync(
+    resolve(process.cwd(), 'src/components/tickets/CertificateSignModal.tsx'),
+    'utf8'
+  )
   const migrationSource = readFileSync(
     resolve(process.cwd(), 'supabase/migrations/20261128010500_ticket_digital_certifications.sql'),
     'utf8'
@@ -245,6 +276,8 @@ test('TicketDetailPage integra pestaña Certificación Legal y la migración inc
 
   assert.ok(detailSource.includes('Certificación Legal'))
   assert.ok(detailSource.includes('<LegalCertificationTab'))
+  assert.ok(modalSource.includes("useState<'autofirma' | 'p12'>('autofirma')"))
+  assert.ok(modalSource.indexOf('AutoFirma') < modalSource.indexOf('Archivo .p12 / .pfx'))
   assert.ok(migrationSource.includes('if v_cert_id is null then'))
   assert.ok(migrationSource.includes('-- ROLLBACK:'))
   assert.ok(migrationSource.includes('trg_ticket_legal_events_immutable'))

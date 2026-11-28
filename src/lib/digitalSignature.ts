@@ -21,6 +21,7 @@ export interface DigitalSignatureResult {
 }
 
 const NIF_NIE_REGEX = /\b([XYZ]\d{7}[A-Z]|\d{8}[A-Z])\b/i
+export const ALPHANUMERIC_ID_REGEX = /^[A-Za-z0-9]+$/
 
 function getAttributeValue(
   attrs: forge.pki.CertificateField[],
@@ -194,65 +195,183 @@ export async function signPayloadWithP12(params: {
 }
 
 /**
- * Construye el enlace de invocación al protocolo AutoFirma (afirma://sign).
+ * Genera un identificador de sesión estrictamente alfanumérico sin guiones (ej. MD176429...).
+ */
+export function generateAutoFirmaSessionId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const randomBytes = new Uint8Array(8)
+  if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.getRandomValues === 'function') {
+    globalThis.crypto.getRandomValues(randomBytes)
+  } else {
+    for (let i = 0; i < randomBytes.length; i += 1) {
+      randomBytes[i] = Math.floor(Math.random() * 256)
+    }
+  }
+  let suffix = ''
+  for (const b of randomBytes) {
+    suffix += chars[b % chars.length]
+  }
+  return `MD${Date.now()}${suffix}`
+}
+
+export function getAutoFirmaRelayUrl(): string {
+  const envUrl =
+    typeof import.meta !== 'undefined' && (import.meta as unknown as { env?: Record<string, string> }).env
+      ? (import.meta as unknown as { env: Record<string, string> }).env.VITE_SUPABASE_URL
+      : undefined
+  const baseUrl = (envUrl || 'https://xmdghpyfrblmtjtevtru.supabase.co').replace(/\/+$/, '')
+  return `${baseUrl}/functions/v1/autofirma-relay`
+}
+
+function toBase64UrlSafe(text: string): string {
+  const stdB64 =
+    typeof btoa === 'function'
+      ? btoa(unescape(encodeURIComponent(text)))
+      : Buffer.from(text, 'utf8').toString('base64')
+  return stdB64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+function fromBase64UrlSafeToStandard(b64: string): string {
+  const cleaned = b64.trim().replace(/-/g, '+').replace(/_/g, '/')
+  const padLen = (4 - (cleaned.length % 4)) % 4
+  return cleaned + '='.repeat(padLen)
+}
+
+/**
+ * Construye la URI oficial afirma://sign conforme a UrlParametersToSign de AutoFirma (@firma).
  */
 export function buildAutoFirmaSignUrl(params: {
   canonicalPayload: string
   opId: string
+  relayUrl?: string
 }): string {
-  const dataB64 =
-    typeof btoa === 'function'
-      ? btoa(unescape(encodeURIComponent(params.canonicalPayload)))
-      : Buffer.from(params.canonicalPayload, 'utf8').toString('base64')
+  if (!ALPHANUMERIC_ID_REGEX.test(params.opId)) {
+    throw new Error('El identificador de sesión de AutoFirma debe ser estrictamente alfanumérico.')
+  }
+
+  const relay = params.relayUrl || getAutoFirmaRelayUrl()
+  const dat = toBase64UrlSafe(params.canonicalPayload)
 
   const query = new URLSearchParams({
     op: 'sign',
     id: params.opId,
+    stservlet: relay,
+    rtservlet: relay,
     format: 'CAdES',
     algorithm: 'SHA256withRSA',
-    dat: dataB64,
+    mode: 'explicit',
+    dat,
   })
 
   return `afirma://sign?${query.toString()}`
 }
 
 /**
- * Lanza la invocación a AutoFirma mediante protocolo afirma:// con control de timeout
- * para detectar si la app no está instalada en el dispositivo.
+ * Decodifica una firma CMS/PKCS#7 en Base64 devuelta por AutoFirma y extrae el certificado X.509 del firmante.
  */
-export function launchAutoFirmaWithTimeout(
-  url: string,
-  timeoutMs = 2500
-): Promise<{ launched: boolean; timedOut: boolean }> {
-  return new Promise((resolve) => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      resolve({ launched: false, timedOut: true })
-      return
+export async function decodeCmsSignatureAndExtractIdentity(
+  cmsBase64: string,
+  canonicalPayload: string,
+  now: Date = new Date()
+): Promise<DigitalSignatureResult> {
+  const stdB64 = fromBase64UrlSafeToStandard(cmsBase64)
+  let derBytes: string
+  try {
+    derBytes = forge.util.decode64(stdB64)
+  } catch {
+    throw new Error('La firma recibida desde AutoFirma no tiene un formato Base64 válido.')
+  }
+
+  let p7: forge.pkcs7.PkcsSignedData
+  try {
+    const asn1 = forge.asn1.fromDer(derBytes)
+    p7 = forge.pkcs7.messageFromAsn1(asn1) as forge.pkcs7.PkcsSignedData
+  } catch {
+    throw new Error('No se pudo decodificar el paquete CMS/PKCS#7 devuelto por AutoFirma.')
+  }
+
+  const certs = (p7 as unknown as { certificates?: forge.pki.Certificate[] }).certificates || []
+  const signerCert = certs[0]
+  if (!signerCert) {
+    throw new Error('La firma CMS de AutoFirma no incluye el certificado X.509 del firmante.')
+  }
+
+  const identity = extractIdentityFromX509Cert(signerCert, now)
+  const payloadSha256 = await computeSha256Hex(canonicalPayload)
+
+  return {
+    method: 'autofirma',
+    identity,
+    signatureB64: stdB64,
+    payloadSha256,
+    signedAtIso: now.toISOString(),
+  }
+}
+
+/**
+ * Realiza polling contra autofirma-relay hasta recibir la firma CMS, un error SAF_... o agotar el timeout.
+ */
+export async function pollAutoFirmaRelay(params: {
+  opId: string
+  canonicalPayload: string
+  relayUrl?: string
+  timeoutMs?: number
+  pollIntervalMs?: number
+  signal?: AbortSignal
+}): Promise<DigitalSignatureResult> {
+  const relay = params.relayUrl || getAutoFirmaRelayUrl()
+  const timeoutMs = params.timeoutMs ?? 90_000
+  const pollIntervalMs = params.pollIntervalMs ?? 1500
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() < deadline) {
+    if (params.signal?.aborted) {
+      throw new Error('Espera de firma en AutoFirma cancelada por el usuario.')
     }
 
-    let settled = false
-    const onVisibilityChange = () => {
-      if (document.hidden && !settled) {
-        settled = true
-        cleanup()
-        resolve({ launched: true, timedOut: false })
+    try {
+      const res = await fetch(`${relay}?op=get&id=${encodeURIComponent(params.opId)}`, {
+        method: 'GET',
+        signal: params.signal,
+      })
+
+      if (res.ok) {
+        const text = (await res.text()).trim()
+        if (text && text !== 'NO_DATA') {
+          if (text.startsWith('SAF_04') || text.startsWith('SAF_09')) {
+            throw new Error(`Operación cancelada en AutoFirma (${text}).`)
+          }
+          if (text.startsWith('SAF_') || text.startsWith('ERR_')) {
+            throw new Error(`AutoFirma devolvió un error (${text}).`)
+          }
+          return await decodeCmsSignatureAndExtractIdentity(text, params.canonicalPayload)
+        }
+      }
+    } catch (err: unknown) {
+      if (params.signal?.aborted) {
+        throw new Error('Espera de firma en AutoFirma cancelada por el usuario.')
+      }
+      if (err instanceof Error && (err.message.includes('AutoFirma') || err.message.includes('CMS'))) {
+        throw err
       }
     }
 
-    const timer = window.setTimeout(() => {
-      if (!settled) {
-        settled = true
-        cleanup()
-        resolve({ launched: false, timedOut: true })
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        params.signal?.removeEventListener('abort', onAbort)
+        resolve()
+      }, pollIntervalMs)
+
+      function onAbort() {
+        clearTimeout(timer)
+        reject(new Error('Espera de firma en AutoFirma cancelada por el usuario.'))
       }
-    }, timeoutMs)
 
-    function cleanup() {
-      window.clearTimeout(timer)
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
+      params.signal?.addEventListener('abort', onAbort, { once: true })
+    })
+  }
 
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    window.location.href = url
-  })
+  throw new Error(
+    'No se recibió respuesta de AutoFirma en 90 segundos. Verifica que tienes AutoFirma instalada o usa la pestaña "Archivo .p12 / .pfx".'
+  )
 }
