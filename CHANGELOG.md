@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.0.95] - 2026-11-28
+
+### Added
+- **Cobertura Base64URL para retorno CMS de AutoFirma (`legalCertification.test.ts`):**
+  - Añadido test unitario explícito que valida la decodificación de paquetes CMS/PKCS#7 codificados en Base64URL sin padding (`=`) y la extracción del certificado X.509 del firmante.
+
 ## [1.0.94] - 2026-11-28
 
 ### Added
